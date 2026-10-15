@@ -1,16 +1,19 @@
 <script lang="ts">
  import {onMount} from 'svelte';
+ import {beforeNavigate} from '$app/navigation';
  import {request} from './api';
  import {Input} from '$lib/components/ui/input';
  import {Textarea} from '$lib/components/ui/textarea';
  import {Button} from '$lib/components/ui/button';
  import {LoaderCircle,Plus,Trash2,ExternalLink} from '@lucide/svelte';
  let {onSaved=()=>{}}:{onSaved?:(user:any)=>void}=$props();
+ let savedProfile=$state('');
+ beforeNavigate(({cancel})=>{if(profile&&savedProfile&&JSON.stringify(profile)!==savedProfile&&!window.confirm('Leave without saving profile changes?'))cancel();});
  let publicVideos=$state<any[]>([]);
  let profile=$state<any>(null),loading=$state(true),busy=$state(false),error=$state(''),notice=$state('');
- async function load(){loading=true;error='';try{const result=await request('/profile');profile={...result.channel,social_links:result.channel.social_links || []};const channel=await request(`/channels/${encodeURIComponent(profile.handle)}`);publicVideos=channel.videos||[];}catch(e){error=(e as Error).message;}finally{loading=false;}}
+ async function load(){loading=true;error='';try{const result=await request('/profile');profile={...result.channel,social_links:result.channel.social_links || []};savedProfile=JSON.stringify(profile);const channel=await request(`/channels/${encodeURIComponent(profile.handle)}`);publicVideos=channel.videos||[];}catch(e){error=(e as Error).message;}finally{loading=false;}}
  onMount(()=>{void load();});
- async function save(){busy=true;error='';notice='';try{const {name,bio,location,avatar_url,banner_url,website,social_links,featured_video_id}=profile;const result=await request('/profile',{name,bio,location,avatar_url,banner_url,website,social_links,featured_video_id},'PATCH');profile={...result.channel,social_links:result.channel.social_links || []};onSaved(result.user);notice='Your public profile has been updated.';}catch(e){error=(e as Error).message;}finally{busy=false;}}
+ async function save(){busy=true;error='';notice='';try{const {name,bio,location,avatar_url,banner_url,website,social_links,featured_video_id}=profile;const result=await request('/profile',{name,bio,location,avatar_url,banner_url,website,social_links,featured_video_id},'PATCH');profile={...result.channel,social_links:result.channel.social_links || []};savedProfile=JSON.stringify(profile);onSaved(result.user);notice='Your public profile has been updated.';}catch(e){error=(e as Error).message;}finally{busy=false;}}
 </script>
 <div class="page-heading"><h1>Edit public profile</h1><p>Your profile is shared by your viewing account and creator channel. Email and security settings stay private.</p></div>
 {#if error}<div class="cloud-alert" role="alert">{error}{#if !profile}<Button variant="outline" onclick={load}>Retry</Button>{/if}</div>{/if}{#if notice}<p class="cloud-notice" role="status">{notice}</p>{/if}

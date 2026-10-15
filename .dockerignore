@@ -17,3 +17,5 @@ __pycache__
 **/*.tfvars
 **/*.pem
 **/*.key
+.superpowers
+.impeccable/review

@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T14:08:39.058661+00:00",
+  "title": "Design System: VideoFlow",
+  "extensions": {
+    "colorMeta": {
+      "signal": {
+        "role": "primary",
+        "displayName": "Signal",
+        "tonalRamp": [
+          "oklch(from #ff5b1f 15% c h)",
+          "oklch(from #ff5b1f 26% c h)",
+          "oklch(from #ff5b1f 38% c h)",
+          "oklch(from #ff5b1f 49% c h)",
+          "oklch(from #ff5b1f 61% c h)",
+          "oklch(from #ff5b1f 72% c h)",
+          "oklch(from #ff5b1f 84% c h)",
+          "oklch(from #ff5b1f 95% c h)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(from #0b0c0b 15% c h)",
+          "oklch(from #0b0c0b 26% c h)",
+          "oklch(from #0b0c0b 38% c h)",
+          "oklch(from #0b0c0b 49% c h)",
+          "oklch(from #0b0c0b 61% c h)",
+          "oklch(from #0b0c0b 72% c h)",
+          "oklch(from #0b0c0b 84% c h)",
+          "oklch(from #0b0c0b 95% c h)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "oklch(from #121312 15% c h)",
+          "oklch(from #121312 26% c h)",
+          "oklch(from #121312 38% c h)",
+          "oklch(from #121312 49% c h)",
+          "oklch(from #121312 61% c h)",
+          "oklch(from #121312 72% c h)",
+          "oklch(from #121312 84% c h)",
+          "oklch(from #121312 95% c h)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "oklch(from #1b1c1a 15% c h)",
+          "oklch(from #1b1c1a 26% c h)",
+          "oklch(from #1b1c1a 38% c h)",
+          "oklch(from #1b1c1a 49% c h)",
+          "oklch(from #1b1c1a 61% c h)",
+          "oklch(from #1b1c1a 72% c h)",
+          "oklch(from #1b1c1a 84% c h)",
+          "oklch(from #1b1c1a 95% c h)"
+        ]
+      },
+      "bone": {
+        "role": "neutral",
+        "displayName": "Bone",
+        "tonalRamp": [
+          "oklch(from #ebe9e2 15% c h)",
+          "oklch(from #ebe9e2 26% c h)",
+          "oklch(from #ebe9e2 38% c h)",
+          "oklch(from #ebe9e2 49% c h)",
+          "oklch(from #ebe9e2 61% c h)",
+          "oklch(from #ebe9e2 72% c h)",
+          "oklch(from #ebe9e2 84% c h)",
+          "oklch(from #ebe9e2 95% c h)"
+        ]
+      },
+      "mute": {
+        "role": "neutral",
+        "displayName": "Mute",
+        "tonalRamp": [
+          "oklch(from #a3a199 15% c h)",
+          "oklch(from #a3a199 26% c h)",
+          "oklch(from #a3a199 38% c h)",
+          "oklch(from #a3a199 49% c h)",
+          "oklch(from #a3a199 61% c h)",
+          "oklch(from #a3a199 72% c h)",
+          "oklch(from #a3a199 84% c h)",
+          "oklch(from #a3a199 95% c h)"
+        ]
+      },
+      "dim": {
+        "role": "neutral",
+        "displayName": "Dim",
+        "tonalRamp": [
+          "oklch(from #75736c 15% c h)",
+          "oklch(from #75736c 26% c h)",
+          "oklch(from #75736c 38% c h)",
+          "oklch(from #75736c 49% c h)",
+          "oklch(from #75736c 61% c h)",
+          "oklch(from #75736c 72% c h)",
+          "oklch(from #75736c 84% c h)",
+          "oklch(from #75736c 95% c h)"
+        ]
+      },
+      "light-card": {
+        "role": "neutral",
+        "displayName": "Light Card",
+        "tonalRamp": [
+          "oklch(from #f5f3ed 15% c h)",
+          "oklch(from #f5f3ed 26% c h)",
+          "oklch(from #f5f3ed 38% c h)",
+          "oklch(from #f5f3ed 49% c h)",
+          "oklch(from #f5f3ed 61% c h)",
+          "oklch(from #f5f3ed 72% c h)",
+          "oklch(from #f5f3ed 84% c h)",
+          "oklch(from #f5f3ed 95% c h)"
+        ]
+      },
+      "light-secondary": {
+        "role": "neutral",
+        "displayName": "Light Secondary",
+        "tonalRamp": [
+          "oklch(from #dedbd2 15% c h)",
+          "oklch(from #dedbd2 26% c h)",
+          "oklch(from #dedbd2 38% c h)",
+          "oklch(from #dedbd2 49% c h)",
+          "oklch(from #dedbd2 61% c h)",
+          "oklch(from #dedbd2 72% c h)",
+          "oklch(from #dedbd2 84% c h)",
+          "oklch(from #dedbd2 95% c h)"
+        ]
+      },
+      "light-sidebar": {
+        "role": "neutral",
+        "displayName": "Light Sidebar",
+        "tonalRamp": [
+          "oklch(from #e4e1d8 15% c h)",
+          "oklch(from #e4e1d8 26% c h)",
+          "oklch(from #e4e1d8 38% c h)",
+          "oklch(from #e4e1d8 49% c h)",
+          "oklch(from #e4e1d8 61% c h)",
+          "oklch(from #e4e1d8 72% c h)",
+          "oklch(from #e4e1d8 84% c h)",
+          "oklch(from #e4e1d8 95% c h)"
+        ]
+      },
+      "light-muted": {
+        "role": "neutral",
+        "displayName": "Light Muted",
+        "tonalRamp": [
+          "oklch(from #615f58 15% c h)",
+          "oklch(from #615f58 26% c h)",
+          "oklch(from #615f58 38% c h)",
+          "oklch(from #615f58 49% c h)",
+          "oklch(from #615f58 61% c h)",
+          "oklch(from #615f58 72% c h)",
+          "oklch(from #615f58 84% c h)",
+          "oklch(from #615f58 95% c h)"
+        ]
+      },
+      "light-active": {
+        "role": "neutral",
+        "displayName": "Light Active",
+        "tonalRamp": [
+          "oklch(from #a93008 15% c h)",
+          "oklch(from #a93008 26% c h)",
+          "oklch(from #a93008 38% c h)",
+          "oklch(from #a93008 49% c h)",
+          "oklch(from #a93008 61% c h)",
+          "oklch(from #a93008 72% c h)",
+          "oklch(from #a93008 84% c h)",
+          "oklch(from #a93008 95% c h)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Dark Border"
+      },
+      "dark-input": {
+        "role": "neutral",
+        "displayName": "Dark Input"
+      },
+      "light-border": {
+        "role": "neutral",
+        "displayName": "Light Border"
+      },
+      "light-input": {
+        "role": "neutral",
+        "displayName": "Light Input"
+      },
+      "dark-accent": {
+        "role": "neutral",
+        "displayName": "Dark Accent"
+      },
+      "light-accent": {
+        "role": "neutral",
+        "displayName": "Light Accent"
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Compact interface text with system CJK fallbacks."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Authentication headings."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Compact labels and badges."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ring",
+        "value": "0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent)",
+        "purpose": "Fine card separation."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent)",
+        "purpose": "Keyboard focus indication."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary button from the existing shadcn interface.",
+      "html": "<button class=\"ds-primary\">Save changes</button>",
+      "css": ".ds-primary{font-family:var(--font-sans, sans-serif);font-size:14px;height:32px;padding:0 10px;border:1px solid transparent;border-radius:var(--radius);background:var(--primary);color:var(--primary-foreground);font-weight:500;transition:all .15s}.ds-primary:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}.ds-primary:active{transform:translateY(1px)}.ds-primary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "",
+      "description": "Secondary button from the existing shadcn interface.",
+      "html": "<button class=\"ds-secondary\">Cancel</button>",
+      "css": ".ds-secondary{font-family:var(--font-sans, sans-serif);font-size:14px;height:32px;padding:0 10px;border:1px solid transparent;border-radius:var(--radius);background:var(--secondary);color:var(--secondary-foreground);font-weight:500;transition:all .15s}.ds-secondary:hover{background:color-mix(in srgb,var(--secondary) 80%,transparent)}.ds-secondary:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
+    },
+    {
+      "name": "Text input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text input from the existing shadcn interface.",
+      "html": "<input class=\"ds-input\" aria-label=\"Project name\" placeholder=\"Project name\">",
+      "css": ".ds-input{font-family:var(--font-sans, sans-serif);font-size:14px;height:32px;padding:4px 10px;border:1px solid var(--input);border-radius:var(--radius);background:transparent;color:var(--foreground);transition:color .15s,border-color .15s}.ds-input::placeholder{color:var(--muted-foreground)}.ds-input:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card from the existing shadcn interface.",
+      "html": "<section class=\"ds-card\">Project details</section>",
+      "css": ".ds-card{font-family:var(--font-sans, sans-serif);font-size:14px;padding:16px;border-radius:calc(var(--radius)*1.4);background:var(--card);color:var(--card-foreground);box-shadow:0 0 0 1px color-mix(in srgb,var(--foreground) 10%,transparent)}"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Badge from the existing shadcn interface.",
+      "html": "<span class=\"ds-badge\">Draft</span>",
+      "css": ".ds-badge{font-family:var(--font-sans, sans-serif);font-size:14px;display:inline-flex;align-items:center;height:20px;padding:2px 8px;font-size:12px;font-weight:500;border:1px solid transparent;border-radius:calc(var(--radius)*2.6);background:var(--secondary);color:var(--secondary-foreground)}"
+    },
+    {
+      "name": "Navigation item",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "Navigation item from the existing shadcn interface.",
+      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\">Discover</a>",
+      "css": ".ds-nav{font-family:var(--font-sans, sans-serif);font-size:14px;display:inline-flex;padding:8px 12px;border:1px solid transparent;border-radius:calc(var(--radius)*.8);color:var(--muted-foreground);text-decoration:none}.ds-nav:hover,.ds-nav[aria-current=page]{background:var(--accent);color:var(--accent-foreground)}.ds-nav:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "VideoFlow\u2019s existing workspace, aligned with its landing-page brand",
+    "overview": "VideoFlow uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.\n\nInter, compact controls, fine borders and muted supporting copy remain the incumbent visual language. Media and the original Studio canvas lead; brand appears in the logo, primary actions and selected states.",
+    "keyCharacteristics": [
+      "Warm ink and bone surfaces with signal-orange actions.",
+      "Compact shadcn controls and readable Inter typography.",
+      "Original Studio canvas and existing responsive layouts preserved."
+    ],
+    "rules": [
+      {
+        "name": "The Contrast Rule",
+        "body": "Use ink text on signal-orange fills and the theme-specific active/muted tokens for text. Measured pairs: signal/ink 6.32:1, bone/ink 16.13:1, mute/ink-2 7.20:1, light-muted/bone 5.26:1 and light-active/bone 5.55:1. These pairs do not certify every opacity, state or overlay.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do use semantic CSS tokens from frontend/src/app.css in both themes.",
+      "Do use the supplied theme-appropriate logo through BrandLogo.svelte.",
+      "Do preserve CJK font fallbacks, visible keyboard focus and distinct error states.",
+      "Do retain existing layouts, media proportions and Studio canvas behavior."
+    ],
+    "donts": [
+      "Don't redraw, recolor or stretch the supplied logo.",
+      "Don't replace Inter or the existing shadcn compositions as part of brand alignment.",
+      "Don't use bright orange for small light-mode text when the contrast-safe active token is available.",
+      "Don't turn status colors into brand orange or invent production media and earnings claims."
+    ]
+  }
+}

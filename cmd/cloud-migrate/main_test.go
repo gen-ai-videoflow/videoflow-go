@@ -56,6 +56,12 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	if _, e = runtimeStore.DB.ExecContext(ctx, `INSERT INTO cloud_video_preferences(user_id,settings)VALUES($1,'{"history_enabled":true}')`, user.ID); e != nil {
+		t.Fatalf("viewer preference grants: %v", e)
+	}
+	if _, e = runtimeStore.DB.ExecContext(ctx, `INSERT INTO cloud_media_assets(id,workspace_id,origin,object_key,status)VALUES($1,$2,'upload','workspaces/test/file.mp4','validating')`, "role-asset-"+role, user.WorkspaceID); e != nil {
+		t.Fatalf("media asset grants: %v", e)
+	}
 	if e = runtimeStore.GrantCredits(ctx, user.WorkspaceID, "role-journal-probe", 100, "Role test"); e != nil {
 		t.Fatalf("credit trigger: %v", e)
 	}

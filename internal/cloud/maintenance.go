@@ -23,7 +23,7 @@ import (
 func (w *Worker) Maintenance(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
-	return errors.Join(w.cleanupExpiredOperationalRows(ctx), w.archiveExpiredWatchEvents(ctx), w.cleanupExpiredUploads(ctx))
+	return errors.Join(w.cleanupVideoUploads(ctx), w.cleanupExpiredOperationalRows(ctx), w.archiveExpiredWatchEvents(ctx), w.cleanupExpiredUploads(ctx))
 }
 func objectAbsent(err error) bool {
 	if err == nil {
@@ -32,7 +32,7 @@ func objectAbsent(err error) bool {
 	var api smithy.APIError
 	if errors.As(err, &api) {
 		switch api.ErrorCode() {
-		case "NotFound", "NoSuchKey", "404":
+		case "NotFound", "NoSuchKey", "NoSuchUpload", "404":
 			return true
 		case "NoSuchBucket":
 			return false
@@ -224,6 +224,7 @@ func (s *Server) clearHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 	statements := []string{
+		`DELETE FROM cloud_video_progress WHERE user_id=$1`,
 		`UPDATE cloud_watch_events SET user_id=NULL WHERE user_id=$1`,
 		`UPDATE cloud_watch_sessions SET user_id=NULL,viewer_hash='cleared:'||id WHERE user_id=$1`,
 		`DELETE FROM cloud_daily_viewers WHERE viewer_hash=$1`,
@@ -248,18 +249,37 @@ func (s *Server) requestAccountDeletion(w http.ResponseWriter, r *http.Request) 
 		s.fail(w, ErrUnauthorized)
 		return
 	}
+	var credentials struct {
+		Password string `json:"password"`
+		Code     string `json:"code"`
+	}
+	if !s.decode(w, r, &credentials) {
+		return
+	}
+	if e := s.reauth(r.Context(), r, u, credentials.Password, credentials.Code, false); e != nil {
+		s.fail(w, e)
+		return
+	}
 	tx, e := s.Store.DB.BeginTx(r.Context(), nil)
 	if e != nil {
 		s.fail(w, e)
 		return
 	}
 	defer tx.Rollback()
+	var locked string
+	if e = tx.QueryRowContext(r.Context(), `SELECT id FROM cloud_users WHERE id=$1 FOR UPDATE`, u.ID).Scan(&locked); e != nil {
+		s.fail(w, e)
+		return
+	}
 	_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_account_deletion_requests(user_id)VALUES($1)ON CONFLICT(user_id)DO NOTHING`, u.ID)
 	if e == nil {
 		_, e = tx.ExecContext(r.Context(), `DELETE FROM cloud_sessions WHERE user_id=$1`, u.ID)
 	}
 	if e == nil {
 		_, e = tx.ExecContext(r.Context(), `DELETE FROM cloud_tokens WHERE user_id=$1`, u.ID)
+	}
+	if e == nil {
+		_, e = tx.ExecContext(r.Context(), `DELETE FROM cloud_auth_challenges WHERE user_id=$1`, u.ID)
 	}
 	if e != nil {
 		s.fail(w, e)

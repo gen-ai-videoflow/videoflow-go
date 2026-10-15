@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/google/uuid"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -99,7 +100,13 @@ func (s *Store) RecordWatch(ctx context.Context, u User, session, eventID string
 	if _, e = tx.ExecContext(ctx, `UPDATE cloud_videos SET watch_seconds=watch_seconds+$2 WHERE id=$1`, video, seconds); e != nil {
 		return 0, e
 	}
-	if !counted && total+seconds >= 10 {
+	var format string
+	var duration int64
+	var measured bool
+	if e = tx.QueryRowContext(ctx, `SELECT v.format,coalesce(a.duration_ms,0),coalesce(a.measured,false) FROM cloud_videos v LEFT JOIN cloud_media_assets a ON a.id=v.source_asset_id WHERE v.id=$1`, video).Scan(&format, &duration, &measured); e != nil {
+		return 0, e
+	}
+	if !counted && total+seconds >= qualifyingViewSeconds(format, duration, measured) {
 		res, e = tx.ExecContext(ctx, `INSERT INTO cloud_daily_viewers(video_id,viewer_hash,day)VALUES($1,$2,(now() AT TIME ZONE 'UTC')::date)ON CONFLICT DO NOTHING`, video, viewer)
 		if e != nil {
 			return 0, e
@@ -184,4 +191,12 @@ func (s *Store) Discovery(ctx context.Context, u User, query, category string) (
 		out = append(out, v)
 	}
 	return out, rows.Err()
+}
+
+// Public qualified views are separate from approved financial reward weights.
+func qualifyingViewSeconds(format string, duration int64, measured bool) int {
+	if format == "short" && measured && duration > 0 {
+		return int(math.Ceil(math.Min(10, math.Max(1, float64(duration)*.8/1000))))
+	}
+	return 10
 }

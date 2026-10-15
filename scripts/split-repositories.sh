@@ -31,6 +31,14 @@ def ignore(directory, names):
     return [n for n in names if n in ignored or n.startswith('.env') and n not in {'.env.example','.env.cloud.example'} or n.endswith(('.tfstate','.tfstate.backup','.tfplan','.pem','.key')) or n.endswith('.tfvars') and not n.endswith('.tfvars.example')]
 shutil.copytree(src/'frontend', dst/'videoflow-web', ignore=ignore, symlinks=True)
 web=dst/'videoflow-web'
+for record in ('PRODUCT.md','DESIGN.md'):
+    if (src/record).exists(): shutil.copy2(src/record,web/record)
+if (src/'.impeccable/config.json').exists():
+    (web/'.impeccable').mkdir(exist_ok=True)
+    shutil.copy2(src/'.impeccable/config.json',web/'.impeccable/config.json')
+    if (src/'.impeccable/design.json').exists(): shutil.copy2(src/'.impeccable/design.json',web/'.impeccable/design.json')
+if (src/'docs/ux').is_dir():
+    shutil.copytree(src/'docs/ux', web/'docs/ux', dirs_exist_ok=True)
 if (src/'docs/launch').is_dir():
     shutil.copytree(src/'docs/launch', web/'docs/launch', dirs_exist_ok=True)
 package=json.loads((web/'package.json').read_text())
@@ -40,7 +48,7 @@ for name in ('dev','build','check'):
 (web/'.gitignore').write_text('node_modules/\n.svelte-kit/\nbuild/\n.env\n.env.*\n!.env.example\n')
 (web/'README.md').write_text('# VideoFlow Web\n\nSvelteKit + shadcn-svelte SaaS frontend. Run `npm ci`, then `CLOUD_API_INTERNAL_URL=http://localhost:8000/v1 npm run dev`. Cloud mode is enabled by the package scripts. Production: `docker build -t videoflow-web .`; run with `CLOUD_API_INTERNAL_URL`, `ORIGIN`, and `PORT`. The backend API contract lives in the companion videoflow-api repository; generated wire types are included. No provider or payment secrets belong here.\n')
 backend=dst/'videoflow-api'; backend.mkdir()
-for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs','deploy','go.mod','go.sum','Makefile','README.md','LICENSE','.gitignore','.dockerignore','.env.cloud.example','compose.cloud.yml'):
+for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs','deploy','go.mod','go.sum','Makefile','README.md','LICENSE','.gitignore','.dockerignore','.env.cloud.example','compose.cloud.yml','PRODUCT.md','DESIGN.md'):
     source=src/name
     if source.is_dir(): shutil.copytree(source,backend/name,ignore=ignore,symlinks=True)
     elif source.is_file(): shutil.copy2(source,backend/name)

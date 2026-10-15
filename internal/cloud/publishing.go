@@ -10,29 +10,40 @@ import (
 )
 
 type Video struct {
-	ID           string    `json:"id"`
-	ChannelID    string    `json:"channel_id"`
-	JobID        string    `json:"job_id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	Visibility   string    `json:"visibility"`
-	Audience     string    `json:"audience"`
-	Status       string    `json:"status"`
-	ManifestKey  string    `json:"-"`
-	ThumbnailKey string    `json:"-"`
-	Views        int64     `json:"views"`
-	WatchSeconds int64     `json:"watch_seconds"`
-	CreatedAt    time.Time `json:"created_at"`
-	Handle       string    `json:"handle"`
-	ChannelName  string    `json:"channel_name"`
-	ThumbnailURL string    `json:"thumbnail_url,omitempty"`
+	RightsConfirmed bool      `json:"rights_confirmed,omitempty"`
+	ID              string    `json:"id"`
+	ChannelID       string    `json:"channel_id"`
+	JobID           string    `json:"job_id"`
+	SourceAssetID   string    `json:"source_asset_id"`
+	Format          string    `json:"format"`
+	Origin          string    `json:"origin"`
+	AIGenerated     bool      `json:"ai_generated"`
+	Width           int       `json:"width"`
+	Height          int       `json:"height"`
+	DurationMS      int64     `json:"duration_ms"`
+	Title           string    `json:"title"`
+	Description     string    `json:"description"`
+	Visibility      string    `json:"visibility"`
+	Audience        string    `json:"audience"`
+	Status          string    `json:"status"`
+	ManifestKey     string    `json:"-"`
+	ThumbnailKey    string    `json:"-"`
+	Views           int64     `json:"views"`
+	WatchSeconds    int64     `json:"watch_seconds"`
+	CreatedAt       time.Time `json:"created_at"`
+	Handle          string    `json:"handle"`
+	ChannelName     string    `json:"channel_name"`
+	ThumbnailURL    string    `json:"thumbnail_url,omitempty"`
 }
 
-const videoCols = `v.id,v.channel_id,v.job_id,v.title,v.description,v.visibility,v.audience,v.status,v.manifest_key,v.thumbnail_key,v.views,v.watch_seconds,v.created_at,c.handle,c.name`
+const videoCols = `v.id,v.channel_id,coalesce(v.job_id,''),v.title,v.description,v.visibility,v.audience,v.status,v.manifest_key,v.thumbnail_key,v.views,v.watch_seconds,v.created_at,c.handle,c.name,coalesce(v.source_asset_id,''),v.format,v.origin,v.ai_generated,coalesce((SELECT width FROM cloud_media_assets WHERE id=v.source_asset_id),0),coalesce((SELECT height FROM cloud_media_assets WHERE id=v.source_asset_id),0),coalesce((SELECT duration_ms FROM cloud_media_assets WHERE id=v.source_asset_id),0)`
 
 func scanVideo(row interface{ Scan(...any) error }) (Video, error) {
 	var v Video
-	err := row.Scan(&v.ID, &v.ChannelID, &v.JobID, &v.Title, &v.Description, &v.Visibility, &v.Audience, &v.Status, &v.ManifestKey, &v.ThumbnailKey, &v.Views, &v.WatchSeconds, &v.CreatedAt, &v.Handle, &v.ChannelName)
+	err := row.Scan(&v.ID, &v.ChannelID, &v.JobID, &v.Title, &v.Description, &v.Visibility, &v.Audience, &v.Status, &v.ManifestKey, &v.ThumbnailKey, &v.Views, &v.WatchSeconds, &v.CreatedAt, &v.Handle, &v.ChannelName, &v.SourceAssetID, &v.Format, &v.Origin, &v.AIGenerated, &v.Width, &v.Height, &v.DurationMS)
+	if v.ThumbnailKey != "" {
+		v.ThumbnailURL = "/api/v1/videos/" + v.ID + "/poster"
+	}
 	return v, err
 }
 func (s *Store) Videos(ctx context.Context, channel string, owner bool) ([]Video, error) {
@@ -72,17 +83,48 @@ func (s *Store) CreateVideo(ctx context.Context, u User, v Video) (Video, error)
 	if v.Title == "" || len(v.Title) > 180 || len(v.Description) > 5000 || (v.Visibility != "public" && v.Visibility != "private" && v.Visibility != "unlisted") || (v.Audience != "free" && v.Audience != "members") {
 		return Video{}, ErrValidation
 	}
-	j, err := s.Job(ctx, u, v.JobID)
+	if v.Format == "" {
+		v.Format = "standard"
+	}
+	if v.Format != "standard" && v.Format != "short" {
+		return Video{}, ErrValidation
+	}
+	var asset MediaAsset
+	var err error
+	if v.SourceAssetID != "" {
+		asset, err = s.ownedAsset(ctx, u, v.SourceAssetID)
+	} else {
+		asset, err = s.generatedAsset(ctx, u, v.JobID)
+	}
 	if err != nil {
 		return Video{}, err
 	}
-	if j.Status != "succeeded" {
+	if asset.Origin == "upload" && !v.RightsConfirmed {
+		return Video{}, ErrValidation
+	}
+	if asset.Status != "ready" {
 		return Video{}, ErrConflict
 	}
+	if v.Format == "short" && (!asset.Measured || asset.Height <= asset.Width || asset.DurationMS < 3000 || asset.DurationMS > 180000) {
+		return Video{}, ErrValidation
+	}
 	v.ID = uuid.NewString()
-	_, err = s.DB.ExecContext(ctx, `INSERT INTO cloud_videos(id,channel_id,job_id,title,description,visibility,audience,caption_segments)VALUES($1,$2,$3,$4,$5,$6,$7,coalesce((SELECT segments FROM cloud_job_captions WHERE job_id=$3),'[]'::jsonb))`, v.ID, u.ChannelID, v.JobID, v.Title, v.Description, v.Visibility, v.Audience)
+	v.SourceAssetID = asset.ID
+	v.Origin = asset.Origin
+	if asset.Origin == "generated" {
+		v.AIGenerated = true
+	}
+	var job any
+	if asset.JobID != "" {
+		job = asset.JobID
+	}
+	err = s.DB.QueryRowContext(ctx, `INSERT INTO cloud_videos(id,channel_id,job_id,title,description,visibility,audience,source_asset_id,format,origin,ai_generated,caption_segments)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce((SELECT segments FROM cloud_job_captions WHERE job_id=$3),'[]'::jsonb)) ON CONFLICT(channel_id,source_asset_id) WHERE source_asset_id IS NOT NULL DO UPDATE SET source_asset_id=EXCLUDED.source_asset_id RETURNING id`, v.ID, u.ChannelID, job, v.Title, v.Description, v.Visibility, v.Audience, asset.ID, v.Format, asset.Origin, v.AIGenerated).Scan(&v.ID)
 	if err != nil {
 		return Video{}, dbError(err)
+	}
+	_, err = s.DB.ExecContext(ctx, `UPDATE cloud_videos SET thumbnail_key=(SELECT poster_key FROM cloud_media_assets WHERE id=$2) WHERE id=$1 AND thumbnail_key=''`, v.ID, asset.ID)
+	if err != nil {
+		return Video{}, err
 	}
 	return s.Video(ctx, v.ID, u.ID)
 }

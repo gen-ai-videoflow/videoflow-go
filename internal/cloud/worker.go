@@ -188,6 +188,10 @@ func (w *Worker) process(ctx context.Context, body string) error {
 		switch msg.Kind {
 		case "generation":
 			return w.generate(ctx, msg.ID)
+		case "media_validation":
+			return w.validateVideoUpload(ctx, msg.ID)
+		case "media_probe":
+			return w.probeGenerated(ctx, msg.ID)
 		case "encoding":
 			return w.encode(ctx, msg.ID)
 		default:
@@ -368,8 +372,9 @@ func (w *Worker) encode(ctx context.Context, id string) error {
 	}
 	defer tx.Rollback()
 	var key, status, encoding, aspect, resolution string
+	var knownAudio *bool
 	var captionJSON []byte
-	if err = tx.QueryRowContext(ctx, `SELECT j.output_key,v.status,v.encoding_id,q.aspect_ratio,q.resolution,v.caption_segments FROM cloud_videos v JOIN cloud_jobs j ON j.id=v.job_id JOIN cloud_quotes q ON q.id=j.quote_id WHERE v.id=$1 FOR UPDATE OF v`, id).Scan(&key, &status, &encoding, &aspect, &resolution, &captionJSON); err != nil {
+	if err = tx.QueryRowContext(ctx, `SELECT coalesce(a.object_key,j.output_key),v.status,v.encoding_id,CASE WHEN a.measured AND a.height>a.width THEN '9:16' WHEN a.measured AND a.height=a.width THEN '1:1' ELSE coalesce(q.aspect_ratio,'16:9') END,coalesce(q.resolution,'720p'),v.caption_segments,CASE WHEN a.measured THEN a.has_audio ELSE NULL END FROM cloud_videos v LEFT JOIN cloud_jobs j ON j.id=v.job_id LEFT JOIN cloud_quotes q ON q.id=j.quote_id LEFT JOIN cloud_media_assets a ON a.id=v.source_asset_id WHERE v.id=$1 FOR UPDATE OF v`, id).Scan(&key, &status, &encoding, &aspect, &resolution, &captionJSON, &knownAudio); err != nil {
 		return err
 	}
 	if status != "processing" || encoding != "" {
@@ -388,9 +393,14 @@ func (w *Worker) encode(ctx context.Context, id string) error {
 		}
 	}
 	destination := "s3://" + w.cfg.PlaybackBucket + "/videos/" + id + "/hls/"
-	hasAudio, err := w.sourceHasAudio(ctx, key)
-	if err != nil {
-		return err
+	hasAudio := false
+	if knownAudio != nil {
+		hasAudio = *knownAudio
+	} else {
+		hasAudio, err = w.sourceHasAudio(ctx, key)
+		if err != nil {
+			return err
+		}
 	}
 	outputs := []mt.Output{}
 	for _, r := range []struct {

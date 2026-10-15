@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 schemas={
+ 'MediaAsset':{'asset_id':'string','job_id':'string','origin':'string','status':'string','filename':'string','content_type':'string','bytes':'integer','width':'integer','height':'integer','duration_ms':'integer','measured':'boolean','has_audio':'boolean','error':'string','poster_available':'boolean','captions_available':'boolean','job_status':'string'},
  'AccountSession':{'id':'string','created_at':'string','last_seen_at':'string','expires_at':'string','current':'boolean'},
  'PaymentInvoice':{'id':'string','purpose':'string','status':'string','address':'string','network':'string','token':'string','token_address':'string','amount':'string','amount_net':'string','fee_amount':'string','price_cents':'integer','pack_id':'string','credits':'integer','expires_at':'string','created_at':'string'},
  'User':{'id':'string','email':'string','name':'string','workspace_id':'string','channel_id':'string','handle':'string','verified':'boolean'},
@@ -11,7 +12,7 @@ schemas={
  'Quote':{'id':'string','credits':'integer','expires_at':'string'},
  'Job':{'can_cancel':'boolean','project_id':'string','kind':'string','id':'string','quote_id':'string','status':'string','credits':'integer','error':'string','created_at':'string','updated_at':'string'},
  'CreditEntry':{'id':'string','amount':'integer','kind':'string','description':'string','created_at':'string'},
- 'Video':{'id':'string','channel_id':'string','job_id':'string','title':'string','description':'string','visibility':'string','audience':'string','status':'string','views':'integer','watch_seconds':'integer','created_at':'string','handle':'string','channel_name':'string','thumbnail_url':'string'},
+ 'Video':{'id':'string','channel_id':'string','job_id':'string','title':'string','description':'string','visibility':'string','audience':'string','status':'string','views':'integer','watch_seconds':'integer','created_at':'string','handle':'string','channel_name':'string','thumbnail_url':'string','source_asset_id':'string','format':'string','origin':'string','ai_generated':'boolean','width':'integer','height':'integer','duration_ms':'integer'},
  'Error':{'code':'string','message':'string','request_id':'string'},
  'StudioEntity':{'id':'string','project_id':'string','scene_id':'string','kind':'string','title':'string','content':'string','description':'string','prompt':'string','object_key':'string','duration':'number','position':'integer','metadata':'object','created_at':'string','updated_at':'string'},
 }
@@ -65,7 +66,7 @@ routes=[
  ('get','/projects/{project}/jobs',None,'Job[]',False),('get','/jobs/{id}/pipeline',None,'PipelineProgress',False),('post','/projects/{project}/pipelines/quotes','pipeline_quote','Quote',False),('post','/projects/{project}/assembly/quotes','assembly_quote','Quote',False),
  ('post','/generation/quotes','quote','Quote',False),('post','/generation/jobs','job','Job',False),
  ('get','/feed',None,'Video[]',True),('get','/search',None,'Video[]',True),('get','/videos',None,'Video[]',True),('get','/videos/{id}',None,'Video',True),('post','/videos','video','Video',False),('patch','/videos/{id}',None,None,False),('post','/videos/{id}/publish',None,None,False),('post','/videos/{id}/playback-grant',None,None,True),('post','/videos/{id}/report','report',None,False),
- ('get','/channel',None,None,False),('patch','/channel','channel',None,False),('get','/channels/{handle}',None,None,True),('post','/channels/{id}/follow',None,None,False),
+ ('get','/channel/videos',None,None,False),('get','/channel',None,None,False),('patch','/channel','channel',None,False),('get','/channels/{handle}',None,None,True),('post','/channels/{id}/follow',None,None,False),
  ('get','/memberships',None,None,False),('post','/memberships/checkout','membership',None,False),('get','/creator/membership-plan',None,None,False),('put','/creator/membership-plan','plan',None,False),('get','/creator/payout-account',None,None,False),('post','/creator/payout-account','payout',None,False),('get','/creator/analytics',None,None,False),('get','/creator/earnings',None,None,False),
  ('post','/watch-sessions','watch',None,False),('post','/watch-events','event',None,False),('post','/viewer/preferences','preference',None,False),('post','/assets/upload-grant','upload',None,False),
 ]
@@ -82,11 +83,24 @@ routes.extend([
  ('post','/auth/passkeys/options','empty',None,True),('post','/auth/passkeys/verify','passkey_login','User',True),
  ('get','/profile',None,None,False),('patch','/profile','profile',None,False),
 ])
+requests['preferences']=obj({'captions_enabled':B,'caption_language':S,'autoplay_next':B,'shorts_autoplay':B,'reduce_motion':{'type':'string','enum':['system','reduce','no-preference']},'data_saving':B,'history_enabled':B})
+requests['publication']=obj({'source_asset_id':S,'job_id':S,'title':S,'description':S,'visibility':{'type':'string','enum':['public','unlisted','private']},'audience':{'type':'string','enum':['free','members']},'format':{'type':'string','enum':['standard','short']},'ai_generated':B,'rights_confirmed':B},('title','visibility','audience'))
+requests['progress']=obj({'position_ms':I},('position_ms',))
+requests['video_upload']=obj({'filename':S,'content_type':{'type':'string','enum':['video/mp4','video/webm']},'bytes':{'type':'integer','minimum':1,'maximum':104857600},'checksum':{'type':'string','pattern':'^[a-f0-9]{64}$'},'rights_confirmed':B,'idempotency_key':S},('filename','content_type','bytes','checksum','rights_confirmed','idempotency_key'))
+requests['upload_part']=obj({'part_number':{'type':'integer','minimum':1,'maximum':20}},('part_number',))
+routes.extend([
+ ('get','/settings/preferences',None,None,False),('patch','/settings/preferences','preferences',None,False),
+ ('get','/jobs/{id}/output',None,'MediaAsset',False),('get','/media-assets/{id}',None,'MediaAsset',False),('get','/media-assets/{id}/download',None,None,False),('get','/media-assets/{id}/preview',None,None,False),('post','/publications','publication','Video',False),
+ ('get','/videos/{id}/actions',None,None,True),('get','/videos/{id}/poster',None,None,True),('get','/videos/{id}/related',None,'Video[]',True),('put','/videos/{id}/progress','progress',None,False),('get','/viewer/saved',None,None,False),('get','/viewer/history',None,None,False),('delete','/channels/{id}/follow','empty',None,False),
+ ('get','/video-uploads/options',None,None,False),('post','/video-uploads','video_upload',None,False),('get','/video-uploads/{id}',None,None,False),('post','/video-uploads/{id}/parts','upload_part',None,False),('post','/video-uploads/{id}/complete','empty',None,False),('delete','/video-uploads/{id}','empty',None,False),
+])
+for action in ('save','like'):
+ for method in ('put','delete'):routes.append((method,'/videos/{id}/'+action,'empty',None,False))
 for kind in ('scripts','characters','scenes','assets'):
  base='/projects/{project}/'+kind
  routes.extend([('get',base,None,'StudioEntity[]',False),('post',base,'studio','StudioEntity',False),('patch',base+'/{entity}','studio_patch','StudioEntity',False),('delete',base+'/{entity}',None,None,False)])
 base='/projects/{project}/scenes/{scene}/shots'
-routes.extend([('get',base,None,'StudioEntity[]',False),('post',base,'studio','StudioEntity',False),('patch',base+'/{entity}','studio_patch','StudioEntity',False),('delete',base+'/{entity}',None,None,False),('get','/projects/{project}/export',None,None,False),('post','/projects/import','archive','Project',False),('get','/jobs/{id}/captions',None,None,False),('put','/jobs/{id}/captions','captions',None,False),('delete','/viewer/history',None,None,False),('post','/account/deletion',None,None,False)])
+routes.extend([('get',base,None,'StudioEntity[]',False),('post',base,'studio','StudioEntity',False),('patch',base+'/{entity}','studio_patch','StudioEntity',False),('delete',base+'/{entity}',None,None,False),('get','/projects/{project}/export',None,None,False),('post','/projects/import','archive','Project',False),('get','/jobs/{id}/captions',None,None,False),('put','/jobs/{id}/captions','captions',None,False),('delete','/viewer/history',None,None,False),('post','/account/deletion','reauth',None,False)])
 for kind in ('scenes','shots','characters','assets'):
  base='/projects/{project}/canvas/'+kind
  routes.extend([('get',base,None,None,False),('post',base,'canvas',None,False),('get',base+'/{entity}',None,None,False),('patch',base+'/{entity}','canvas',None,False),('delete',base+'/{entity}',None,None,False)])
@@ -99,12 +113,14 @@ for method,path,body,response,anonymous in routes:
   params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':200 if path in ('/payments/invoices','/premium/checkout','/billing/checkout') else 128}})
  op={'operationId':method+'_'+path.strip('/').replace('/','_').replace('{','').replace('}','').replace('-','_'),'security':[] if anonymous else [{'session':[]}],'parameters':params,'responses':{'200':{'description':'Success'},'400':{'description':'Invalid input'},'401':{'description':'Authentication or authorization required'},'409':{'description':'State conflict'},'503':{'description':'Integration disabled or unavailable'}}}
  if path=='/auth/login':op['responses']['202']={'description':'Second factor required; challenge is not an authenticated session','content':{'application/json':{'schema':obj({'mfa_required':B,'challenge':S,'methods':{'type':'array','items':S}},('mfa_required','challenge','methods'))}}}
- if path=='/feed':op['parameters'].extend([{'name':n,'in':'query','schema':S} for n in ('q','category','filter')])
+
+ if path=='/feed':op['parameters'].extend([{'name':n,'in':'query','schema':S} for n in ('q','category','filter','format','cursor')])
  if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':requests[body]}}}
  if response:
   schema={'$ref':'#/components/schemas/'+response.removesuffix('[]')}
   if response.endswith('[]'):schema={'type':'array','items':schema}
   op['responses']['201' if path=='/auth/register' else '200']={'description':'Success','content':{'application/json':{'schema':schema}}}
+ if path=='/feed':op['responses']['200']={'description':'Legacy array without format/cursor; format-filtered requests return items and next_cursor','content':{'application/json':{'schema':{'oneOf':[{'type':'array','items':{'$ref':'#/components/schemas/Video'}},obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/Video'}},'next_cursor':S},('items','next_cursor'))]}}}}
  if path.endswith('/events'):
   op['responses']['200']={'description':'Authorized job snapshots as resumable progress hints','content':{'text/event-stream':{'schema':S}}}
  if path in ('/memberships/checkout','/creator/membership-plan'):

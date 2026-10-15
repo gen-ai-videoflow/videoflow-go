@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import ts from 'typescript';
+const code=ts.transpileModule(readFileSync(new URL('../src/lib/cloud/viewing/feed-state.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const {appendUnique,adjacentIndex,requestGate}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+assert.deepEqual(appendUnique([{id:'a'}],[{id:'a'},{id:'b'}]).map(v=>v.id),['a','b']);assert.equal(adjacentIndex(0,-1,2),0);assert.equal(adjacentIndex(1,1,2),1);const gate=requestGate();const first=gate.next();const second=gate.next();assert.equal(gate.current(first),false);assert.equal(gate.current(second),true);gate.next();assert.equal(gate.current(second),false);console.log('Feed identity, boundaries and stale-request checks passed');

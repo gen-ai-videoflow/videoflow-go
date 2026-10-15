@@ -158,3 +158,9 @@ variable "billing_enabled" {
   default     = false
   description = "Explicit commercial activation gate; Premium also requires a nonzero reviewed price."
 }
+
+variable "video_uploads_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable file publication only after private storage, validation workers and moderation operations are verified."
+}

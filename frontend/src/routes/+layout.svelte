@@ -1,5 +1,6 @@
 <script lang="ts">
   import '../app.css';
+ import BrandLogo from '$lib/components/BrandLogo.svelte';
   import CloudApp from '$lib/cloud/CloudApp.svelte';
   const cloudMode = import.meta.env.VITE_CLOUD_MODE === 'true';
   import { page } from '$app/state';
@@ -90,7 +91,7 @@
     <a class="shrink-0 rounded-md px-2 py-1.5 text-xs hover:bg-accent" href="/settings">Settings</a>
   </nav>
   <aside class="hidden w-48 shrink-0 flex-col border-r border-border p-3 md:flex">
-    <div class="px-2 pt-3 pb-1 text-sm font-semibold tracking-wide">VideoFlow</div>
+    <div class="px-2 pt-3 pb-1 text-sm font-semibold tracking-wide"><BrandLogo/></div>
     <!-- Current-project row: the entry point to /projects (switch, create, manage). -->
     <a
       href="/projects"

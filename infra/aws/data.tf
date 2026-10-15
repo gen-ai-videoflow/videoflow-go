@@ -151,7 +151,7 @@ resource "aws_s3_bucket_cors_configuration" "uploads" {
   bucket = aws_s3_bucket.media["uploads"].id
   cors_rule {
     allowed_origins = [var.public_origin]
-    allowed_methods = ["POST", "HEAD"]
+    allowed_methods = ["POST", "PUT", "HEAD"]
     allowed_headers = ["*"]
     expose_headers  = ["ETag"]
     max_age_seconds = 300

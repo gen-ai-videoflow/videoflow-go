@@ -45,3 +45,6 @@ electron/payload/
 .env.*
 !.env.example
 !.env.cloud.example
+
+# Local interface review captures (not shipped browser assets)
+.impeccable/review/

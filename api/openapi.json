@@ -1763,18 +1763,55 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Legacy array without format/cursor; format-filtered requests return items and next_cursor",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Video"
-                  }
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Video"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Video"
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "next_cursor"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -2141,6 +2178,34 @@
         }
       }
     },
+    "/channel/videos": {
+      "get": {
+        "operationId": "get_channel_videos",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
     "/channel": {
       "get": {
         "operationId": "get_channel",
@@ -2283,6 +2348,54 @@
           },
           "503": {
             "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_channels_id_follow",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
           }
         }
       }
@@ -3531,6 +3644,1093 @@
                     }
                   }
                 },
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings/preferences": {
+      "get": {
+        "operationId": "get_settings_preferences",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch_settings_preferences",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "captions_enabled": {
+                    "type": "boolean"
+                  },
+                  "caption_language": {
+                    "type": "string"
+                  },
+                  "autoplay_next": {
+                    "type": "boolean"
+                  },
+                  "shorts_autoplay": {
+                    "type": "boolean"
+                  },
+                  "reduce_motion": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "reduce",
+                      "no-preference"
+                    ]
+                  },
+                  "data_saving": {
+                    "type": "boolean"
+                  },
+                  "history_enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/output": {
+      "get": {
+        "operationId": "get_jobs_id_output",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/media-assets/{id}": {
+      "get": {
+        "operationId": "get_media_assets_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/media-assets/{id}/download": {
+      "get": {
+        "operationId": "get_media_assets_id_download",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/media-assets/{id}/preview": {
+      "get": {
+        "operationId": "get_media_assets_id_preview",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/publications": {
+      "post": {
+        "operationId": "post_publications",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source_asset_id": {
+                    "type": "string"
+                  },
+                  "job_id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "unlisted",
+                      "private"
+                    ]
+                  },
+                  "audience": {
+                    "type": "string",
+                    "enum": [
+                      "free",
+                      "members"
+                    ]
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "short"
+                    ]
+                  },
+                  "ai_generated": {
+                    "type": "boolean"
+                  },
+                  "rights_confirmed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "title",
+                  "visibility",
+                  "audience"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos/{id}/actions": {
+      "get": {
+        "operationId": "get_videos_id_actions",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/poster": {
+      "get": {
+        "operationId": "get_videos_id_poster",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/related": {
+      "get": {
+        "operationId": "get_videos_id_related",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Video"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/progress": {
+      "put": {
+        "operationId": "put_videos_id_progress",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "position_ms": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "position_ms"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewer/saved": {
+      "get": {
+        "operationId": "get_viewer_saved",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/viewer/history": {
+      "get": {
+        "operationId": "get_viewer_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_viewer_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/video-uploads/options": {
+      "get": {
+        "operationId": "get_video_uploads_options",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/video-uploads": {
+      "post": {
+        "operationId": "post_video_uploads",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "filename": {
+                    "type": "string"
+                  },
+                  "content_type": {
+                    "type": "string",
+                    "enum": [
+                      "video/mp4",
+                      "video/webm"
+                    ]
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 104857600
+                  },
+                  "checksum": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "rights_confirmed": {
+                    "type": "boolean"
+                  },
+                  "idempotency_key": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "filename",
+                  "content_type",
+                  "bytes",
+                  "checksum",
+                  "rights_confirmed",
+                  "idempotency_key"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/video-uploads/{id}": {
+      "get": {
+        "operationId": "get_video_uploads_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_video_uploads_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/video-uploads/{id}/parts": {
+      "post": {
+        "operationId": "post_video_uploads_id_parts",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "part_number": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  }
+                },
+                "required": [
+                  "part_number"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/video-uploads/{id}/complete": {
+      "post": {
+        "operationId": "post_video_uploads_id_complete",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos/{id}/save": {
+      "put": {
+        "operationId": "put_videos_id_save",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_videos_id_save",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos/{id}/like": {
+      "put": {
+        "operationId": "put_videos_id_like",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_videos_id_like",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
                 "required": []
               }
             }
@@ -5129,34 +6329,6 @@
         }
       }
     },
-    "/viewer/history": {
-      "delete": {
-        "operationId": "delete_viewer_history",
-        "security": [
-          {
-            "session": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Invalid input"
-          },
-          "401": {
-            "description": "Authentication or authorization required"
-          },
-          "409": {
-            "description": "State conflict"
-          },
-          "503": {
-            "description": "Integration disabled or unavailable"
-          }
-        }
-      }
-    },
     "/account/deletion": {
       "post": {
         "operationId": "post_account_deletion",
@@ -5181,6 +6353,28 @@
           },
           "503": {
             "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
           }
         }
       }
@@ -6615,6 +7809,59 @@
       }
     },
     "schemas": {
+      "MediaAsset": {
+        "type": "object",
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "duration_ms": {
+            "type": "integer"
+          },
+          "measured": {
+            "type": "boolean"
+          },
+          "has_audio": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "poster_available": {
+            "type": "boolean"
+          },
+          "captions_available": {
+            "type": "boolean"
+          },
+          "job_status": {
+            "type": "string"
+          }
+        }
+      },
       "AccountSession": {
         "type": "object",
         "properties": {
@@ -6844,6 +8091,27 @@
           },
           "thumbnail_url": {
             "type": "string"
+          },
+          "source_asset_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "ai_generated": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "duration_ms": {
+            "type": "integer"
           }
         }
       },

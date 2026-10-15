@@ -49,9 +49,9 @@ resource "aws_iam_role_policy" "api" {
         Effect = "Allow", Action = ["sqs:SendMessage"], Resource = [for q in aws_sqs_queue.jobs : q.arn]
       },
       {
-        Effect = "Allow", Action = ["s3:PutObject"], Resource = ["${aws_s3_bucket.media["uploads"].arn}/*"]
+        Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"], Resource = ["${aws_s3_bucket.media["uploads"].arn}/*"]
         }, {
-        Effect = "Allow", Action = ["s3:GetObject"], Resource = ["${aws_s3_bucket.media["originals"].arn}/*"]
+        Effect = "Allow", Action = ["s3:GetObject"], Resource = ["${aws_s3_bucket.media["originals"].arn}/*", "${aws_s3_bucket.media["playback"].arn}/posters/*"]
     }]
   })
 }
@@ -63,8 +63,9 @@ resource "aws_iam_role_policy" "worker" {
         Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes", "sqs:SendMessage"], Resource = [for q in aws_sqs_queue.jobs : q.arn]
       },
       {
-        Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"], Resource = [for b in aws_s3_bucket.media : "${b.arn}/*"]
+        Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"], Resource = [for b in aws_s3_bucket.media : "${b.arn}/*"]
       },
+      { Effect = "Allow", Action = ["s3:ListBucketMultipartUploads"], Resource = [aws_s3_bucket.media["uploads"].arn] },
       {
         Effect = "Allow", Action = ["mediaconvert:CreateJob", "mediaconvert:GetJob", "mediaconvert:DescribeEndpoints"], Resource = "*"
       },
@@ -109,6 +110,10 @@ resource "aws_ecs_task_definition" "services" {
         name = "PUBLIC_ORIGIN", value = var.public_origin
         }, {
         name = "S3_BUCKET_ANALYTICS", value = aws_s3_bucket.media["analytics"].id
+        }, {
+        name = "VIDEO_UPLOADS_ENABLED", value = tostring(var.video_uploads_enabled)
+        }, {
+        name = "FFPROBE_PATH", value = "ffprobe"
         }, {
         name = "S3_BUCKET_UPLOADS", value = aws_s3_bucket.media["uploads"].id
         }, {

@@ -82,6 +82,9 @@ func (s *Server) Router() http.Handler {
 		r.Get("/videos", s.feed)
 		r.Get("/search", s.feed)
 		r.Get("/videos/{id}", s.video)
+		r.Get("/videos/{id}/poster", s.videoPoster)
+		r.Get("/videos/{id}/actions", s.videoActions)
+		r.Get("/videos/{id}/related", s.relatedVideos)
 		r.Post("/videos/{id}/playback-grant", s.issuePlayback)
 		r.Get("/channels/{handle}", s.publicChannel)
 		r.Get("/billing/packs", func(w http.ResponseWriter, r *http.Request) {
@@ -90,6 +93,18 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
 			s.profileRoutes(r)
+			r.Get("/viewer/{kind:saved|history}", s.viewerLibrary)
+			r.Put("/videos/{id}/{action:save|like}", s.changeVideoAction)
+			r.Delete("/videos/{id}/{action:save|like}", s.changeVideoAction)
+			r.Put("/videos/{id}/progress", s.saveVideoProgress)
+			r.Get("/video-uploads/options", s.uploadOptions)
+			r.Post("/video-uploads", s.beginVideoUpload)
+			r.Get("/video-uploads/{id}", s.videoUploadStatus)
+			r.Post("/video-uploads/{id}/parts", s.uploadPart)
+			r.Post("/video-uploads/{id}/complete", s.completeVideoUpload)
+			r.Delete("/video-uploads/{id}", s.abortVideoUpload)
+			r.Get("/settings/preferences", s.getPreferences)
+			r.Patch("/settings/preferences", s.patchPreferences)
 			s.studioRoutes(r)
 			s.canvasRoutes(r)
 			s.pipelineRoutes(r)
@@ -125,6 +140,7 @@ func (s *Server) Router() http.Handler {
 				v, e := s.newCryptoInvoice(r.Context(), currentUser(r), "credits", b.PackID, r.Header.Get("Idempotency-Key"))
 				s.result(w, v, e)
 			})
+			r.Get("/channel/videos", s.creatorVideos)
 			r.Post("/watch-sessions", s.beginWatch)
 			r.Post("/watch-events", s.watchEvent)
 			r.Post("/viewer/preferences", s.viewerPreferences)
@@ -141,12 +157,23 @@ func (s *Server) Router() http.Handler {
 			r.Post("/generation/jobs", s.submitJob)
 			r.Post("/jobs/{id}/cancel", s.cancelJob)
 			r.Get("/jobs/{id}/download", s.download)
+			r.Get("/jobs/{id}/output", s.outputDetail)
+			r.Get("/media-assets/{id}/{action:download|preview}", s.assetDownload)
+			r.Get("/media-assets/{id}", func(w http.ResponseWriter, r *http.Request) {
+				a, e := s.Store.ownedAsset(r.Context(), currentUser(r), chi.URLParam(r, "id"))
+				s.result(w, a, e)
+			})
+			r.Post("/publications", s.createPublication)
 			r.Post("/videos", s.createVideo)
 			r.Post("/videos/{id}/publish", s.publishVideo)
 			r.Patch("/videos/{id}", s.updateVideo)
 
 			r.Post("/videos/{id}/report", s.report)
 			r.Post("/channels/{id}/follow", s.follow)
+			r.Delete("/channels/{id}/follow", func(w http.ResponseWriter, r *http.Request) {
+				_, e := s.Store.DB.ExecContext(r.Context(), `DELETE FROM cloud_follows WHERE user_id=$1 AND channel_id=$2`, currentUser(r).ID, chi.URLParam(r, "id"))
+				s.result(w, map[string]bool{"ok": true}, e)
+			})
 			r.Get("/channel", s.channel)
 			r.Patch("/channel", s.updateChannel)
 			r.Get("/creator/analytics", s.analytics)
@@ -537,6 +564,10 @@ func (s *Server) cancelJob(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"ok": true}, s.Store.FinishJob(r.Context(), j.ID, "cancelled", "", "Cancelled before generation"))
 }
 func (s *Server) feed(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("format") != "" || r.URL.Query().Get("cursor") != "" {
+		s.viewingFeed(w, r)
+		return
+	}
 	v, e := s.Store.DiscoveryFeed(r.Context(), s.optionalUser(r), r.URL.Query().Get("q"), r.URL.Query().Get("category"), r.URL.Query().Get("filter"))
 	s.result(w, v, e)
 }
@@ -561,26 +592,49 @@ func (s *Server) publishVideo(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"ok": true}, e)
 }
 func (s *Server) updateVideo(w http.ResponseWriter, r *http.Request) {
-	var b struct {
+	var in struct {
 		Title       string `json:"title"`
 		Description string `json:"description"`
 		Visibility  string `json:"visibility"`
 		Audience    string `json:"audience"`
+		Format      string `json:"format"`
+		AI          *bool  `json:"ai_generated"`
 	}
-	if !s.decode(w, r, &b) {
+	if !s.decode(w, r, &in) {
 		return
 	}
-	if b.Title == "" || len(b.Title) > 180 || len(b.Description) > 5000 || (b.Visibility != "public" && b.Visibility != "unlisted" && b.Visibility != "private") || (b.Audience != "free" && b.Audience != "members") {
+	u := currentUser(r)
+	v, e := s.Store.Video(r.Context(), chi.URLParam(r, "id"), u.ID)
+	if e != nil {
+		s.fail(w, e)
+		return
+	}
+	if v.ChannelID != u.ChannelID {
+		s.fail(w, ErrNotFound)
+		return
+	}
+	if in.Format == "" {
+		in.Format = v.Format
+	}
+	if in.Title == "" || len(in.Title) > 180 || len(in.Description) > 5000 || (in.Visibility != "public" && in.Visibility != "unlisted" && in.Visibility != "private") || (in.Audience != "free" && in.Audience != "members") || (in.Format != "standard" && in.Format != "short") {
 		s.fail(w, ErrValidation)
 		return
 	}
-	res, e := s.Store.DB.ExecContext(r.Context(), `UPDATE cloud_videos SET title=$3,description=$4,visibility=$5,audience=$6 WHERE id=$1 AND channel_id=$2`, chi.URLParam(r, "id"), currentUser(r).ChannelID, b.Title, b.Description, b.Visibility, b.Audience)
-	if e == nil {
-		n, _ := res.RowsAffected()
-		if n == 0 {
-			e = ErrNotFound
+	if in.Format == "short" {
+		a, e := s.Store.ownedAsset(r.Context(), u, v.SourceAssetID)
+		if e != nil || !a.Measured || a.Height <= a.Width || a.DurationMS < 3000 || a.DurationMS > 180000 {
+			s.fail(w, ErrValidation)
+			return
 		}
 	}
+	ai := v.AIGenerated
+	if in.AI != nil {
+		ai = *in.AI
+	}
+	if v.Origin == "generated" {
+		ai = true
+	}
+	_, e = s.Store.DB.ExecContext(r.Context(), `UPDATE cloud_videos SET title=$3,description=$4,visibility=$5,audience=$6,format=$7,ai_generated=$8 WHERE id=$1 AND channel_id=$2`, v.ID, u.ChannelID, in.Title, in.Description, in.Visibility, in.Audience, in.Format, ai)
 	s.result(w, map[string]bool{"ok": true}, e)
 }
 func (s *Server) download(w http.ResponseWriter, r *http.Request) {

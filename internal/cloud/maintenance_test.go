@@ -135,7 +135,7 @@ func TestPrivacyControlsPreserveFinancialFactsAndRevokeSessions(t *testing.T) {
 	if count != 0 {
 		t.Fatal("preferences retained")
 	}
-	request = httptest.NewRequest(http.MethodPost, "/account/deletion", nil).WithContext(context.WithValue(ctx, userContext{}, u))
+	request = httptest.NewRequest(http.MethodPost, "/account/deletion", strings.NewReader(`{"password":"Test-password-123!"}`)).WithContext(context.WithValue(ctx, userContext{}, u))
 	response = httptest.NewRecorder()
 	server.requestAccountDeletion(response, request)
 	if response.Code != 202 {

@@ -79,7 +79,7 @@ func (m *Media) DownloadGrant(ctx context.Context, key string) (string, error) {
 	if m.cfg.OriginalsBucket == "" {
 		return "", errors.New("originals bucket is not configured")
 	}
-	req, err := m.presign.PresignGetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(m.cfg.OriginalsBucket), Key: aws.String(key)}, s3.WithPresignExpires(5*time.Minute))
+	req, err := m.presign.PresignGetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(m.cfg.OriginalsBucket), Key: aws.String(key), ResponseContentDisposition: aws.String(`attachment; filename="video.mp4"`)}, s3.WithPresignExpires(5*time.Minute))
 	if err != nil {
 		return "", err
 	}

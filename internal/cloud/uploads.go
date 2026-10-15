@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"time"
 )
@@ -24,7 +25,7 @@ func (s *Store) ReserveUpload(ctx context.Context, workspace, key string, bytes 
 		return err
 	}
 	var used int64
-	if err = tx.QueryRowContext(ctx, `SELECT COALESCE(sum(bytes),0) FROM cloud_upload_reservations WHERE workspace_id=$1 AND deleted_at IS NULL`, workspace).Scan(&used); err != nil {
+	if err = workspaceUploadBytes(ctx, tx, workspace, &used); err != nil {
 		return err
 	}
 	if used > WorkspaceUploadQuotaBytes-bytes {
@@ -67,4 +68,9 @@ func (s *Server) createUploadGrant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.json(w, 200, grant)
+}
+
+// Both admission paths hold the workspace credit-account lock before counting.
+func workspaceUploadBytes(ctx context.Context, tx *sql.Tx, workspace string, used *int64) error {
+	return tx.QueryRowContext(ctx, `SELECT (SELECT coalesce(sum(bytes),0) FROM cloud_upload_reservations WHERE workspace_id=$1 AND deleted_at IS NULL)+(SELECT coalesce(sum(bytes),0) FROM cloud_video_uploads WHERE workspace_id=$1 AND NOT quota_released)`, workspace).Scan(used)
 }
