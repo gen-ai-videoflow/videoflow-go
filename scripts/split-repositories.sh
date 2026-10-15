@@ -28,7 +28,7 @@ import shutil, sys, json
 src, dst = map(Path, sys.argv[1:])
 ignored = {'.git','.codegraph','.terraform','node_modules','.svelte-kit','build','dist','storage','data','__pycache__','.venv','editor-app'}
 def ignore(directory, names):
-    return [n for n in names if n in ignored or n.startswith('.env') and n not in {'.env.example','.env.cloud.example'} or n.endswith(('.tfstate','.tfstate.backup','.tfplan','.pem','.key')) or n.endswith('.tfvars') and not n.endswith('.tfvars.example')]
+    return [n for n in names if (n in ignored and not str(directory).startswith(str(src/'frontend/editor/src/upstream'))) or n.startswith('.env') and n not in {'.env.example','.env.cloud.example'} or n.endswith(('.tfstate','.tfstate.backup','.tfplan','.pem','.key')) or n.endswith('.tfvars') and not n.endswith('.tfvars.example')]
 shutil.copytree(src/'frontend', dst/'videoflow-web', ignore=ignore, symlinks=True)
 web=dst/'videoflow-web'
 for record in ('PRODUCT.md','DESIGN.md'):
