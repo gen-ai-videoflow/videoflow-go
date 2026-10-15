@@ -42,6 +42,8 @@ for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs',
     source=src/name
     if source.is_dir(): shutil.copytree(source,backend/name,ignore=ignore,symlinks=True)
     elif source.is_file(): shutil.copy2(source,backend/name)
+# Keep the backend contract's shared wire types alongside OpenAPI.
+shutil.copy2(src/'frontend/src/lib/cloud/generated.ts', backend/'api/generated.ts')
 if not (dst/'videoflow-web'/'.dockerignore').exists():
     (dst/'videoflow-web'/'.dockerignore').write_text('.git\n.env*\nnode_modules\n.svelte-kit\nbuild\n')
 web_dockerfile=src/'deploy/Dockerfile.cloud-web'
