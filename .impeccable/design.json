@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-15T14:38:47.149018+00:00",
+  "generatedAt": "2026-10-15T14:47:32.402504+00:00",
   "title": "Design System: VideoFlow",
   "extensions": {
     "colorMeta": {
@@ -243,6 +243,18 @@
       {
         "name": "studio-list-single",
         "value": "600px"
+      },
+      {
+        "name": "viewer-mobile",
+        "value": "650px"
+      },
+      {
+        "name": "viewer-initial-collapse",
+        "value": "1000px"
+      },
+      {
+        "name": "template-review-stack",
+        "value": "1000px"
       }
     ]
   },
@@ -301,6 +313,28 @@
       "description": "One scrollable line-style strip per selected-project workspace; canvas is a separate destination. Editors appear after selection or creation. Transfer controls belong in Project actions.",
       "html": "<nav class=\"ds-resource-tabs\" aria-label=\"Project resources\"><a href=\"#\" aria-current=\"page\">Characters</a><a href=\"#\">Scenes</a><a href=\"#\">Assets</a></nav>",
       "css": ".ds-resource-tabs{display:flex;gap:15px;overflow:auto;padding:16px 0 7px;border-bottom:1px solid var(--border);font-family:var(--font-sans,sans-serif)}.ds-resource-tabs a{flex-shrink:0;font-size:12px;padding:9px 10px;color:var(--muted-foreground);text-decoration:none;position:relative;border:1px solid transparent;border-radius:8px}.ds-resource-tabs a[aria-current=page]{color:var(--accent-foreground)}.ds-resource-tabs a[aria-current=page]::after{content:\"\";position:absolute;left:0;right:0;bottom:-5px;height:2px;background:var(--foreground)}.ds-resource-tabs a:hover{color:var(--foreground)}.ds-resource-tabs a:focus-visible{outline:1px solid var(--ring);border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
+    },
+    {
+      "name": "Viewing rail item",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "Viewing navigation above 650px: 232px expanded or 76px collapsed, 44px expanded rows and 48px collapsed rows. Independent videoflow.viewer.sidebar preference persists; absent a preference, widths at or below 1000px initially collapse. At 650px and below use Discover, Shorts, Following and You bottom navigation. Collapsed links retain accessible labels and titles.",
+      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z\"/><path d=\"M9 21v-9h6v9\"/></svg><span>Discover</span></a>",
+      "css": ".ds-nav{font-family:var(--font-sans,sans-serif);font-size:14px;display:flex;align-items:center;gap:22px;min-height:44px;padding:10px 14px;border-radius:10px;color:var(--foreground);text-decoration:none}.ds-nav svg{flex-shrink:0}.ds-nav:hover{background:var(--muted)}.ds-nav[aria-current=page]{background:var(--muted);font-weight:600}.ds-nav:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Template concept cover",
+      "kind": "custom",
+      "description": "16:9 image-led Explainer, Product story and Short story covers labelled AI concept artwork. Optimized 960px WebP assets and exact prompts are recorded in frontend/static/artwork/provenance.json. These are editable starter concepts, never published videos or generation results. Empty Discover links select the matching /templates?starter= ID. Template creation preserves script, scene and shot import without spending generation credits. At 1000px and below, the template chooser uses a locally scrolling three-card row with 260px minimum card widths and proximity snapping; the structure/form review stacks. Mount and container resize center the selected card within the local row without scrolling the page. Empty Discover starter links instead stack at 650px. At 600px and below the empty introduction uses 20px vertical padding and hides its film icon; the guest action is Explore templates.",
+      "html": "<figure class=\"ds-concept\"><div class=\"ds-concept-image\" role=\"img\" aria-label=\"Template concept cover\"></div><figcaption>AI concept artwork</figcaption></figure>",
+      "css": ".ds-concept{position:relative;margin:0;aspect-ratio:16/9;overflow:hidden;border-radius:12px 12px 0 0;background:var(--muted)}.ds-concept-image{width:100%;height:100%}.ds-concept figcaption{position:absolute;left:10px;bottom:10px;font-family:var(--font-sans,sans-serif);font-size:10px;padding:4px 7px;border-radius:4px;background:#0b0c0be6;color:#ebe9e2}"
+    },
+    {
+      "name": "Viewing search",
+      "kind": "input",
+      "description": "Desktop header search is a labelled 42px form, maximum width 620px. Submit a trimmed encoded query to /search?q=…. The search route retains its own form and hides the header form. At 650px and below the header uses a search link.",
+      "html": "<form class=\"ds-view-search\" role=\"search\"><input type=\"search\" aria-label=\"Search videos\" placeholder=\"Search videos\"><button type=\"submit\" aria-label=\"Search\">Search</button></form>",
+      "css": ".ds-view-search{display:flex;max-width:620px;height:42px;border:1px solid var(--border);border-radius:24px;overflow:hidden}.ds-view-search input{min-width:0;width:100%;padding:0 18px;background:var(--background);color:var(--foreground);font-family:var(--font-sans,sans-serif);font-size:14px;outline-offset:-3px}.ds-view-search button{width:60px;flex-shrink:0;background:var(--muted);color:var(--foreground);border-left:1px solid var(--border)}.ds-view-search button:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
     }
   ],
   "narrative": {
@@ -323,7 +357,8 @@
       "Do use the supplied theme-appropriate logo through BrandLogo.svelte.",
       "Do preserve CJK font fallbacks, visible keyboard focus and distinct error states.",
       "Do preserve media proportions and Studio canvas behavior while using one resource tab strip per project workspace.",
-      "Do keep overview continuation prominent, editors conditional on selection or creation, and project transfer actions inside Project actions."
+      "Do keep overview continuation prominent, editors conditional on selection or creation, and project transfer actions inside Project actions.",
+      "Do label starter covers as AI concept artwork and link empty Discover suggestions to the matching starter parameter; preserve actual published-video thumbnails."
     ],
     "donts": [
       "Don't redraw, recolor or stretch the supplied logo.",
