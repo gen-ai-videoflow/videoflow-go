@@ -1,0 +1,103 @@
+name: Cloud platform checks
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+permissions:
+  contents: read
+concurrency:
+  group: cloud-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.files.outputs.backend }}
+      frontend: ${{ steps.files.outputs.frontend }}
+      standalone_web: ${{ steps.files.outputs.standalone_web }}
+      terraform: ${{ steps.files.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: files
+        shell: bash
+        run: |
+          if [[ -f go.mod && -d internal/cloud ]]; then echo 'backend=true' >> "$GITHUB_OUTPUT"; fi
+          if [[ -f frontend/package-lock.json ]]; then echo 'frontend=true' >> "$GITHUB_OUTPUT"; fi
+          if [[ -f package-lock.json && -f svelte.config.js ]]; then echo 'standalone_web=true' >> "$GITHUB_OUTPUT"; fi
+          if [[ -d infra/aws ]]; then echo 'terraform=true' >> "$GITHUB_OUTPUT"; fi
+  backend:
+    needs: detect
+    if: needs.detect.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: videoflow
+          POSTGRES_USER: videoflow
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U videoflow -d videoflow" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      CLOUD_TEST_DATABASE_URL: postgres://videoflow:ci-only-password@127.0.0.1:5432/videoflow?sslmode=disable
+      CLOUD_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache: true
+      - run: go test -race ./internal/cloud ./cmd/cloud ./cmd/cloud-worker ./cmd/cloud-admin
+      - run: go test ./...
+      - run: go vet ./internal/cloud ./cmd/cloud ./cmd/cloud-worker ./cmd/cloud-admin
+      - name: Validate source extraction
+        run: |
+          bash -n scripts/split-repositories.sh
+          scripts/split-repositories.sh
+          if [[ -d frontend ]]; then scripts/split-repositories.sh --output "$RUNNER_TEMP/extracted"; fi
+      - name: Build cloud API image
+        run: docker build -f deploy/Dockerfile.cloud -t videoflow-cloud:ci .
+      - name: Build cloud worker image
+        run: docker build -f deploy/Dockerfile.cloud-worker -t videoflow-worker:ci .
+  web:
+    needs: detect
+    if: needs.detect.outputs.frontend == 'true' || needs.detect.outputs.standalone_web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check and build desktop and cloud modes
+        shell: bash
+        run: |
+          if [[ -f frontend/package-lock.json ]]; then cd frontend; fi
+          npm ci
+          npm run check
+          VITE_CLOUD_MODE=false npm run build
+          VITE_CLOUD_MODE=true VITE_CLOUD_API_BASE=/api/v1 npm run build
+      - name: Build cloud SSR image
+        if: needs.detect.outputs.frontend == 'true'
+        run: docker build -f deploy/Dockerfile.cloud-web -t videoflow-web:ci .
+      - name: Build extracted web image
+        if: needs.detect.outputs.standalone_web == 'true'
+        run: docker build -t videoflow-web:ci .
+  terraform:
+    needs: detect
+    if: needs.detect.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.14.0'
+      - run: terraform -chdir=infra/aws fmt -check -recursive
+      - run: terraform -chdir=infra/aws init -backend=false -input=false
+      - run: terraform -chdir=infra/aws validate

@@ -131,3 +131,11 @@ Explore the complete guide to using VideoFlow Go in the [`handbook/`](handbook/R
 ## Desktop app and web deployment
 
 Electron packaging reuses the Go backend and Svelte interface, bundling the media tools for desktop users. Separate frontend/backend containers remain available for web deployment. See [Electron and web build instructions](docs/ELECTRON-AND-WEB.md). The Electron workflow builds macOS and Linux installers for Intel and ARM processors.
+
+## Cloud SaaS development
+
+The AWS SaaS application has separate PostgreSQL API, worker and operator commands, plus a SvelteKit/shadcn-svelte web interface. It does not expose the desktop server's global SQLite routes to cloud users. See [cloud deployment instructions](docs/CLOUD-DEPLOYMENT.md), [implementation status](docs/CLOUD-IMPLEMENTATION.md), and the [platform specification](docs/superpowers/specs/2026-10-15-cloud-saas-platform-design.md).
+
+Start local dependencies with `docker compose --env-file .env.cloud -f compose.cloud.yml up -d` after copying `.env.cloud.example` to `.env.cloud`. Add `--profile app up --build` to run the cloud applications. Credits start at zero; external generation, payments and payouts require explicitly configured services and spending policies. Existing desktop commands remain unchanged.
+
+Use `scripts/split-repositories.sh --output NEW_DIRECTORY` to create independent local `videoflow-web` and `videoflow-api` source repositories without deleting this repository or pushing to GitHub.

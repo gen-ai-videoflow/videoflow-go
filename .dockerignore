@@ -11,3 +11,9 @@ electron/payload
 storage
 **/*.sqlite*
 __pycache__
+**/.terraform
+**/*.tfstate*
+**/*.tfplan
+**/*.tfvars
+**/*.pem
+**/*.key

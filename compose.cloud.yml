@@ -1,0 +1,88 @@
+name: videoflow-cloud
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: videoflow
+      POSTGRES_USER: videoflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["cloud-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U videoflow -d videoflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  localstack:
+    image: localstack/localstack:4
+    environment:
+      SERVICES: s3,sqs
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-southeast-1}
+    ports: ["127.0.0.1:4566:4566"]
+    healthcheck:
+      test: ["CMD", "awslocal", "sqs", "list-queues"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  init-aws:
+    image: amazon/aws-cli:2.31.0
+    depends_on:
+      localstack: {condition: service_healthy}
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-southeast-1}
+      AWS_ENDPOINT_URL: http://localstack:4566
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        aws s3api head-bucket --bucket videoflow-local-originals 2>/dev/null || aws s3 mb s3://videoflow-local-originals
+        aws s3api head-bucket --bucket videoflow-local-playback 2>/dev/null || aws s3 mb s3://videoflow-local-playback
+        aws s3api head-bucket --bucket videoflow-local-uploads 2>/dev/null || aws s3 mb s3://videoflow-local-uploads
+        aws s3api head-bucket --bucket videoflow-local-analytics 2>/dev/null || aws s3 mb s3://videoflow-local-analytics
+        aws sqs create-queue --queue-name videoflow-local-encoding
+        dlq=$$(aws sqs create-queue --queue-name videoflow-local-generation-dlq --query QueueUrl --output text)
+        arn=$$(aws sqs get-queue-attributes --queue-url "$$dlq" --attribute-names QueueArn --query Attributes.QueueArn --output text)
+        aws sqs create-queue --queue-name videoflow-local-generation --attributes "{\"VisibilityTimeout\":\"300\",\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$$arn\\\",\\\"maxReceiveCount\\\":\\\"5\\\"}\"}"
+  api:
+    profiles: [app]
+    build: {context: ., dockerfile: deploy/Dockerfile.cloud}
+    env_file: .env.cloud
+    environment: {PORT: "8080"}
+    ports: ["127.0.0.1:8081:8080"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      init-aws: {condition: service_completed_successfully}
+  worker:
+    profiles: [app]
+    build: {context: ., dockerfile: deploy/Dockerfile.cloud-worker}
+    env_file: .env.cloud
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      init-aws: {condition: service_completed_successfully}
+  web:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.cloud-web
+      args:
+        VITE_CLOUD_MODE: "true"
+        VITE_CLOUD_API_BASE: http://localhost:8081/v1
+    environment:
+      CLOUD_API_INTERNAL_URL: http://api:8080/v1
+      ORIGIN: http://localhost:8080
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on: [api]
+volumes:
+  cloud-postgres:

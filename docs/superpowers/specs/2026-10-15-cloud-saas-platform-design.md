@@ -1,7 +1,7 @@
 # VideoFlow Cloud SaaS Platform Specification
 
 Date: 2026-10-15
-Status: Proposed specification for review; implementation has not started.
+Status: Architecture accepted for implementation. Delivered coverage and remaining work are tracked in [implementation status](../../CLOUD-IMPLEMENTATION.md).
 Scope: Product architecture, repository separation, AWS deployment, data ownership, Redis usage, and phased delivery.
 
 ## 1. Intent and agreed constraints

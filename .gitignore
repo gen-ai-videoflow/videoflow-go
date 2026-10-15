@@ -40,3 +40,8 @@ __pycache__/
 # Electron build dependencies and native payload
 electron/node_modules/
 electron/payload/
+
+# Cloud runtime secrets
+.env.*
+!.env.example
+!.env.cloud.example

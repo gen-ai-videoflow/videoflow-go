@@ -1,0 +1,18 @@
+FROM node:24-alpine AS build
+WORKDIR /src
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+ARG VITE_CLOUD_MODE=true
+ARG VITE_CLOUD_API_BASE=/api/v1
+ENV VITE_CLOUD_MODE=$VITE_CLOUD_MODE VITE_CLOUD_API_BASE=$VITE_CLOUD_API_BASE
+RUN npm run build
+FROM node:24-alpine
+WORKDIR /app
+ENV NODE_ENV=production PORT=8080 HOST=0.0.0.0
+COPY --from=build --chown=node:node /src/build ./build
+COPY --from=build --chown=node:node /src/node_modules ./node_modules
+COPY --from=build --chown=node:node /src/package.json ./package.json
+USER node
+EXPOSE 8080
+CMD ["node", "build/index.js"]

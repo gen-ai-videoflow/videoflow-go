@@ -1,0 +1,36 @@
+# Copy locally and fill actual ARNs; never enter secret values.
+region = "ap-southeast-1"
+environment = "staging"
+image_tag = "replace-with-immutable-release-tag"
+public_origin = "https://studio.example.com"
+web_domain = "studio.example.com"
+media_domain = "media.example.com"
+alb_origin_domain = "origin.example.com"
+alb_certificate_arn = "arn:aws:acm:ap-southeast-1:123456789012:certificate/REPLACE"
+# us-east-1 certificate covering BOTH web_domain and media_domain.
+edge_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE"
+cloudfront_public_key_pem = <<-PEM
+-----BEGIN PUBLIC KEY-----
+REPLACE_WITH_RSA_PUBLIC_KEY
+-----END PUBLIC KEY-----
+PEM
+redis_auth_secret_arn = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:redis-auth-REPLACE"
+secret_arns = {
+ DATABASE_URL = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:database-url-REPLACE"
+ REDIS_URL = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:redis-url-REPLACE"
+ STRIPE_SECRET_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-key-REPLACE"
+ STRIPE_WEBHOOK_SECRET = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-webhook-REPLACE"
+ OPENROUTER_API_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:openrouter-REPLACE"
+ CLOUDFRONT_PRIVATE_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:playback-signing-REPLACE"
+}
+budget_email = "operations@example.com"
+monthly_budget_usd = 500
+multi_az = false
+
+# Default spend guard blocks paid provider submissions. Set only after approval.
+provider_daily_budget_micros = 0
+provider_max_cost_micros = 0
+openrouter_video_model = ""
+# Pre-verified SES email/domain identity; blank leaves SES IAM grant absent.
+ses_identity = ""
+ses_from = ""
