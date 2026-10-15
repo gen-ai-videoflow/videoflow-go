@@ -1,5 +1,7 @@
 <script lang="ts">
   import '../app.css';
+  import CloudApp from '$lib/cloud/CloudApp.svelte';
+  const cloudMode = import.meta.env.VITE_CLOUD_MODE === 'true';
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import {
@@ -26,6 +28,7 @@
   let activeProject: any = $state(null);
 
   onMount(() => {
+    if (cloudMode) return;
     initActivity();
     // ModeWatcher-style: keep <html> in sync with the saved theme preference
     // (the Settings appearance toggle writes localStorage['videoflow.theme']).
@@ -36,6 +39,7 @@
 
   $effect(() => {
     // SvelteKit soft navigation reuses the root layout after project activation.
+    if (cloudMode) return;
     const path = page.url.pathname;
     void path;
     get('/projects/active').then((p) => (activeProject = p)).catch(() => {});
@@ -71,6 +75,9 @@
   }
 </script>
 
+{#if cloudMode}
+  <CloudApp />
+{:else}
 <div class="flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
   <nav aria-label="Primary" class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-2 py-1.5 md:hidden">
     <a class="shrink-0 rounded-md px-2 py-1.5 text-xs font-medium hover:bg-accent" href="/projects" title={activeProject?.name ?? 'Projects'}>{activeProject?.name ?? 'Projects'}</a>
@@ -164,7 +171,7 @@
   </main>
 </div>
 
-<svelte:window onkeydown={onKeydown} />
+
 
 <!-- Single app-wide palette instance. Studio-only callbacks are read from the
   store (set by the Studio page on mount); off Studio they are undefined and
@@ -176,3 +183,7 @@
 />
 
 <Toaster richColors />
+
+{/if}
+
+<svelte:window onkeydown={(e) => { if (!cloudMode) onKeydown(e); }} />
