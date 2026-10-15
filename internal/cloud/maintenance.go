@@ -194,6 +194,10 @@ func (w *Worker) cleanupExpiredOperationalRows(ctx context.Context) error {
 	if e != nil {
 		return e
 	}
+	_, e = tx.ExecContext(ctx, `DELETE FROM cloud_sessions WHERE id IN (SELECT id FROM cloud_sessions WHERE expires_at<now() OR last_seen_at<now()-interval '7 days' LIMIT 5000)`)
+	if e != nil {
+		return e
+	}
 	_, e = tx.ExecContext(ctx, `DELETE FROM cloud_auth_challenges WHERE token_hash IN (SELECT token_hash FROM cloud_auth_challenges WHERE expires_at<now() LIMIT 5000)`)
 	if e != nil {
 		return e

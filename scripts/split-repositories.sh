@@ -31,6 +31,8 @@ def ignore(directory, names):
     return [n for n in names if n in ignored or n.startswith('.env') and n not in {'.env.example','.env.cloud.example'} or n.endswith(('.tfstate','.tfstate.backup','.tfplan','.pem','.key')) or n.endswith('.tfvars') and not n.endswith('.tfvars.example')]
 shutil.copytree(src/'frontend', dst/'videoflow-web', ignore=ignore, symlinks=True)
 web=dst/'videoflow-web'
+if (src/'docs/launch').is_dir():
+    shutil.copytree(src/'docs/launch', web/'docs/launch', dirs_exist_ok=True)
 package=json.loads((web/'package.json').read_text())
 for name in ('dev','build','check'):
     package['scripts'][name]='VITE_CLOUD_MODE=true '+package['scripts'][name]

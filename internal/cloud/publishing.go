@@ -45,7 +45,7 @@ func (s *Store) Videos(ctx context.Context, channel string, owner bool) ([]Video
 	if owner {
 		filter = "c.id=$1"
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+videoCols+` FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE `+filter+` ORDER BY v.created_at DESC LIMIT 60`, args...)
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+videoCols+` FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE `+filter+` ORDER BY (v.id=c.featured_video_id) DESC,v.created_at DESC LIMIT 60`, args...)
 	if err != nil {
 		return nil, err
 	}

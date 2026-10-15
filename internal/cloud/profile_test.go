@@ -110,6 +110,17 @@ func TestProfileHidesPrivateAndUnlistedVideos(t *testing.T) {
 	if _, e = store.DB.ExecContext(ctx, `UPDATE cloud_channels SET featured_video_id=$2 WHERE id=$1`, u.ChannelID, published); e != nil {
 		t.Fatal(e)
 	}
+	// Featured order follows the profile selection rather than creation time.
+	if _, e = store.DB.ExecContext(ctx, `UPDATE cloud_videos SET created_at=now()-interval '90 days' WHERE id=$1`, published); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = store.DB.ExecContext(ctx, `UPDATE cloud_videos SET visibility='public' WHERE channel_id=$1 AND visibility='unlisted'`, u.ChannelID); e != nil {
+		t.Fatal(e)
+	}
+	videos, e = store.Videos(ctx, u.ChannelID, false)
+	if e != nil || len(videos) != 2 || videos[0].ID != published {
+		t.Fatalf("feature order: %#v %v", videos, e)
+	}
 	if _, e = store.DB.ExecContext(ctx, `UPDATE cloud_videos SET visibility='private' WHERE id=$1`, published); e != nil {
 		t.Fatal(e)
 	}

@@ -75,6 +75,9 @@ func (s *Server) securityRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireUser, s.mutationLimits)
 		r.Get("/security", s.securityStatus)
+		r.Get("/security/sessions", s.listSessions)
+		r.Delete("/security/sessions/{id}", s.revokeSession)
+		r.Post("/security/sessions/revoke-others", s.revokeOtherSessions)
 		r.Post("/security/totp/begin", s.totpBegin)
 		r.Post("/security/totp/confirm", s.totpConfirm)
 		r.Post("/security/totp/disable", s.totpDisable)

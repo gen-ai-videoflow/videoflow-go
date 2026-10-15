@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 schemas={
+ 'AccountSession':{'id':'string','created_at':'string','last_seen_at':'string','expires_at':'string','current':'boolean'},
  'PaymentInvoice':{'id':'string','purpose':'string','status':'string','address':'string','network':'string','token':'string','token_address':'string','amount':'string','amount_net':'string','fee_amount':'string','price_cents':'integer','pack_id':'string','credits':'integer','expires_at':'string','created_at':'string'},
  'User':{'id':'string','email':'string','name':'string','workspace_id':'string','channel_id':'string','handle':'string','verified':'boolean'},
  'Project':{'id':'string','workspace_id':'string','name':'string','description':'string','created_at':'string'},
@@ -75,7 +76,7 @@ requests['passkey_register']=obj({'challenge':S,'credential':{'type':'object'},'
 requests['passkey_login']=obj({'challenge':S,'credential':{'type':'object'}},('challenge','credential'))
 requests['profile']=obj({'name':S,'bio':S,'description':S,'location':S,'website':S,'avatar_url':S,'banner_url':S,'featured_video_id':S,'social_links':{'type':'array','items':obj({'label':S,'url':S},('label','url'))}})
 routes.extend([
- ('get','/security',None,None,False),('post','/auth/mfa','mfa','User',True),
+ ('get','/security',None,None,False),('get','/security/sessions',None,'AccountSession[]',False),('delete','/security/sessions/{id}','empty',None,False),('post','/security/sessions/revoke-others','empty',None,False),('post','/auth/mfa','mfa','User',True),
  ('post','/security/totp/begin','reauth',None,False),('post','/security/totp/confirm','totp_confirm',None,False),('post','/security/totp/disable','reauth',None,False),
  ('post','/security/passkeys/register/options','reauth',None,False),('post','/security/passkeys/register/verify','passkey_register',None,False),('delete','/security/passkeys/{id}','reauth',None,False),
  ('post','/auth/passkeys/options','empty',None,True),('post','/auth/passkeys/verify','passkey_login','User',True),

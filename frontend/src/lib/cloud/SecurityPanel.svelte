@@ -6,6 +6,7 @@
   import { ShieldCheck, KeyRound, Smartphone, LoaderCircle, Copy, RefreshCw } from '@lucide/svelte';
   import { request } from './api';
   import { createPasskey } from './webauthn';
+  import SessionManager from './SessionManager.svelte';
   interface Key {id:string;name:string;created_at:string}
   interface State {totp_available:boolean;totp_enabled:boolean;passkeys:Key[];recovery_codes_remaining:number;mfa_required:boolean}
   let securityState=$state<State|null>(null);let loading=$state(true);let busy=$state(false);let error=$state('');let notice=$state('');let password=$state('');let code=$state('');let setup=$state<{secret:string;otpauth_url:string}|null>(null);let setupCode=$state('');let qr=$state('');let recoveryCodes=$state<string[]>([]);let keyName=$state('');
@@ -33,6 +34,7 @@
     <section class="security-section"><div class="security-heading"><KeyRound class="size-5"/><div><h2>Passkeys</h2><p>Use your device’s fingerprint, face verification, PIN or security key. VideoFlow never receives your private key.</p></div></div><p class="security-help">Once a passkey is added, password sign-in also needs an enrolled second factor. Keep another passkey or an authenticator with saved recovery codes so you can recover access.</p>
       <div class="passkey-list">{#each securityState.passkeys||[] as key}<div class="passkey-row"><KeyRound class="size-4"/><div><strong>{key.name||'Passkey'}</strong><small>Added {new Date(key.created_at).toLocaleDateString()}</small></div><Button variant="outline" size="sm" disabled={busy||!password||(securityState.totp_enabled&&!securityState.passkeys.length&&!code)} onclick={()=>remove(key.id)}>Remove</Button></div>{:else}<p class="security-help">No passkeys added yet.</p>{/each}</div><Label for="passkey-name">Passkey name</Label><Input id="passkey-name" bind:value={keyName} maxlength={80} placeholder="For example, personal laptop" disabled={busy}/><div class="security-actions"><Button disabled={busy||!password||(securityState.totp_enabled&&!securityState.passkeys.length&&!code)} onclick={addPasskey}>{#if busy}<LoaderCircle class="size-4 animate-spin"/>{:else}<KeyRound class="size-4"/>{/if}Add a passkey</Button><Button variant="ghost" disabled={busy} onclick={load}><RefreshCw class="size-4"/>Refresh settings</Button></div>
     </section>
+    <SessionManager/>
   {/if}
 </div>
 <style>

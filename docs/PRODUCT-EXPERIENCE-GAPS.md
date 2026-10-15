@@ -4,8 +4,8 @@ The payment execution checklist is distinct from the wider product roadmap. The 
 
 | Area | Implemented locally | Further product work |
 | --- | --- | --- |
-| Account/authentication | shadcn login-02/signup-02 layout, application-owned credentials, email verification/recovery tokens, session expiry/revocation, origin protection, request limits, safe post-login destination, encrypted TOTP/recovery codes, WebAuthn passkeys, shared recovery/MFA layouts | User-visible session/device management, deeper abuse controls and delivered-email verification in a real environment; do not describe the module as perfect |
-| Public creator profile | Editable avatar/banner/bio/location/HTTPS links, true public counts, published public videos, persistent follows, official user-profile1 Svelte layout and Premium gating | Collections and user-visible pinned/featured video controls |
+| Account/authentication | shadcn login-02/signup-02 layout, application-owned credentials, email verification/recovery tokens, session expiry/revocation, origin protection, request limits, safe post-login destination, encrypted TOTP/recovery codes, WebAuthn passkeys, shared recovery/MFA layouts, active session review/revocation and expired-session cleanup | Device naming/recognition, deeper abuse controls and delivered-email verification in a real environment; do not describe the module as perfect |
+| Public creator profile | Editable avatar/banner/bio/location/HTTPS links, true public counts, published public videos, persistent follows, official user-profile1 Svelte layout, featured public-video selection and Premium gating | Collections |
 | Creator management | Original project canvas, templates, generation quotes/jobs, publishing privacy/audience settings, basic analytics/earnings | A focused content-management dashboard, scheduled publication, comments/moderation workflow and deeper analytics |
 | Discover | Default Discover viewer navigation, Following and video search, separate Studio tools, public channel/watch routes and protected playback | Richer recommendation controls, watch-next and continue-watching surfaces |
 | Short-form viewing | Short video outputs can be published through the normal video path | Dedicated vertical swipe/keyboard Shorts feed, autoplay/mute controls, lifecycle/accessibility controls and format-aware recommendations |
@@ -16,3 +16,7 @@ Recommended information architecture: **Discover** for general browsing, **Short
 ## Security verification limits
 
 Automated verification includes real signed ES256 WebAuthn software-authenticator fixtures, origin/user-verification/counter checks, MFA/recovery replay and restricted PostgreSQL runtime grants. A physical/platform authenticator enrollment still needs a compatible device/browser check; automated fixtures are not a claim of hardware testing. Delivered email and deployed media/load checks remain external environment gates. AWS and live payments remain disabled/deferred.
+
+## Launch preparation
+
+Reviewable messaging, a demo script, social/outreach drafts and the first-month checklist are in `docs/launch/LAUNCH-CONTENT.md`. These are prepared materials, not sent outreach or a claim of a public production launch.
