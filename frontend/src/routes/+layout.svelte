@@ -28,7 +28,7 @@
   let activeProject: any = $state(null);
 
   onMount(() => {
-    if (cloudMode) return;
+    if (cloudMode) return watchTheme();
     initActivity();
     // ModeWatcher-style: keep <html> in sync with the saved theme preference
     // (the Settings appearance toggle writes localStorage['videoflow.theme']).
@@ -182,8 +182,9 @@
   onnewstory={() => palette.handlers.onnewstory?.()}
 />
 
-<Toaster richColors />
+
 
 {/if}
+<Toaster richColors />
 
 <svelte:window onkeydown={(e) => { if (!cloudMode) onKeydown(e); }} />

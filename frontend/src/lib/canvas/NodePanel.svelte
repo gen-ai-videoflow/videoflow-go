@@ -13,6 +13,14 @@
 
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { request } from '$lib/cloud/api';
+  const cloudMode = import.meta.env.VITE_CLOUD_MODE === 'true';
+  let downloadError = $state('');
+  async function downloadCloudOutput() {
+    downloadError = '';
+    try { const result = await request(`/jobs/${encodeURIComponent(String(data.job_id || data.render_job_id || ''))}/download`); window.open(result.url, '_blank', 'noopener,noreferrer'); }
+    catch (e) { downloadError = (e as Error).message; }
+  }
   import type { Node } from '@xyflow/svelte';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
@@ -105,7 +113,7 @@
     } else {
       form = {};
     }
-    if (shown && String(d.kind) === 'output') void loadCaptionConfig();
+    if (!cloudMode && shown && String(d.kind) === 'output') void loadCaptionConfig();
   });
 
   // Close requested via Escape or the X button. Dirty edits get a confirm;
@@ -370,12 +378,12 @@
             <Input id="np-aspect" bind:value={form.aspect_ratio} oninput={markFormDirty} />
           </div>
         </div>
-        <div class="flex gap-2">
+        {#if !cloudMode}<div class="flex gap-2">
           <Input placeholder="Tell AI what to change…" bind:value={refineInstruction} />
           <Button variant="outline" onclick={refine} disabled={refining || !refineInstruction.trim()}>
             <Sparkles class="size-4 mr-1" />{refining ? 'Refining…' : 'AI refine'}
           </Button>
-        </div>
+        </div>{/if}
         <div class="flex items-center gap-2">
           <Button class="flex-1" onclick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
           {#if formDirty}
@@ -405,18 +413,22 @@
           <Label for="np-movement">Movement</Label>
           <Input id="np-movement" bind:value={form.movement} oninput={markFormDirty} />
         </div>
-        <div class="flex gap-2">
+        {#if !cloudMode}<div class="flex gap-2">
           <Input placeholder="Tell AI what to change…" bind:value={refineInstruction} />
           <Button variant="outline" onclick={refine} disabled={refining || !refineInstruction.trim()}>
             <Sparkles class="size-4 mr-1" />{refining ? 'Refining…' : 'AI refine'}
           </Button>
-        </div>
+        </div>{/if}
         <div class="flex items-center gap-2">
           <Button class="flex-1" onclick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
           {#if formDirty}
             <Badge variant="outline" class="text-muted-foreground">unsaved</Badge>
           {/if}
         </div>
+      {:else if kind === 'output' && cloudMode}
+        <p class="text-sm text-muted-foreground">Your completed video is stored privately. Download it with a temporary authorized link.</p>
+        <Button onclick={downloadCloudOutput}>Download video</Button>
+        {#if downloadError}<p class="text-sm text-destructive" role="alert">{downloadError}</p>{/if}
       {:else if kind === 'output'}
         {#if videoSrc}
           <!-- svelte-ignore a11y_media_has_caption -->
@@ -503,7 +515,7 @@
         <p class="text-sm">{data.label}</p>
       {/if}
 
-      {#if kind === 'scene' || kind === 'shot'}
+      {#if !cloudMode && (kind === 'scene' || kind === 'shot')}
         <div class="grid gap-2 border-t border-border pt-3">
           <Button variant="ghost" size="sm" class="justify-start" onclick={toggleHistory}>
             <History class="size-4 mr-1" />

@@ -65,10 +65,13 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	if _, e = runtimeStore.DB.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id)VALUES('test','dispute_probe',$1)`, role); e != nil {
 		t.Fatalf("append-only audit insert: %v", e)
 	}
-	for _, query := range []string{`UPDATE cloud_credit_entries SET amount=0 WHERE false`, `DELETE FROM cloud_credit_postings WHERE false`, `UPDATE cloud_money_postings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_earnings WHERE false`, `UPDATE cloud_earnings SET amount_cents=0 WHERE false`} {
+	for _, query := range []string{`UPDATE cloud_credit_entries SET amount=0 WHERE false`, `DELETE FROM cloud_credit_postings WHERE false`, `UPDATE cloud_money_postings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_earnings WHERE false`, `UPDATE cloud_earnings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_premium_refunds WHERE false`, `UPDATE cloud_premium_invoices SET gross_cents=0 WHERE false`, `DELETE FROM cloud_premium_invoices WHERE false`} {
 		if _, e = runtimeStore.DB.ExecContext(ctx, query); e == nil {
 			t.Fatalf("journal mutation allowed: %s", query)
 		}
+	}
+	if _, e = runtimeStore.DB.ExecContext(ctx, `UPDATE cloud_premium_invoices SET refunded_cents=0 WHERE false`); e != nil {
+		t.Fatalf("Premium refund update denied: %v", e)
 	}
 	purchaseID := "role-purchase-" + role
 	if _, e = store.DB.ExecContext(ctx, `INSERT INTO cloud_purchases(id,workspace_id,pack_id,credits,price_cents,currency,status,payment_intent,idempotency_key)VALUES($1,$2,'test',100,1000,'usd','paid',$3,$1)`, purchaseID, user.WorkspaceID, "pi_"+role); e != nil {

@@ -143,3 +143,18 @@ variable "runtime_database_password_secret_arn" {
   default     = ""
   description = "Optional password secret for explicitly provisioning the restricted database role."
 }
+
+variable "premium_price_cents" {
+  type    = number
+  default = 0
+  validation {
+    condition     = var.premium_price_cents == 0 || (var.premium_price_cents >= 100 && var.premium_price_cents <= 100000 && floor(var.premium_price_cents) == var.premium_price_cents)
+    error_message = "Premium monthly USD price must be 0 (disabled) or 100..100000 cents."
+  }
+}
+
+variable "billing_enabled" {
+  type        = bool
+  default     = false
+  description = "Explicit commercial activation gate; Premium also requires a nonzero reviewed price."
+}

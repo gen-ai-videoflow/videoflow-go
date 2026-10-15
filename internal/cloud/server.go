@@ -67,6 +67,7 @@ func (s *Server) Router() http.Handler {
 	r.Post("/v1/webhooks/stripe", s.paymentWebhook)
 	r.Get("/authorize", s.authorizeMedia)
 	r.Route("/v1", func(r chi.Router) {
+		s.premiumRoutes(r)
 		r.Post("/auth/register", s.register)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/logout", s.auth(s.logout))
@@ -86,6 +87,7 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
 			s.studioRoutes(r)
+			s.canvasRoutes(r)
 			s.pipelineRoutes(r)
 			r.Delete("/viewer/history", s.clearHistory)
 			r.Post("/account/deletion", s.requestAccountDeletion)

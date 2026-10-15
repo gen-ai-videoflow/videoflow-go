@@ -1,3 +1,5 @@
+> Current product decision: new recurring sales are platform-wide Premium (`BILLING_ENABLED` plus reviewed `PREMIUM_PRICE_CENTS`), not per-channel memberships. See [Premium](PREMIUM.md). Legacy membership settings/records remain only for reconciliation. The original VideoFlow canvas/sidebar and shadcn login-02/signup-02 layouts are the cloud interface.
+
 # Cloud development and AWS deployment
 
 The cloud binaries are separate from the SQLite desktop/local server. Infrastructure is a staging foundation, not evidence of production readiness. Nothing in these scripts applies Terraform, deletes the source repository, or enables payments automatically.

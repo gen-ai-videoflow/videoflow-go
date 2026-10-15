@@ -163,12 +163,15 @@ func provisionRuntimeRole(ctx context.Context, store *cloud.Store, role, passwor
 	for _, table := range tables {
 		privileges := "SELECT,INSERT,UPDATE,DELETE"
 		switch table {
-		case "cloud_credit_entries", "cloud_credit_postings", "cloud_money_postings", "cloud_earnings":
+		case "cloud_credit_entries", "cloud_credit_postings", "cloud_money_postings", "cloud_earnings", "cloud_premium_refunds", "cloud_premium_invoices":
 			privileges = "SELECT,INSERT"
 		}
 		if _, e = tx.ExecContext(ctx, `GRANT `+privileges+` ON public.`+quoteIdentifier(table)+` TO `+quoteIdentifier(role)); e != nil {
 			return e
 		}
+	}
+	if _, e = tx.ExecContext(ctx, `GRANT UPDATE(refunded_cents) ON public.cloud_premium_invoices TO `+quoteIdentifier(role)); e != nil {
+		return e
 	}
 	// Webhook dispute audits are append-only. Financial operators use a separate login.
 	if _, e = tx.ExecContext(ctx, `GRANT INSERT ON public.cloud_admin_audit TO `+quoteIdentifier(role)); e != nil {

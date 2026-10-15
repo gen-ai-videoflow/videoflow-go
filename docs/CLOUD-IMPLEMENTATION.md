@@ -5,7 +5,7 @@ This branch implements an initial SaaS application, not a completed production l
 ## Implemented
 
 - Separate PostgreSQL cloud API, background worker, and audited operator CLI; existing desktop server remains separate.
-- SvelteKit cloud mode with existing shadcn-svelte, public SSR metadata, same-origin API gateway, responsive navigation, account recovery, projects, credit purchases, generation quotes/jobs, channels, publishing, memberships, earnings and credentialed HLS playback.
+- SvelteKit cloud mode reuses the original interactive entity canvas, original sidebar/theme and resizable canvas/assistant layout. Full-page login-02/signup-02 layouts use existing shadcn-svelte components. Cloud-only adapters connect the original canvas to project-scoped PostgreSQL data; account recovery, credits, jobs, channels, public discovery, Premium and protected HLS remain available.
 - Application-owned Argon2id credentials, opaque hashed sessions, verification/recovery tokens, expiry/revocation, origin checks and Redis-backed sensitive request admission. No Cognito.
 - Durable launch quotas: 100 projects and 500 total studio entities per workspace, including archive imports.
 - Workspace ownership checks; the cloud server never mounts unscoped legacy routes or local storage.
@@ -18,14 +18,14 @@ This branch implements an initial SaaS application, not a completed production l
 - Explicit operator migrations and runtime-role provisioning. Production API/worker startup checks schema compatibility and rejects elevated/owner database credentials. Runtime cannot change schema or mutate journal history; financial operator tables remain separate.
 - Size/type-bound quarantine uploads with verified-user checks and durable per-workspace quotas. Quarantine objects are not automatically promoted into trusted project assets.
 - Channels, follows, private/unlisted/public access, member-only grants, basic search/following/trending feeds, hidden-channel preferences, rate-limited watch events, deduplicated view counters, and a per-viewer elapsed-time clock.
-- Membership plan drafts, gated recurring checkout, provider-state entitlement reconciliation, partial refunds, Connect onboarding, and pending creator earnings.
+- One platform-wide monthly Premium subscription unlocks Premium videos across creators. Provider-verified checkout, paid-through entitlements, refunds/disputes and owned billing portal management are durable. Generation credits are separate. New per-channel subscription checkout/pricing is retired; legacy receipts remain for reconciliation. Premium invoices do not automatically mint per-channel creator earnings. See PREMIUM.md.
 - Capped deterministic engagement reward allocation/monthly close using externally approved accounting and qualified-watch inputs. Operator payout holds/thresholds, country/capability checks, frozen batches and stable provider transfer keys.
 - Bounded operational cleanup, confirmed-deletion upload quota recovery, archive-before-delete analytics retention, viewing-history clearing and account-deletion requests that revoke sessions while preserving financial records.
 - Private AWS Terraform foundation, local PostgreSQL/Redis/LocalStack compose, Dockerfiles, CI, API contract/shared wire types, and safe source-repository extraction.
 
 ## Deliberately gated configuration
 
-Paid generation needs provider credentials, reviewed model IDs and positive per-job/daily cost caps. Story pipelines additionally require OPENROUTER_STORY_MODEL, STORY_CREDITS and STORY_MAX_COST_MICROS; local assembly needs ASSEMBLY_CREDITS. Story requests route by price with provider token/request price ceilings and bounded output tokens; no user can select or supply a model. Credit checkout needs Stripe credentials, verified email and BILLING_ENABLED. Memberships also need an explicit commission policy and an onboarded eligible creator. Payout transfers need supported countries, CASH_PAYOUTS_ENABLED and an operator execution flag. Rewards default off. None of these controls represents a live provider approval, tax decision or production readiness guarantee.
+Paid generation needs provider credentials, reviewed model IDs and positive per-job/daily cost caps. Story pipelines additionally require OPENROUTER_STORY_MODEL, STORY_CREDITS and STORY_MAX_COST_MICROS; local assembly needs ASSEMBLY_CREDITS. Story requests route by price with provider token/request price ceilings and bounded output tokens; no user can select or supply a model. Credit checkout needs Stripe credentials, verified email and BILLING_ENABLED. Platform Premium requires BILLING_ENABLED, Stripe settings and a reviewed positive PREMIUM_PRICE_CENTS. It does not require per-channel plans or creator onboarding to grant viewing access. Payout transfers need supported countries, CASH_PAYOUTS_ENABLED and an operator execution flag. Rewards default off. None of these controls represents a live provider approval, tax decision or production readiness guarantee.
 
 Video cost admission uses the reviewed catalog snapshot; it cannot guarantee a third-party invoice if provider prices change after quoting. Reconcile actual usage and configure provider-account spending limits before public paid generation. Story requests additionally send OpenRouter token-price ceilings ([provider routing documentation](https://openrouter.ai/docs/guides/routing/provider-selection)).
 
@@ -33,7 +33,7 @@ Terraform creates CloudFront distributions but does not subscribe them to a flat
 
 ## Remaining master-spec work
 
-- Full parity with the desktop node canvas and frame-accurate nonlinear timeline, transitions, voice/music mixing and extended-duration rendering. Cloud storyboard/shot ordering, timing, automated screenplay-to-clips and bounded assembly are implemented.
+- Full parity with desktop AI chat/refinement/history, frame-accurate nonlinear editing, transitions, voice/music mixing and extended-duration rendering. The original interactive node canvas, scoped relationships/scene-shot editing, cloud storyboard timing and bounded assembly are implemented. Desktop-only AI commands are hidden or explicitly unavailable in cloud mode.
 - Automated content safety/copyright checks, appeals and administrative MFA interface. Current moderation is reports plus audited operator blocking; a grant expiry limits revocation delay and cannot recall downloaded content.
 - Automated fraud qualification for monetary rewards, auditable revenue recognition inputs and accounting review. Watch events alone must not authorize money. Current recommendations are deterministic follow/recency/trending rules, not a trained personalization model.
 - High-volume analytics queue ingestion, advanced recommendation controls, notifications, comments, scheduling and publication collections. S3 archival and account-level history clearing are implemented.

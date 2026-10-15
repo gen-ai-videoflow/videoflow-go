@@ -80,7 +80,7 @@ func (s *Store) RecordWatch(ctx context.Context, u User, session, eventID string
 		return 0, tx.Commit()
 	}
 	var allowed bool
-	e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE v.id=$1 AND v.status='published' AND c.user_id<>$2 AND (v.audience='free' OR EXISTS(SELECT 1 FROM cloud_memberships m WHERE m.user_id=$2 AND m.channel_id=v.channel_id AND m.status='active' AND m.paid_through>now())))`, video, u.ID).Scan(&allowed)
+	e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE v.id=$1 AND v.status='published' AND v.visibility<>'private' AND c.user_id<>$2 AND (v.audience='free' OR EXISTS(SELECT 1 FROM cloud_premium_subscriptions m WHERE m.user_id=$2 AND m.status='active' AND m.paid_through>now() AND m.paid_through>m.revoked_through AND NOT EXISTS(SELECT 1 FROM cloud_premium_disputes d WHERE d.user_id=$2 AND d.status NOT IN ('won','warning_closed')))))`, video, u.ID).Scan(&allowed)
 	if e != nil {
 		return 0, e
 	}

@@ -29,6 +29,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { get, post, del } from '$lib/api';
+  import { getCanvasProject } from '$lib/cloud/legacy';
   import {
     toFlow,
     loadPositions,
@@ -457,7 +458,7 @@
                   </button>
                   <a
                     class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent"
-                    href="/assets"
+                    href={import.meta.env.VITE_CLOUD_MODE === 'true' ? `/workspace?tab=assets&project=${encodeURIComponent(getCanvasProject())}` : '/assets'}
                   >
                     <Image class="size-3.5" />Upload asset
                   </a>

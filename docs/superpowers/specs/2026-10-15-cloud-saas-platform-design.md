@@ -1,3 +1,7 @@
+# Current decision amendment
+
+The user subsequently chose one platform-wide Premium subscription, like Medium, replacing per-channel subscription pricing described below. Premium grants viewing access across creators; generation credits remain separate and creator payouts use the capped approved platform-revenue pool. The original VideoFlow canvas/sidebar design is preserved, with shadcn login-02/signup-02 layouts. See [Premium implementation](../../PREMIUM.md) and [UI/Premium execution record](../plans/2026-10-15-original-ui-premium.md). Historical design sections below remain context, not authority for new channel subscriptions.
+
 # VideoFlow Cloud SaaS Platform Specification
 
 Date: 2026-10-15

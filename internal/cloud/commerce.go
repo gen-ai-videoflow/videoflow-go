@@ -167,7 +167,7 @@ func (s *Server) stripeForm(ctx context.Context, path, key string, form url.Valu
 func (s *Server) membershipSalesEnabled() bool {
 	return s.Config.BillingEnabled && s.Config.MembershipsEnabled && s.Config.MembershipPolicyConfigured && s.Config.MembershipCommissionBPS >= 0 && s.Config.MembershipCommissionBPS <= 10000 && s.Config.StripeSecret != ""
 }
-func (s *Server) membershipPlan(w http.ResponseWriter, r *http.Request) {
+func (s *Server) legacyMembershipPlan(w http.ResponseWriter, r *http.Request) {
 	u := currentUser(r)
 	if r.Method == http.MethodGet {
 		var price, version int64
@@ -201,7 +201,7 @@ func (s *Server) membershipPlan(w http.ResponseWriter, r *http.Request) {
 	_, e := s.Store.DB.ExecContext(r.Context(), `INSERT INTO cloud_membership_plans(channel_id,price_cents,currency,enabled)VALUES($1,$2,$3,$4)ON CONFLICT(channel_id)DO UPDATE SET price_cents=EXCLUDED.price_cents,currency=EXCLUDED.currency,enabled=EXCLUDED.enabled,version=cloud_membership_plans.version+1,updated_at=now()`, u.ChannelID, b.PriceCents, b.Currency, b.Enabled)
 	s.result(w, map[string]bool{"ok": true}, e)
 }
-func (s *Server) membershipCheckout(w http.ResponseWriter, r *http.Request) {
+func (s *Server) legacyMembershipCheckout(w http.ResponseWriter, r *http.Request) {
 	if !s.membershipSalesEnabled() {
 		s.fail(w, ErrUnavailable)
 		return
@@ -764,4 +764,12 @@ func (s *Server) membershipRefunded(ctx context.Context, eventID string, raw jso
 		return e
 	}
 	return tx.Commit()
+}
+
+// Legacy payment records remain reconcilable; new channel sales are retired.
+func (s *Server) membershipCheckout(w http.ResponseWriter, r *http.Request) {
+	s.json(w, http.StatusGone, map[string]string{"code": "channel_memberships_retired", "message": "Premium unlocks videos across all creators. Use /premium/checkout."})
+}
+func (s *Server) membershipPlan(w http.ResponseWriter, r *http.Request) {
+	s.json(w, http.StatusGone, map[string]string{"code": "channel_memberships_retired", "message": "Individual channel subscription plans are retired."})
 }

@@ -159,6 +159,10 @@ func (s *Server) paymentWebhook(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, ErrValidation)
 		return
 	}
+	if handled, e := s.processPremiumWebhook(r.Context(), rawEvent.ID, rawEvent.Type, rawEvent.Data.Object); handled || e != nil {
+		s.result(w, map[string]bool{"received": true}, e)
+		return
+	}
 	if strings.HasPrefix(rawEvent.Type, "charge.dispute.") {
 		err := s.paymentDispute(r.Context(), rawEvent.ID, rawEvent.Data.Object)
 		s.result(w, map[string]bool{"received": true}, err)

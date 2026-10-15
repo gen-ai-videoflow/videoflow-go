@@ -67,7 +67,8 @@
 
   beforeNavigate((navigation)=>{if(dirty && !navigation.willUnload && !window.confirm('Discard your unsaved studio changes?'))navigation.cancel();});
   onMount(() => {
-    if(page.url.searchParams.get('tab')==='storyboard')kind='storyboard';
+    const requestedTab=page.url.searchParams.get('tab');
+    if(requestedTab && sections.some(section=>section.value===requestedTab))kind=requestedTab;
     void request('/projects').then(value=>{
       projects=list(value);
       const requested=page.url.searchParams.get('project');

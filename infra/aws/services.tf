@@ -101,9 +101,11 @@ resource "aws_ecs_task_definition" "services" {
         }, {
         name = "CLOUD_DEV_MODE", value = "false"
         }, {
-        name = "BILLING_ENABLED", value = "false"
+        name = "BILLING_ENABLED", value = tostring(var.billing_enabled)
       },
       {
+        name = "PREMIUM_PRICE_CENTS", value = tostring(var.premium_price_cents)
+        }, {
         name = "PUBLIC_ORIGIN", value = var.public_origin
         }, {
         name = "S3_BUCKET_ANALYTICS", value = aws_s3_bucket.media["analytics"].id

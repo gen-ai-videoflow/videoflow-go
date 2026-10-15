@@ -174,7 +174,7 @@
     <button class={itemCls} role="menuitem" onclick={() => { onselect(node); onclose(); }}>
       <PanelRight class="size-3.5" />Open details
     </button>
-    {#if kind === 'output'}
+    {#if kind === 'output' && import.meta.env.VITE_CLOUD_MODE !== 'true'}
       <a class={itemCls} role="menuitem" href={`/editor/${node.id}`}>
         <Clapperboard class="size-3.5" />Open in editor
       </a>

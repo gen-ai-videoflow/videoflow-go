@@ -145,7 +145,6 @@ func (s *Store) CanWatch(ctx context.Context, u User, v Video) bool {
 	if u.ID == "" {
 		return false
 	}
-	var allowed bool
-	err := s.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_memberships WHERE user_id=$1 AND channel_id=$2 AND status='active' AND paid_through>now())`, u.ID, v.ChannelID).Scan(&allowed)
+	allowed, err := s.HasPremium(ctx, u.ID)
 	return err == nil && allowed
 }

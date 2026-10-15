@@ -1,3 +1,4 @@
+import { canvasStorageKey } from '$lib/cloud/legacy';
 import { MarkerType, type Node, type Edge } from '@xyflow/svelte';
 
 /** Per-kind accent colors — node left borders and minimap dots share these so
@@ -74,11 +75,11 @@ export function toFlow(g: ApiGraph): { nodes: Node[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
-const POS_KEY = 'videoflow.canvas.positions';
+const posKey = () => import.meta.env.VITE_CLOUD_MODE === 'true' ? canvasStorageKey() : 'videoflow.canvas.positions';
 
 export function loadPositions(): Record<string, { x: number; y: number }> {
   try {
-    return JSON.parse(localStorage.getItem(POS_KEY) ?? '{}');
+    return JSON.parse(localStorage.getItem(posKey()) ?? '{}');
   } catch {
     return {};
   }
@@ -86,9 +87,9 @@ export function loadPositions(): Record<string, { x: number; y: number }> {
 
 export function savePositions(nodes: Node[]) {
   const pos = Object.fromEntries(nodes.map((n) => [n.id, n.position]));
-  localStorage.setItem(POS_KEY, JSON.stringify(pos));
+  localStorage.setItem(posKey(), JSON.stringify(pos));
 }
 
 export function clearPositions() {
-  localStorage.removeItem(POS_KEY);
+  localStorage.removeItem(posKey());
 }

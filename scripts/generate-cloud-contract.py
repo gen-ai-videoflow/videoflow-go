@@ -18,7 +18,11 @@ def obj(fields,required=()):return {'type':'object','additionalProperties':False
 S={'type':'string'};I={'type':'integer'};B={'type':'boolean'}
 objects['PipelineScene']=obj({'title':S,'prompt':S,'duration':I,'status':S},('title','prompt','duration','status'))
 objects['PipelineProgress']=obj({'stage':S,'status':S,'script':S,'scenes':{'type':'array','items':{'$ref':'#/components/schemas/PipelineScene'}}},('stage','status','script','scenes'))
+objects['CanvasGraph']=obj({'nodes':{'type':'array','items':obj({'id':S,'type':S,'label':S,'data':{'type':'object'}},('id','type','label'))},'edges':{'type':'array','items':obj({'source':S,'target':S,'label':S},('source','target','label'))}},('nodes','edges'))
 requests={
+ 'empty':obj({}),
+ 'edge':obj({'source':S,'target':S,'label':{'type':'string','enum':['casts','uses','reference']}},('source','target','label')),
+ 'canvas':obj({'title':S,'name':S,'description':S,'summary':S,'prompt':S,'duration':{'type':'number'},'aspect_ratio':S,'camera':S,'movement':S,'shot_order':I,'scene_id':S,'object_key':S}),
  'studio':obj({'title':{'type':'string','maxLength':180},'content':{'type':'string','maxLength':100000},'description':{'type':'string','maxLength':8000},'prompt':{'type':'string','maxLength':8000},'object_key':S,'duration':{'type':'number','minimum':0,'maximum':3600},'position':{'type':'integer','minimum':0,'maximum':10000},'metadata':{'type':'object'}},('title',)),
  'studio_patch':{'type':'object','additionalProperties':False,'properties':{x:{'type':t}for x,t in {'title':'string','content':'string','description':'string','prompt':'string','duration':'number','position':'integer','metadata':'object'}.items()}},
  'captions':obj({'segments':{'type':'array','items':obj({'start':{'type':'number'},'end':{'type':'number'},'text':S},('start','end','text'))}},('segments',)),
@@ -48,6 +52,7 @@ requests={
 }
 # method, route, request schema, response schema, anonymous
 routes=[
+ ('get','/premium',None,None,True),('post','/premium/checkout','empty',None,False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
  ('post','/auth/register','register','User',True),('post','/auth/login','login','User',True),('post','/auth/logout',None,None,False),
  ('post','/auth/forgot-password','email',None,True),('post','/auth/resend-verification','email',None,True),('post','/auth/verify-email','token',None,True),('post','/auth/reset-password','reset',None,True),
  ('get','/me',None,'User',False),('get','/projects',None,'Project[]',False),('post','/projects','project','Project',False),
@@ -65,10 +70,15 @@ for kind in ('scripts','characters','scenes','assets'):
  routes.extend([('get',base,None,'StudioEntity[]',False),('post',base,'studio','StudioEntity',False),('patch',base+'/{entity}','studio_patch','StudioEntity',False),('delete',base+'/{entity}',None,None,False)])
 base='/projects/{project}/scenes/{scene}/shots'
 routes.extend([('get',base,None,'StudioEntity[]',False),('post',base,'studio','StudioEntity',False),('patch',base+'/{entity}','studio_patch','StudioEntity',False),('delete',base+'/{entity}',None,None,False),('get','/projects/{project}/export',None,None,False),('post','/projects/import','archive','Project',False),('get','/jobs/{id}/captions',None,None,False),('put','/jobs/{id}/captions','captions',None,False),('delete','/viewer/history',None,None,False),('post','/account/deletion',None,None,False)])
+for kind in ('scenes','shots','characters','assets'):
+ base='/projects/{project}/canvas/'+kind
+ routes.extend([('get',base,None,None,False),('post',base,'canvas',None,False),('get',base+'/{entity}',None,None,False),('patch',base+'/{entity}','canvas',None,False),('delete',base+'/{entity}',None,None,False)])
+for base in ('/projects/{project}/scenes/{scene}/cast/{character}','/projects/{project}/shots/{shot}/assets/{asset}'):
+ routes.extend([('post',base,None,None,False),('delete',base,None,None,False)])
 paths={}
 for method,path,body,response,anonymous in routes:
  params=[{'name':part[1:-1],'in':'path','required':True,'schema':S}for part in path.split('/')if part.startswith('{')]
- if path in ('/generation/jobs','/memberships/checkout','/billing/checkout'):
+ if path in ('/generation/jobs','/memberships/checkout','/billing/checkout','/premium/checkout'):
   params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':128}})
  op={'operationId':method+'_'+path.strip('/').replace('/','_').replace('{','').replace('}','').replace('-','_'),'security':[] if anonymous else [{'session':[]}],'parameters':params,'responses':{'200':{'description':'Success'},'400':{'description':'Invalid input'},'401':{'description':'Authentication or authorization required'},'409':{'description':'State conflict'},'503':{'description':'Integration disabled or unavailable'}}}
  if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':requests[body]}}}
@@ -78,6 +88,10 @@ for method,path,body,response,anonymous in routes:
   op['responses']['201' if path=='/auth/register' else '200']={'description':'Success','content':{'application/json':{'schema':schema}}}
  if path.endswith('/events'):
   op['responses']['200']={'description':'Authorized job snapshots as resumable progress hints','content':{'text/event-stream':{'schema':S}}}
+ if path in ('/memberships/checkout','/creator/membership-plan'):
+  op['deprecated']=True
+  op['description']='Channel membership pricing is retired; use platform-wide Premium.'
+  op['responses']['410']={'description':'Per-channel subscriptions are retired'}
  paths.setdefault(path,{})[method]=op
 contract={'openapi':'3.1.0','info':{'title':'VideoFlow Cloud API','version':'1.0.0'},'servers':[{'url':'/api/v1'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'videoflow_session'}},'schemas':objects}}
 (root/'api/openapi.json').write_text(json.dumps(contract,indent=2)+'\n')

@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	PremiumPriceCents                                                              int64
 	StoryModel, FFmpegPath                                                         string
 	StoryCredits, StoryMaxCostMicros, AssemblyCredits                              int64
 	S3PublicEndpoint                                                               string
@@ -46,7 +47,7 @@ func EnvConfig() (Config, error) {
 	c.ConnectEnabled = os.Getenv("CONNECT_ENABLED") == "true"
 	c.SupportedPayoutCountries = os.Getenv("SUPPORTED_PAYOUT_COUNTRIES")
 	c.RewardsEnabled = os.Getenv("REWARDS_ENABLED") == "true"
-	for key, target := range map[string]*int64{"STORY_CREDITS": &c.StoryCredits, "STORY_MAX_COST_MICROS": &c.StoryMaxCostMicros, "ASSEMBLY_CREDITS": &c.AssemblyCredits, "MEMBERSHIP_COMMISSION_BPS": &c.MembershipCommissionBPS, "REWARD_BPS": &c.RewardBPS, "REWARD_MONTHLY_CAP_CENTS": &c.RewardMonthlyCapCents, "PROVIDER_DAILY_BUDGET_MICROS": &c.ProviderDailyBudgetMicros, "PROVIDER_MAX_COST_MICROS": &c.ProviderMaxCostMicros} {
+	for key, target := range map[string]*int64{"PREMIUM_PRICE_CENTS": &c.PremiumPriceCents, "STORY_CREDITS": &c.StoryCredits, "STORY_MAX_COST_MICROS": &c.StoryMaxCostMicros, "ASSEMBLY_CREDITS": &c.AssemblyCredits, "MEMBERSHIP_COMMISSION_BPS": &c.MembershipCommissionBPS, "REWARD_BPS": &c.RewardBPS, "REWARD_MONTHLY_CAP_CENTS": &c.RewardMonthlyCapCents, "PROVIDER_DAILY_BUDGET_MICROS": &c.ProviderDailyBudgetMicros, "PROVIDER_MAX_COST_MICROS": &c.ProviderMaxCostMicros} {
 		if raw := os.Getenv(key); raw != "" {
 			n, e := strconv.ParseInt(raw, 10, 64)
 			if e != nil || n < 0 {
@@ -57,6 +58,9 @@ func EnvConfig() (Config, error) {
 				c.MembershipPolicyConfigured = true
 			}
 		}
+	}
+	if c.PremiumPriceCents != 0 && (c.PremiumPriceCents < 100 || c.PremiumPriceCents > 100000) {
+		return c, fmt.Errorf("PREMIUM_PRICE_CENTS must be 0 (disabled) or 100..100000")
 	}
 	if c.MembershipCommissionBPS > 10000 || c.RewardBPS > 10000 {
 		return c, fmt.Errorf("basis points must be <=10000")
