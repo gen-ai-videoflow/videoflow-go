@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { restoredInvoiceAttempt } from './payment-state';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -43,7 +44,7 @@
     void action(async()=>{
       const storageKey=`videoflow.payment.${user.id}.${purpose}.${packId || ''}`;
       let attempt=invoiceAttempts.get(storageKey);
-      if(!attempt){try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');if(saved?.key)attempt=saved;}catch{}}
+      if(!attempt){try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');attempt=restoredInvoiceAttempt(saved);}catch{}}
       if(attempt?.id){const existing=await request(`/payments/invoices/${encodeURIComponent(attempt.id)}`);if(existing.status!=='settled'){await goto(`/payments?invoice=${encodeURIComponent(existing.id)}`);return;}attempt=undefined;}
       if(!attempt)attempt={key:crypto.randomUUID()};
       invoiceAttempts.set(storageKey,attempt);try{sessionStorage.setItem(storageKey,JSON.stringify(attempt));}catch{}

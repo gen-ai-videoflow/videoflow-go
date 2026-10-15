@@ -62,6 +62,8 @@ jobs:
       - run: go test -race ./internal/cloud ./cmd/cloud ./cmd/cloud-worker ./cmd/cloud-admin ./cmd/cloud-migrate
       - run: go test ./...
       - run: go vet ./internal/cloud ./cmd/cloud ./cmd/cloud-worker ./cmd/cloud-admin ./cmd/cloud-migrate
+      - name: Test local payment gateway simulator
+        run: python3 scripts/test_cryptorails_mock.py
       - name: Validate source extraction
         run: |
           bash -n scripts/split-repositories.sh
@@ -82,13 +84,19 @@ jobs:
         with:
           node-version: '24'
       - name: Check and build desktop and cloud modes
+        env:
+          CRYPTORAILS_API_KEY: ci-private-tenant-canary
+          CRYPTORAILS_WEBHOOK_SECRET: ci-private-webhook-canary
+          OPENROUTER_API_KEY: ci-private-model-canary
         shell: bash
         run: |
           if [[ -f frontend/package-lock.json ]]; then cd frontend; fi
           npm ci
           npm run check
+          node scripts/check-payments.mjs
           VITE_CLOUD_MODE=false npm run build
           VITE_CLOUD_MODE=true VITE_CLOUD_API_BASE=/api/v1 npm run build
+          python3 scripts/audit-cloud-secrets.py --root build/client
       - name: Build cloud SSR image
         if: needs.detect.outputs.frontend == 'true'
         run: docker build -f deploy/Dockerfile.cloud-web -t videoflow-web:ci .

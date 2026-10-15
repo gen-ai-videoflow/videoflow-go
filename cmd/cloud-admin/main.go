@@ -18,7 +18,7 @@ func main() {
 }
 func run() error {
 	if len(os.Args) < 2 {
-		return fmt.Errorf("usage: cloud-admin report-list|block-video|resolve-job|reward-close|payout-prepare|payout-execute|crypto-inspect|crypto-recover-address|crypto-replay")
+		return fmt.Errorf("usage: cloud-admin report-list|block-video|resolve-job|reward-close|payout-prepare|payout-execute|crypto-inspect|crypto-recover-address|crypto-replay|crypto-report")
 	}
 	flags := flag.NewFlagSet(os.Args[1], flag.ContinueOnError)
 	id := flags.String("id", "", "resource or batch ID")
@@ -57,6 +57,8 @@ func run() error {
 	}
 	var result any = map[string]bool{"ok": true}
 	switch os.Args[1] {
+	case "crypto-report":
+		result, err = store.AuditedCryptoPaymentHealth(ctx, *actor)
 	case "crypto-inspect", "crypto-recover-address", "crypto-replay":
 		server := cloud.NewServer(store, cfg)
 		defer server.Close()

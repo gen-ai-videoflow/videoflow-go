@@ -1,101 +1,67 @@
 # CryptoRails execution and launch checklist
 
-Status convention: `[x]` means locally evidenced work; `[ ]` means pending verification or an external setup step. Code completion, mock tests, provider onboarding and live activation are separate states. The user has authorized implementation of this checklist; an unchecked external credential/funding step is not permission to invent an input or claim a successful payment.
+The user requested local completion before AWS deployment. All locally actionable payment checks below are complete. Real tenant onboarding, funded blockchain payments and deployment remain explicitly deferred; simulator results do not complete those external gates. The wider creator/Discover roadmap is tracked separately in [PRODUCT-EXPERIENCE-GAPS.md](../PRODUCT-EXPERIENCE-GAPS.md).
 
-## Implemented infrastructure evidence
+## Local implementation — complete
 
-- [x] Added production Terraform CryptoRails configuration with disabled defaults, HTTPS API URL validation, exact asset/fee configuration and explicit stablecoin policy approval.
-- [x] Added API-only Secrets Manager ARN injection for tenant/signing credentials; no frontend/worker crypto credential injection.
-- [x] Added blank development environment examples with payment switches off.
-- [x] Recorded Studio, Templates, Discover, Credits, Premium and invoice journeys in [the payment specification](../CRYPTORAILS.md).
-- [x] Read the supplied provider guide and fetched its current primary documentation.
-- [x] Terraform `fmt -check` and `validate` passed for the CryptoRails infrastructure changes (Terraform 1.14, AWS provider 6.69). Re-run after any later infrastructure changes.
-- [x] Compose configuration validated with the updated development environment example; no gateway/container money flow was executed.
+- [x] New credit and Premium checkouts use CryptoRails; historical Stripe receipts, refunds, disputes and owned subscription management remain reconcilable.
+- [x] Server-owned invoices freeze purpose, account/workspace, pack/credits, exact asset/network/contract, treasury, fees and net target. No client-selected price, credit quantity or destination is authoritative.
+- [x] Fresh deposit addresses and stable references survive reload. Ambiguous create requests are fenced in review; retries cannot create another address for that invoice.
+- [x] Tenant keys remain server-side; redirects are rejected and provider Retry-After cooldowns are shared through Redis. Redis is ephemeral admission/status infrastructure, never the financial source of truth.
+- [x] Raw-body HMAC verification precedes JSON parsing; only correctly correlated signed confirmed net settlement fulfills purchases.
+- [x] Settlement receipt, credit ledger grant or 30-day Premium extension and invoice status commit atomically in PostgreSQL. Restricted runtime credentials preserve immutable invoice terms and append-only financial evidence.
+- [x] Premium and generation credits are separate. Renewal is explicit; held/revoked legacy subscription time cannot be copied into a crypto entitlement or misleading expiry display.
+- [x] Default and missing-input configurations fail closed, including disabled token precision 0. Rewards, creator cash payouts and withdrawals remain separately gated and off by default.
+- [x] API-only AWS secret references and reviewed asset/fee settings are prepared with disabled defaults. Terraform and compose validation pass; no AWS apply occurred.
 
-## Backend implementation and deterministic verification
+## Backend verification — complete locally
 
-- [x] Confirm every new purchase endpoint creates a CryptoRails invoice; no new Stripe checkout path remains enabled.
-- [x] Credit packs and prepaid Premium freeze distinct purposes and exact net targets; no cross-purpose replay or user/tenant substitution.
-- [x] Fresh deposit address is durable per invoice; same-key retries never create another address. Concurrent/ambiguous address creation is fenced in review and recoverable through owned history.
-- [x] API key header is `x-tenant-api-key`; HTTP redirects cannot leak it to a different origin.
-- [x] Notify/consolidation accepts only stored invoice settings and stable references; client amount/network/token/treasury substitution is rejected.
-- [ ] Decimal parsing, fee arithmetic and JSON serialization are exact; tests cover 18 decimals, zero/negative values, overprecision, large amounts and rounding boundaries.
-- [x] Raw-body HMAC validation rejects modified bodies, malformed signatures and missing secrets before parsing.
-- [x] Only signed confirmed **net** settlement with complete identity/fee/amount matching fulfills an invoice.
-- [ ] Mismatched source, destination, token contract, chain, operation, reference, gross/provider fee/net, underfunded net or inconsistent gross/fee/net and unknown invoices fail closed.
-- [ ] Duplicate/concurrent callbacks, stale failure messages, application crash before/after commit and payment-purpose replay cannot duplicate grants.
-- [x] Premium renewal grants exactly 30 days once from the correct paid-through/confirmation boundary; credits remain unchanged by Premium purchase.
-- [ ] Premium expiry denies new protected playback grants; private/blocked/deleted content remains denied despite Premium.
-- [x] Recovery never settles from an unsigned transaction query, browser balance or synthetic locally signed event.
-- [x] Restricted runtime database role supports the new invoice/receipt/ledger path and preserves append-only financial evidence.
-- [x] Historical Stripe invoice/refund/dispute/subscription webhook reconciliation and owned management tests still pass.
-- [x] Run PostgreSQL/Redis integration tests, race tests, Go vet and existing local/desktop tests; record commands/results.
+- [x] Exact decimal parsing and JSON money strings: 18 decimals, values above JavaScript's safe integer range, maximum price integers, zero/negative/malformed input, overprecision and five-decimal upward-rounding boundaries.
+- [x] Twenty signed mutation cases reject mismatched source/destination, asset, network, operation, reference, gross/fee/net and underfunded or inconsistent amounts. Unknown invoices fail closed.
+- [x] Duplicate and twelve concurrent callbacks grant once. Stale failure events and purpose/key substitution cannot change a completed purchase.
+- [x] Deferred commit failure rolls back receipt, grant and invoice status for credits and Premium. Actual PostgreSQL connection termination during commit leaves no partial state; a new Server instance and original event recover once. Lost-response replay after commit changes nothing. This is a connection-loss/restart drill, not a claim of an OS process-kill experiment.
+- [x] Expired Premium denies new playback grants and redemption of a previously issued grant. Private, blocked and deleted videos remain denied even with active Premium.
+- [x] Restricted-role signed settlement succeeds and preserves an existing account dispute hold. Historical payment and desktop/local tests still pass.
+- [x] Full PostgreSQL/Redis-backed race tests, real FFmpeg assembly integration and Go vet pass.
 
-## Frontend and user journey verification
+## Frontend and browser verification — complete locally
 
-- [x] `/` and `/studio` retain the original protected project canvas; public browsing lives at `/discover`.
-- [x] Template selection creates an owned editable project and opens its actual canvas; no paid generation starts implicitly.
-- [x] Credits and Premium screens expose separate purposes and do not claim Premium includes generation credits.
-- [x] Premium copy says prepaid 30 days and explicit renewal; historical recurring Stripe management is clearly distinguished.
-- [x] Invoice screen displays exact accepted network/token/contract, amount/address, applicable fee guidance, local QR, status and reopen/history/recheck actions.
-- [ ] Secrets never appear in bundles, browser requests, QR text, logs or RPC headers.
-- [ ] A browser detected deposit shows “detected/pending,” not “paid”; reload/reopen remains pending until authoritative settlement.
-- [ ] Insufficient balance/fees, wrong network/asset, ambiguous creation, pending confirmation, failed delivery and reconciliation-needed states are actionable and truthful.
-- [x] Cross-user invoice IDs and history are denied; no address/secret/financial metadata leaks.
-- [ ] Verify responsive browser flows, keyboard/focus behavior, local QR rendering and new/classic build modes.
-- [ ] Capture actual browser evidence for Discover → Premium invoice → confirmed grant and Studio → credits invoice → confirmed balance; mocks alone do not complete this item.
+- [x] Original canvas/auth-02 screens remain; Discover is distinct from Studio. Templates create actual connected projects without paid generation.
+- [x] Payment history, exact amount/network/token/contract, local address-only QR, copy/recheck/reopen controls and explicit 30-day renewal are present.
+- [x] Pending/reload states cannot confirm payment. A simulated deposit with a deliberately withheld signed callback remains uncredited after browser reload.
+- [x] Conditional shortfall/wrong-network/wrong-token troubleshooting does not invent a failure diagnosis. Review/failed/expired/unknown/missing-address states hide deposit controls. Failed loads hide stale payment details and expose retry; interrupted refresh is reported.
+- [x] Persisted purchase attempts are validated. Thirty-three state/recovery assertions pass; no browser balance, wallet hint or return URL grants credits or access.
+- [x] Keyboard history selection works with Enter; same-page invoice switching preserves focus/scroll and announces selection. Mobile/desktop layouts, local QR and both desktop/static and cloud/Node build modes pass.
+- [x] Secret audit scanned 1,417 exported asset/log files against the two actual mock server-secret values: zero exposures. Browser HTML/API responses/resource URLs also contained no known secret and made no direct provider request. A deliberately secret-bearing invalid callback produced a safe constant rejection log, not a body/signature echo. A separate cloud build with three server-secret canaries scanned 1,416 public files with zero exposures; CI is wired to repeat it; this is bounded canary evidence, not a guarantee about all future configurations.
+- [x] Actual shared-browser flows used the real local application and isolated simulator: Studio/credits → invoice → processing → recovered signed delivery → 1,000 credits once; Discover → Premium → invoice → signed confirmation → 30-day access. A duplicate Premium event did not extend access again or change generation credits. These are simulated gateway transactions, never funded blockchain payments.
+- [x] The actual local HTTPS SvelteKit proxy accepted original raw signed replay and rejected a modified body and malformed signature (200/401/401). Production proxy behavior still requires deployed verification.
 
-## Tenant and AWS staging setup
+## Local operations and restore verification — complete
 
-- [ ] Create/restrict the gateway tenant API key through its administrator UI and store it in Secrets Manager.
-- [ ] Store and rotate the webhook signing secret; configure the exact public HTTPS callback in the tenant.
-- [ ] Verify selected chain/VM/token contract and explicitly reviewed 5–18 token decimals, active token configuration, fixed/percentage fees, treasury/consolidation wallet and any required withdrawal-side gas balance.
-- [ ] Verify wallet activation requirements for the selected network; no network/token/address is assumed by the example configuration.
-- [ ] Approve/document stablecoin USD pricing and depeg behavior; do not enable `CRYPTORAILS_USD_PEG_ACCEPTED` by habit.
-- [ ] Configure production RPC capacity if browser detection is used; backend/gateway credential keys must never become public RPC keys.
-- [ ] Migrate staging explicitly, re-provision restricted runtime grants and deploy reviewed images/configuration to an isolated account.
-- [ ] Verify the webhook path bypasses UI authentication while preserving raw bytes; test valid/invalid signatures through the real proxy chain.
-- [ ] Fund a controlled low-value staging invoice with the exact displayed instructions and fees; compare deposit, consolidation gross/provider fee/net and final treasury receipt.
-- [ ] Verify only one durable credit/30-day Premium grant after duplicate delivery and user refresh.
-- [ ] Deliberately fail webhook delivery; observe the provider's failed-delivery record and exercise its actual supported manual replay/recovery path. **Do not assume automatic retries.**
-- [ ] Reconcile application/gateway/chain state after an application timeout; never resubmit a new financial reference blindly.
-- [ ] Verify monitoring and on-call routing for pending/ambiguous invoices, signature failures, mismatched net settlement, failed deliveries, treasury/gas insufficiency and provider outages.
-- [ ] Exercise PostgreSQL restore and financial reconciliation with gateway state newer than the restore point; preserve receipts and prevent duplicate settlement.
+- [x] Authenticated loopback/private-Docker simulator implements deposit addresses, active token policy, exact fee/balance checks, stable consolidation references, failed delivery and preserved original raw/HMAC replay. Its three tests pass; it is explicitly test-only and cannot move real funds.
+- [x] Audited `cloud-admin crypto-inspect`, `crypto-recover-address` and `crypto-replay` perform guarded recovery; no unsigned lookup or locally reconstructed signature grants value. A failed provider transaction moves to review; consumed failed references require external funds recovery rather than blind resubmission.
+- [x] Audited `cloud-admin crypto-report` exposes aggregate statuses/stale ages and receipt/grant integrity checks without PII, secrets, provider calls or financial repair. Safe webhook logs distinguish invalid_signature, malformed_payload and settlement_rejected.
+- [x] Disposable restored settled checkpoint: two original signed callbacks replayed twice left credits, receipts and Premium expiry unchanged.
+- [x] Disposable older pending checkpoint: replay of the newer original callback granted exactly 1,000 credits once; second replay changed nothing. An event whose invoice was absent from that checkpoint was excluded rather than fabricated.
+- [x] QA report after the browser drill showed two settled invoices and zero missing receipt, incorrect state or missing/incorrect credit-grant discrepancies.
+- [x] Evidence, customer instructions, manual residual/refund recovery boundaries, simulator setup and safe restore commands are documented. No automatic crypto refund, withdrawal or creator transfer is represented as implemented by checkout.
 
-## Operator recovery commands
+See [LOCAL-CRYPTORAILS-DRILL.md](LOCAL-CRYPTORAILS-DRILL.md), [the integration contract](../CRYPTORAILS.md) and the implementation plan for commands and scope. Restore tooling refuses the main app/test databases and creates new named databases; no production or main app data was restored or overwritten.
 
-Use a separately authorized operator identity and private database access. Keep the captured raw payload file private; its bytes must be exactly what the provider signed. Templates below do not generate signatures or settle from a poll:
+## Deferred external/provider/deployment gates — not completed
 
-```sh
-cloud-admin crypto-inspect --id "$INVOICE_ID" --actor "$OPERATOR_ID"
-cloud-admin crypto-recover-address --id "$INVOICE_ID" --address "$PROVIDER_VERIFIED_ADDRESS" --actor "$OPERATOR_ID" --reason "$RECOVERY_REASON"
-cloud-admin crypto-replay --input "$ORIGINAL_RAW_BODY_FILE" --signature "$ORIGINAL_PROVIDER_HMAC" --actor "$OPERATOR_ID"
-```
+These require actual tenant access, funded wallets or deployment-specific infrastructure. They are intentionally not checked during the requested no-AWS phase.
 
-Inspection reads provider transaction state and records an audit event; a provider-confirmed failed transaction moves the invoice to `review` without granting value. A failed reference is already consumed at the gateway and cannot simply be retried. External operator/provider funds recovery or refund is required; never invent a new financial reference to bypass that state. Address recovery is for an ambiguous invoice in `review` with no bound address: an operator first obtains the real address through the gateway's supported administration/evidence workflow, and the application checks that exact address against the frozen tenant reference and VM before binding it. A transaction/address GET is not a substitute for a signed settlement event, and an unknown address cannot be recovered by inventing one or assuming reference-only lookup works.
+- [ ] Create/restrict a real tenant API key and store real API/webhook credentials in the chosen secret store.
+- [ ] Configure and rotate the real webhook secret and approved public callback.
+- [ ] Verify real chain/VM/token contract, token precision, activation requirements, fees, consolidation treasury and gas funding.
+- [ ] Approve the actual stablecoin USD/depeg policy, supported jurisdictions, fees and customer refund/recovery terms.
+- [ ] Deploy staging, run explicit migrations and restricted-role provisioning, and verify the deployed proxy preserves raw webhook bodies and rejects invalid signatures.
+- [ ] Execute low-value funded credit and Premium transactions; reconcile deposit, consolidation fee/net and treasury receipt. Local simulator/browser tests do not complete this gate.
+- [ ] Exercise the real provider's failed-delivery/manual recovery capability and timeout reconciliation. Automatic gateway webhook retries must not be assumed.
+- [ ] Connect aggregate reports/logs to real monitoring, alerts and an assigned operator/on-call procedure; verify deployment budgets and backup/restore/failover behavior.
+- [ ] Enable real checkout only after those gates pass. Keep creator payouts, withdrawals and rewards gated until their own launch checks pass.
 
-Replay submits the **original raw body and original signature** through the ordinary webhook verifier and atomic/idempotent settlement path. Obtain those from supported gateway delivery recovery or a preserved original delivery. Never sign a reconstructed transaction query locally. If no original authoritative signed payload can be recovered, escalate to financial operations/provider support and leave the invoice unfulfilled. Review `crypto_inspect`, `crypto_recover_address` and `crypto_replay` audit records after the procedure. Reconciliation of residual address balances and any real refund transfer is a separate reviewed operation.
+No public RPC service is needed by the current checkout: it uses server-controlled consolidation and signed callbacks. Browser deposit-watch/RPC detection is optional future work and would require separately approved capacity; it must never become settlement authority.
 
-## Activation and closure
-
-- [ ] Record test evidence, supported jurisdiction/token/network policy, fees, refund/recovery policy and customer-facing instructions.
-- [ ] Set real secrets and reviewed asset/fee configuration without committing plaintext credentials.
-- [ ] Enable new checkout only with explicit `BILLING_ENABLED` and `CRYPTORAILS_ENABLED`; verify disabled/missing-input configurations still fail closed.
-- [ ] Keep rewards, creator payouts, withdrawals and unrelated commercial switches off unless their separate launch gates pass.
-- [ ] Confirm budgets/alerts and gateway operational recovery ownership; a signed callback is settlement authority, not proof of tax/accounting compliance or final bank cash availability.
-- [ ] Publish the final verification result with any unchecked items clearly listed. No AWS apply or live activation is claimed by this checklist's creation.
-
-## Local execution evidence (2026-10-15)
-
-- PostgreSQL/Redis-backed `go test -race ./...` passed, including the real FFmpeg assembly integration through the worker image. Historical desktop/local tests remain passing. Final additional payment/role checks cover signed settlement through restricted runtime credentials while retaining an existing dispute hold.
-- Independent review found held legacy Premium time being copied into crypto renewals; both legacy-base queries now exclude unresolved disputes, with a 200-day held legacy / 30-day new crypto regression test.
-- CryptoRails HTTP redirects are rejected before a tenant key can be forwarded. Provider `Retry-After` cooldowns use Redis across replicas and in-memory state for development; browser retries do not bypass the gateway backoff.
-- The documented unexpanded tenant-token response is supported using exact network/contract query filters and explicitly reviewed token decimals. Expanded metadata, when supplied, must match. Fee changes reject new invoices.
-- Svelte check reports zero errors/warnings; desktop static and cloud Node builds pass. API, worker and web images are built locally. Terraform formatting/schema validation and compose configuration validation pass; no AWS apply occurred.
-- Shared T3 browser: mobile signup succeeded; template creation produced three scenes, three shots, three edges, zero jobs and zero credits spent; original canvas rendered at desktop and mobile sizes. Pending-invoice local QR and exact strings rendered without horizontal overflow at 390px and 1366px. An empty-address review invoice showed no QR/send/check-payment controls.
-- Browser invoice layouts used two explicitly non-payable private `local-test-only` / `TEST-USDC` fixtures, not a funded provider transaction. Live confirmations, external-wallet transfer, production webhook delivery/replay and activation remain unchecked above. No synthetic callback was used to grant this preview account value.
-- Login/signup preserve same-origin viewing or Premium destinations; 24 redirect-security cases reject external, encoded and auth-loop destinations.
-
-Unchecked staging/activation items require the actual tenant, credentials, treasury/gas configuration and funded validation. They are not represented as completed by local mock or fixture tests.
-
-Final local follow-up: 12 concurrent settlement attempts grant exactly once; the displayed Premium expiry also excludes held legacy time. Disabled Terraform precision `0` is accepted while enabled checkout requires reviewed precision. Login was exercised in the shared browser with `/premium` return intent and landed on `/premium`. Temporary non-payable invoice fixtures were removed after UI verification; no financial grant or funded test was created.
+Final local closure: the full race suite, Go vet, workflow lint, simulator tests, frontend checks/builds and independent repository checks passed. The temporary 10544 simulator preview and its three containers were stopped; the normal 10543 preview remains available with real payments disabled. No existing application database was overwritten.

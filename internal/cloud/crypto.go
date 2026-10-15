@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"io"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -388,6 +389,7 @@ func (s *Server) cryptoWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	b, e := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
 	if e != nil {
+		slog.Warn("cryptorails webhook rejected", "reason", "malformed_payload")
 		s.fail(w, ErrValidation)
 		return
 	}
@@ -395,15 +397,20 @@ func (s *Server) cryptoWebhook(w http.ResponseWriter, r *http.Request) {
 	m := hmac.New(sha256.New, []byte(s.Config.CryptoRailsWebhookSecret))
 	m.Write(b)
 	if e != nil || !hmac.Equal(sig, m.Sum(nil)) {
+		slog.Warn("cryptorails webhook rejected", "reason", "invalid_signature")
 		s.fail(w, ErrUnauthorized)
 		return
 	}
 	var event cryptoSettlement
 	if json.Unmarshal(b, &event) != nil {
+		slog.Warn("cryptorails webhook rejected", "reason", "malformed_payload")
 		s.fail(w, ErrValidation)
 		return
 	}
 	e = s.settleCrypto(r.Context(), event)
+	if e != nil {
+		slog.Warn("cryptorails webhook rejected", "reason", "settlement_rejected")
+	}
 	s.result(w, map[string]bool{"ok": true}, e)
 }
 func (s *Server) settleCrypto(ctx context.Context, event cryptoSettlement) error {
