@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/OpenCut-app/opencut-classic",
+  "commit": "cf5e79e919144200294fb9fed22a222592a0aeea",
+  "license": "MIT",
+  "source": "apps/web/src",
+  "modifications": [
+    "isolated Vite entry with Next image/navigation adapters",
+    "platform project persistence and private source import bridge",
+    "curated toolbar and platform theme override",
+    "repair legacy storage migration object-parameter calls and sticker registry signature; include upstream ambient declarations",
+    "disable export when referenced browser source files are missing; expose source reconnection in platform adapter"
+  ],
+  "excluded": [
+    "upstream auth, database and hosted catalogues",
+    "landing, blog and marketing pages"
+  ],
+  "dependencyLicenseNotes": {
+    "mediabunny": "MPL-2.0",
+    "soundtouchjs": "LGPL-2.1"
+  }
+}

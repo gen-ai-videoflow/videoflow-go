@@ -22,7 +22,9 @@ S={'type':'string'};I={'type':'integer'};B={'type':'boolean'}
 objects['PipelineScene']=obj({'title':S,'prompt':S,'duration':I,'status':S},('title','prompt','duration','status'))
 objects['PipelineProgress']=obj({'stage':S,'status':S,'script':S,'scenes':{'type':'array','items':{'$ref':'#/components/schemas/PipelineScene'}}},('stage','status','script','scenes'))
 objects['CanvasGraph']=obj({'nodes':{'type':'array','items':obj({'id':S,'type':S,'label':S,'data':{'type':'object'}},('id','type','label'))},'edges':{'type':'array','items':obj({'source':S,'target':S,'label':S},('source','target','label'))}},('nodes','edges'))
+objects['EditorDocument']=obj({'revision':I,'document':{'type':'object','nullable':True},'updated_at':S},('revision','document'))
 requests={
+ 'editor_document':obj({'revision':{'type':'integer','minimum':0},'document':{'type':'object'}},('revision','document')),
  'empty':obj({}),
  'payment_invoice':obj({'purpose':{'type':'string','enum':['credits','premium']},'pack_id':S},('purpose',)),
  'edge':obj({'source':S,'target':S,'label':{'type':'string','enum':['casts','uses','reference']}},('source','target','label')),
@@ -56,6 +58,7 @@ requests={
 }
 # method, route, request schema, response schema, anonymous
 routes=[
+ ('get','/projects/{project}/editor',None,'EditorDocument',False),('put','/projects/{project}/editor','editor_document','EditorDocument',False),
  ('get','/payments/options',None,None,True),('post','/payments/invoices','payment_invoice','PaymentInvoice',False),('get','/payments/invoices',None,'PaymentInvoice[]',False),('get','/payments/invoices/{id}',None,'PaymentInvoice',False),('post','/payments/invoices/{id}/notify','empty','PaymentInvoice',False),
  ('get','/premium',None,None,True),('post','/premium/checkout','empty','PaymentInvoice',False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
  ('post','/auth/register','register','User',True),('post','/auth/login','login','User',True),('post','/auth/logout',None,None,False),

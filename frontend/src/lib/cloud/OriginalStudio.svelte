@@ -34,7 +34,7 @@
     <label for="canvas-project" class="text-sm font-medium">Project</label>
     <select id="canvas-project" class="h-8 max-w-64 rounded-md border border-input bg-background px-2 text-sm" value={project} onchange={e=>select(e.currentTarget.value)} disabled={!projects.length}><option value="" disabled>Select a project</option>{#each projects as p}<option value={p.id}>{p.name}</option>{/each}</select>
     <Button size="sm" variant="ghost" onclick={()=>refresh().catch(e=>error=e.message)} disabled={!project}><RefreshCw class="size-4"/><span class="sr-only">Refresh canvas</span></Button>
-    <a href="/studio/dashboard" class="ml-auto text-sm text-muted-foreground underline underline-offset-4">Studio overview</a>
+    <a href={`/studio/editor?project=${encodeURIComponent(project)}`} class="ml-auto text-sm text-muted-foreground underline underline-offset-4">Open editor</a><a href="/studio/dashboard" class=" text-sm text-muted-foreground underline underline-offset-4">Studio overview</a>
   </header>
   {#if error}<div role="alert" class="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>{/if}
   {#if !loaded}<div class="grid flex-1 place-items-center"><LoaderCircle class="size-5 animate-spin"/></div>

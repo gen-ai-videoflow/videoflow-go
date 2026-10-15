@@ -19,3 +19,5 @@ __pycache__
 **/*.key
 .superpowers
 .impeccable/review
+
+frontend/static/editor-app

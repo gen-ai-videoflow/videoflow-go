@@ -1,0 +1,11 @@
+# VideoFlow editor — OpenCut Classic integration
+
+Pinned upstream: https://github.com/OpenCut-app/opencut-classic (see UPSTREAM.json). Reachable MIT source is vendored under src/upstream, with original notices in LICENSE-OPENCUT. It is an isolated React browser editor within the SvelteKit application; no Next.js auth, database or hosted API is used.
+
+Build: `npm ci --ignore-scripts && npm run build`. The parent cloud build invokes this automatically and writes the generated bundle to static/editor-app (ignored). Node24 is the production runtime. Source plus lockfile and these build scripts permit rebuilding/replacing dependency modules. Preserve all copyright and dependency notices when distributing. Mediabunny is MPL-2.0; SoundTouchJS is LGPL-2.1. Neither library source is modified; do not describe the entire dependency tree as MIT. The source distribution must include the lockfile and build instructions; generated notices accompany the served bundle.
+
+The adapter owns the platform header, toolbar selection, media handoff, account/project scope and cloud document saves. It reuses upstream timeline, preview, property controls, text/captions, browser media storage/processing and real export. Unsupported hosted sound/sticker catalogues and placeholder transitions are deliberately not exposed. Local audio is imported through Media. Canvas planning remains in VideoFlow Storyboard.
+
+Timeline snapshots are saved to the owned Go project with compare-and-swap revisions. Source files live in this browser's OPFS/IndexedDB cache; the UI says so. They are not automatically cloud backed up. A cloud save conflict/failure pauses further cloud writes and retains local edits. A project with unsynced local edits and a different cloud revision is not overwritten automatically. Use the same browser for local sources. Browser export capability depends on WebCodecs, device resources and source codecs; there is no claim of a server-render fallback.
+
+Finished exports download locally. Publishing is the existing validated file-upload flow, subject to configured upload availability. No editor request creates a generation quote or charges credits. Upstream automatic captioning downloads its fixed browser transcription model; language choice is retained, model/provider selection is not exposed.

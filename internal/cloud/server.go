@@ -126,6 +126,8 @@ func (s *Server) Router() http.Handler {
 				v, e := s.Store.CreateProject(r.Context(), currentUser(r), b.Name, b.Description)
 				s.result(w, v, e)
 			})
+			r.Get("/projects/{project}/editor", s.getEditorDocument)
+			r.Put("/projects/{project}/editor", s.saveEditorDocument)
 			r.Get("/credits", func(w http.ResponseWriter, r *http.Request) {
 				v, e := s.Store.Credits(r.Context(), currentUser(r).WorkspaceID)
 				s.result(w, v, e)

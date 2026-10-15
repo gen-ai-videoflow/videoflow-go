@@ -24,6 +24,7 @@
   import ShortsFeed from './viewing/ShortsFeed.svelte';
   import {settingsSection,studioSection} from './navigation';
  import Dashboard from './Dashboard.svelte';
+ import EditorPage from './EditorPage.svelte';
  import * as Dropdown from '$lib/components/ui/dropdown-menu';
   import PublicProfile from './PublicProfile.svelte';
   import Studio from './Studio.svelte';
@@ -86,22 +87,23 @@
   const resourceSection=$derived(studioSection(path,page.url.searchParams.get('tab')||''));
   const canvasPage=$derived(path==='/studio'&&!resourceSection);
   const dashboardPage=$derived(path==='/studio/dashboard');
+  const editorPage=$derived(path==='/studio/editor');
   const viewingRoute=$derived(['/','/discover','/following','/search','/library','/history','/shorts'].includes(path)||path.startsWith('/watch/')||path.startsWith('/shorts/'));
   const creatorUtilityPage=$derived(path.startsWith('/studio/publish')||path.startsWith('/studio/upload')||path.startsWith('/studio/outputs/')||path==='/channel');
   const viewerPage=$derived(viewingRoute||!!settingsTab||['/', '/discover','/following','/search','/settings','/security','/profile','/payments','/premium','/memberships','/credits'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/'));
-  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || ((canvasPage||resourceSection||dashboardPage) ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
+  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || ((canvasPage||resourceSection||dashboardPage||editorPage) ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
   const signInHref=$derived(authHref('/login',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const signUpHref=$derived(authHref('/register',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
-  const displayAuth=$derived(signInPage||((canvasPage||resourceSection||dashboardPage)&&sessionKnown&&!user));
+  const displayAuth=$derived(signInPage||((canvasPage||resourceSection||dashboardPage||editorPage)&&sessionKnown&&!user));
   const publicPage = $derived(path==='/shorts'||path.startsWith('/shorts/')||['/','/discover','/search'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
   const createNav=[{url:'/create',label:'Create video',icon:Clapperboard},{url:'/studio/templates',label:'Templates',icon:LayoutTemplate}];
   const browseNav=[{url:'/discover',label:'Discover',icon:Compass}];
   const outputNav=[{url:'/studio/videos',label:'My videos',icon:Film}];
-  const advancedNav=[{url:'/studio',label:'Canvas',icon:Clapperboard},{url:'/workspace',label:'Project workspace',icon:FolderOpen}];
+  const advancedNav=[{url:'/studio/editor',label:'Editor',icon:Clapperboard},{url:'/studio',label:'Storyboard',icon:Clapperboard},{url:'/workspace',label:'Project workspace',icon:FolderOpen}];
   const systemNav=[{url:'/channel',label:'My content',icon:Radio}];
   const mobileNav=[{url:'/studio/dashboard',label:'Overview',icon:LayoutTemplate},{url:'/projects',label:'Projects',icon:FolderOpen},...createNav,...outputNav,...advancedNav,...browseNav,...systemNav];
   const active=(url:string)=>url==='/workspace'?!!resourceSection:url==='/studio'?canvasPage:path===(aliases[url]||url);
-  const titles: Record<string,string> = {'/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Canvas','/studio/dashboard':'Overview','/workspace':'Project workspace','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
+  const titles: Record<string,string> = {'/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Canvas','/studio/dashboard':'Projects overview','/studio/editor':'Video editor','/workspace':'Project workspace','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
   const list = (value:any):any[] => Array.isArray(value) ? value : value?.items || value?.videos || value?.projects || value?.jobs || [];
   const money = (cents:number | undefined, currency = 'USD') => cents == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency}).format(cents/100);
   const date = (value:string) => value ? new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
@@ -117,14 +119,14 @@
   async function load(current:string) {
     const sequence=++loadSequence;
     loading = true; loadFailed = false; error = ''; notice = ''; data = {}; playback = ''; quote = null; showReport = false; reportReason = ''; followed = false;
-    if (authPage||settingsTab||viewingRoute||!!resourceSection||dashboardPage||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
+    if (authPage||settingsTab||viewingRoute||!!resourceSection||dashboardPage||editorPage||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
     if (!user && !publicPage) { loading = false; return; }
     try {
       let candidate:any={};let candidateJobs:any[]|undefined;
       if (canvasPage) candidate = {};
       else if(['/', '/discover','/following','/search'].includes(current))candidate={videos:list(await request(`/feed?${new URLSearchParams({...((current==='/following')?{filter:'following'}:{}),...(feedQuery?{q:feedQuery}:{})})}`))};
       else if (current === '/projects') candidate = {projects:list(await request('/projects'))};
-      else if (current === '/create') { const [p,j] = await Promise.all([request('/projects'),request('/jobs')]); projects = list(p); jobs = list(j); }
+      else if (current === '/create') { const [p,j] = await Promise.all([request('/projects'),request('/jobs')]); projects = list(p); jobs = list(j); const requestedProject=page.url.searchParams.get('project'); if(requestedProject&&projects.some((p:any)=>p.id===requestedProject)) projectId=requestedProject; }
       else if (current === '/credits') { const [balance,payments] = await Promise.all([request('/credits'),request('/payments/options')]); candidate = {...balance,payments}; }
       else if (current === '/channel') { const [channel,generations] = await Promise.all([request('/channel'),request('/jobs')]);candidate=channel; jobs=list(generations); channelName = channel.channel?.name || channel.name || ''; channelDescription = channel.channel?.description || channel.description || ''; }
       else if (current === '/earnings') { const [earnings,analytics,account] = await Promise.all([request('/creator/earnings'), request('/creator/analytics'),request('/creator/payout-account')]); candidate = {...earnings,analytics}; payout=account;payoutCountry=account.country || ''; }
@@ -159,8 +161,8 @@
 {:else}
 {#snippet cloudContent()}
   <div class="cloud-body min-h-0 min-w-0 flex-1 overflow-hidden">
-    {#if !canvasPage&&!resourceSection&&!dashboardPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
-    <main class="cloud-main" class:cloud-canvas-main={canvasPage} class:viewer-main={viewerPage}>
+    {#if !canvasPage&&!editorPage&&!resourceSection&&!dashboardPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
+    <main class="cloud-main" class:cloud-canvas-main={canvasPage||editorPage} class:viewer-main={viewerPage}>
       {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><button onclick={() => load(path)}>Try again</button></div>{/if}
       {#if notice}<div class="cloud-notice" role="status"><Check size={17}/>{notice}</div>{/if}
       {#if !ready || loading || (viewingRoute&&!sessionKnown)}<div class="cloud-loading" role="status"><LoaderCircle class="animate-spin" size={25}/><span>{settingsTab?'Loading settings…':path.startsWith('/studio')?'Loading Studio…':'Loading videos…'}</span></div>
@@ -175,6 +177,8 @@
         {#key page.url.search}<PublishComposer/>{/key}
       {:else if settingsTab}
         <SettingsPage {user} section={settingsTab} invoiceId={page.url.searchParams.get('invoice')||''} onUpdated={(updated)=>{if(updated)user=updated;}}/>
+      {:else if editorPage}
+        <EditorPage {user}/>
       {:else if dashboardPage}
         <Dashboard {user}/>
       {:else if resourceSection}
@@ -215,7 +219,7 @@
     </main>
   </div>
 {/snippet}
-{#if viewerPage}<ViewerShell {user} {path} {signInHref} onSignOut={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/');})}>{@render cloudContent()}</ViewerShell>{:else if creatorUtilityPage}<CreatorShell {path}>{@render cloudContent()}</CreatorShell>{:else}<div class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
+{#if viewerPage}<ViewerShell {user} {path} {signInHref} onSignOut={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/');})}>{@render cloudContent()}</ViewerShell>{:else if creatorUtilityPage}<CreatorShell {path}>{@render cloudContent()}</CreatorShell>{:else if editorPage}<div class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground">{@render cloudContent()}</div>{:else}<div class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
   <nav aria-label="Primary" class="studio-mobile-header md:hidden"><a href="/studio/dashboard"><BrandLogo compact/></a><Dropdown.Root><Dropdown.Trigger class="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">{titles[path]||'Studio'}<SlidersHorizontal class="size-4"/></Dropdown.Trigger><Dropdown.Content align="end">{#each mobileNav as item}<Dropdown.Item onSelect={()=>void goto(item.url)}><item.icon class="size-4"/>{item.label}</Dropdown.Item>{/each}<Dropdown.Separator/><Dropdown.Item onSelect={()=>void goto('/settings/account')}>Account settings</Dropdown.Item><Dropdown.Item onSelect={()=>void goto('/credits')}>Credits</Dropdown.Item></Dropdown.Content></Dropdown.Root></nav>
   <aside class="studio-sidebar" class:collapsed={sidebarCollapsed} aria-label="Studio navigation">
     <div class="sidebar-heading">

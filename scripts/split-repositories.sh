@@ -26,7 +26,7 @@ python3 - "$root" "$output" <<'PY'
 from pathlib import Path
 import shutil, sys, json
 src, dst = map(Path, sys.argv[1:])
-ignored = {'.git','.codegraph','.terraform','node_modules','.svelte-kit','build','dist','storage','data','__pycache__','.venv'}
+ignored = {'.git','.codegraph','.terraform','node_modules','.svelte-kit','build','dist','storage','data','__pycache__','.venv','editor-app'}
 def ignore(directory, names):
     return [n for n in names if n in ignored or n.startswith('.env') and n not in {'.env.example','.env.cloud.example'} or n.endswith(('.tfstate','.tfstate.backup','.tfplan','.pem','.key')) or n.endswith('.tfvars') and not n.endswith('.tfvars.example')]
 shutil.copytree(src/'frontend', dst/'videoflow-web', ignore=ignore, symlinks=True)
@@ -37,6 +37,9 @@ if (src/'.impeccable/config.json').exists():
     (web/'.impeccable').mkdir(exist_ok=True)
     shutil.copy2(src/'.impeccable/config.json',web/'.impeccable/config.json')
     if (src/'.impeccable/design.json').exists(): shutil.copy2(src/'.impeccable/design.json',web/'.impeccable/design.json')
+if (src/'docs/EDITOR-OPERATIONS.md').is_file():
+    (web/'docs').mkdir(exist_ok=True)
+    shutil.copy2(src/'docs/EDITOR-OPERATIONS.md',web/'docs/EDITOR-OPERATIONS.md')
 if (src/'docs/ux').is_dir():
     shutil.copytree(src/'docs/ux', web/'docs/ux', dirs_exist_ok=True)
 if (src/'docs/launch').is_dir():
@@ -45,7 +48,7 @@ package=json.loads((web/'package.json').read_text())
 for name in ('dev','build','check'):
     package['scripts'][name]='VITE_CLOUD_MODE=true '+package['scripts'][name]
 (web/'package.json').write_text(json.dumps(package,indent=2)+'\n')
-(web/'.gitignore').write_text('node_modules/\n.svelte-kit/\nbuild/\n.env\n.env.*\n!.env.example\n')
+(web/'.gitignore').write_text('node_modules/\n.svelte-kit/\nbuild/\nstatic/editor-app/\n.env\n.env.*\n!.env.example\n')
 (web/'README.md').write_text('# VideoFlow Web\n\nSvelteKit + shadcn-svelte SaaS frontend. Run `npm ci`, then `CLOUD_API_INTERNAL_URL=http://localhost:8000/v1 npm run dev`. Cloud mode is enabled by the package scripts. Production: `docker build -t videoflow-web .`; run with `CLOUD_API_INTERNAL_URL`, `ORIGIN`, and `PORT`. The backend API contract lives in the companion videoflow-api repository; generated wire types are included. No provider or payment secrets belong here.\n')
 backend=dst/'videoflow-api'; backend.mkdir()
 for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs','deploy','go.mod','go.sum','Makefile','README.md','LICENSE','.gitignore','.dockerignore','.env.cloud.example','compose.cloud.yml','PRODUCT.md','DESIGN.md'):
@@ -55,10 +58,10 @@ for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs',
 # Keep the backend contract's shared wire types alongside OpenAPI.
 shutil.copy2(src/'frontend/src/lib/cloud/generated.ts', backend/'api/generated.ts')
 if not (dst/'videoflow-web'/'.dockerignore').exists():
-    (dst/'videoflow-web'/'.dockerignore').write_text('.git\n.env*\nnode_modules\n.svelte-kit\nbuild\n')
+    (dst/'videoflow-web'/'.dockerignore').write_text('.git\n.env*\n**/node_modules\n**/.svelte-kit\nbuild\nstatic/editor-app\n')
 web_dockerfile=src/'deploy/Dockerfile.cloud-web'
 if web_dockerfile.is_file():
-    (dst/'videoflow-web'/'Dockerfile').write_text(web_dockerfile.read_text().replace('COPY frontend/package*.json ./','COPY package*.json ./').replace('COPY frontend/ ./','COPY . ./'))
+    (dst/'videoflow-web'/'Dockerfile').write_text(web_dockerfile.read_text().replace('COPY frontend/package*.json ./','COPY package*.json ./').replace('COPY frontend/ ./','COPY . ./').replace('COPY frontend/editor/package*.json ./editor/','COPY editor/package*.json ./editor/'))
 workflow=src/'.github/workflows/cloud.yml'
 if workflow.is_file():
     for repo in (dst/'videoflow-web',backend):

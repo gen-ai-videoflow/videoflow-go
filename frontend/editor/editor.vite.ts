@@ -1,0 +1,3 @@
+import {defineConfig} from 'vite';import react from '@vitejs/plugin-react';import tailwindcss from '@tailwindcss/vite';import {fileURLToPath} from 'node:url';
+const local=(s:string)=>fileURLToPath(new URL(s,import.meta.url));
+export default defineConfig({base:'/editor-app/',plugins:[react(),tailwindcss()],resolve:{alias:{'@':local('./src/upstream'),'next/navigation':local('./src/navigation.ts'),'next/image':local('./src/image.tsx')}},define:{'process.env.NODE_ENV':JSON.stringify('production')},worker:{format:'es'},build:{outDir:'../static/editor-app',emptyOutDir:true,chunkSizeWarningLimit:2000}});

@@ -1,0 +1,243 @@
+:root,
+.dark {
+  --background: #0b0c0b;
+  --foreground: #ebe9e2;
+  --card: #121312;
+  --card-foreground: #ebe9e2;
+  --popover: #1b1c1a;
+  --popover-foreground: #ebe9e2;
+  --primary: #ff5b1f;
+  --primary-foreground: #0b0c0b;
+  --accent: #292b26;
+  --accent-foreground: #ebe9e2;
+  --muted: #1b1c1a;
+  --muted-foreground: #a3a199;
+  --border: #ebe9e21f;
+  --input: #ebe9e238;
+  --ring: #ff5b1f;
+}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+}
+.vf-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+.vf-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.vf-header strong {
+  font-size: 13px;
+}
+.vf-header > span {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.vf-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  font-size: 12px;
+}
+.vf-workspace {
+  display: grid;
+  grid-template-columns: 64px 260px minmax(300px, 1fr) 270px;
+  min-height: 0;
+  flex: 1;
+  gap: 2px;
+}
+.vf-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 4px;
+  border-right: 1px solid var(--border);
+}
+.vf-tools button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 0;
+  font-size: 10px;
+  border-radius: 7px;
+  color: var(--muted-foreground);
+}
+.vf-tools .active {
+  color: #ff8e60;
+  background: #ff5b1f1a;
+}
+.vf-assets,
+.vf-properties {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--card);
+}
+.vf-preview {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.vf-timeline {
+  height: 280px;
+  min-height: 180px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+}
+.vf-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  padding: 6px 16px;
+  border-top: 1px solid var(--border);
+}
+.vf-foot a {
+  text-decoration: underline;
+}
+.vf-foot button {
+  margin-left: auto;
+  color: var(--foreground);
+}
+.vf-error {
+  padding: 40px;
+  display: grid;
+  gap: 18px;
+  place-content: center;
+  height: 100dvh;
+  text-align: center;
+}
+.vf-error button {
+  background: var(--primary);
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--primary-foreground);
+}
+button {
+  cursor: pointer;
+}
+.vf-header [class*="bg-linear"],
+.vf-header [class*="bg-[#38BDF8]"] {
+  background: var(--primary) !important;
+  color: var(--primary-foreground);
+  box-shadow: none !important;
+}
+.vf-header [class*="from-white"] {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .vf-workspace {
+    grid-template-columns: 60px 220px minmax(250px, 1fr);
+  }
+  .vf-properties {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .vf-workspace {
+    grid-template-columns: 52px minmax(160px, 1fr);
+  }
+  .vf-assets {
+    display: none;
+  }
+  .vf-properties {
+    display: none;
+  }
+  .vf-header > span {
+    display: none;
+  }
+  .vf-header-actions {
+    gap: 10px;
+  }
+  .vf-timeline {
+    height: 240px;
+  }
+  .vf-foot {
+    font-size: 9px;
+    flex-wrap: wrap;
+  }
+  .vf-header strong {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.vf-source-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #382718;
+  font-size: 12px;
+  max-height: 150px;
+  overflow: auto;
+}
+.vf-source-warning span {
+  color: #e6c7a9;
+}
+.vf-source-warning label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.vf-source-warning input {
+  max-width: 230px;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .vf-workspace {
+    grid-template-columns: 52px minmax(130px, 1fr);
+    grid-template-rows: minmax(180px, 1fr) minmax(130px, 1fr);
+  }
+  .vf-tools {
+    grid-row: 1/3;
+  }
+  .vf-assets {
+    display: block;
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .vf-preview {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .vf-header-actions {
+    gap: 6px;
+    font-size: 10px;
+  }
+  .vf-header {
+    padding: 0 8px;
+    gap: 8px;
+  }
+  .vf-header-actions > button:first-child {
+    display: none;
+  }
+  .vf-timeline {
+    height: 200px;
+    min-height: 150px;
+  }
+  .vf-foot {
+    display: none;
+  }
+}

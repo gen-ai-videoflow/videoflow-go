@@ -48,3 +48,8 @@ electron/payload/
 
 # Local interface review captures (not shipped browser assets)
 .impeccable/review/
+
+# Generated open-source editor bundle
+frontend/static/editor-app/
+
+/frontend/editor/node_modules/

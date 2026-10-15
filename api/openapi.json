@@ -10,6 +10,116 @@
     }
   ],
   "paths": {
+    "/projects/{project}/editor": {
+      "get": {
+        "operationId": "get_projects_project_editor",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditorDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put_projects_project_editor",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditorDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "document": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "revision",
+                  "document"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "/payments/options": {
       "get": {
         "operationId": "get_payments_options",
@@ -8284,6 +8394,26 @@
         "required": [
           "nodes",
           "edges"
+        ]
+      },
+      "EditorDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer"
+          },
+          "document": {
+            "type": "object",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "document"
         ]
       }
     }
