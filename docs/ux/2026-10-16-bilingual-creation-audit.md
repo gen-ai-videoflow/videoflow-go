@@ -27,3 +27,5 @@ No live AI/provider calls, image generation, reference-image conditioning, physi
 A local disk-space failure interrupted formatting. Affected working files were restored and checkpointed, generated caches cleared, then type/render checks rerun successfully. The last working preview was preserved throughout; failed intermediate builds were not promoted.
 
 Starter import check passed: a mobile Mandarin starter was customized with a new script marker and first-scene direction, then created through the normal form. It opened `/studio` for the returned project; server readback preserved the custom Mandarin script and scene prompt, created3scenes and created0generation jobs. This verified a free editable project import, not a paid generation.
+
+The mobile canvas review found an oversized minimap and a desktop right-click coachmark obscuring the graph. The final responsive fix hides these two aids on narrow screens and reduces the desktop minimap to130×90px. Zoom and fit controls remain available. This is part of the bounded review fix batch.

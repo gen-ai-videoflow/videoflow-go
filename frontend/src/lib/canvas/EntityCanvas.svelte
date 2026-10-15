@@ -603,6 +603,7 @@
       <Background />
       <Controls />
       <MiniMap
+ style="width:130px;height:90px"
         pannable
         zoomable
         nodeColor={(n) => kindColor(String(n.data?.kind ?? ""))}
@@ -665,6 +666,8 @@
     background: var(--card);
   }
   @media (max-width: 767px) {
+ .canvas-shell :global(.svelte-flow__minimap),.canvas-shell :global([data-testid="canvas-coachmark"]){display:none}
+
     .canvas-shell {
       flex-direction: column;
     }
