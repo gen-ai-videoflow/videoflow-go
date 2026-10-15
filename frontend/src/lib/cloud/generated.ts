@@ -137,6 +137,8 @@ export interface StudioEntity {
   updated_at: string;
 }
 
+export interface EditorDocument { revision: number; document: Record<string, unknown> | null; updated_at?: string; }
+
 export interface PipelineScene { title: string; prompt: string; duration: number; status: string; }
 export interface PipelineProgress { stage: string; status: string; script: string; scenes: PipelineScene[]; }
 

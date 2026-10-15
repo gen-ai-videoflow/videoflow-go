@@ -8404,8 +8404,10 @@
             "type": "integer"
           },
           "document": {
-            "type": "object",
-            "nullable": true
+            "type": [
+              "object",
+              "null"
+            ]
           },
           "updated_at": {
             "type": "string"
