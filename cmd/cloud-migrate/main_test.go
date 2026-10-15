@@ -65,13 +65,16 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	if _, e = runtimeStore.DB.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id)VALUES('test','dispute_probe',$1)`, role); e != nil {
 		t.Fatalf("append-only audit insert: %v", e)
 	}
-	for _, query := range []string{`UPDATE cloud_credit_entries SET amount=0 WHERE false`, `DELETE FROM cloud_credit_postings WHERE false`, `UPDATE cloud_money_postings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_earnings WHERE false`, `UPDATE cloud_earnings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_premium_refunds WHERE false`, `UPDATE cloud_premium_invoices SET gross_cents=0 WHERE false`, `DELETE FROM cloud_premium_invoices WHERE false`} {
+	for _, query := range []string{`UPDATE cloud_credit_entries SET amount=0 WHERE false`, `DELETE FROM cloud_credit_postings WHERE false`, `UPDATE cloud_money_postings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_earnings WHERE false`, `UPDATE cloud_earnings SET amount_cents=0 WHERE false`, `DELETE FROM cloud_premium_refunds WHERE false`, `UPDATE cloud_premium_invoices SET gross_cents=0 WHERE false`, `DELETE FROM cloud_premium_invoices WHERE false`, `UPDATE cloud_crypto_settlements SET net_amount='0' WHERE false`, `DELETE FROM cloud_crypto_settlements WHERE false`, `UPDATE cloud_crypto_invoices SET amount='0' WHERE false`, `UPDATE cloud_crypto_invoices SET credits=0 WHERE false`, `DELETE FROM cloud_crypto_invoices WHERE false`} {
 		if _, e = runtimeStore.DB.ExecContext(ctx, query); e == nil {
 			t.Fatalf("journal mutation allowed: %s", query)
 		}
 	}
 	if _, e = runtimeStore.DB.ExecContext(ctx, `UPDATE cloud_premium_invoices SET refunded_cents=0 WHERE false`); e != nil {
 		t.Fatalf("Premium refund update denied: %v", e)
+	}
+	if _, e = runtimeStore.DB.ExecContext(ctx, `UPDATE cloud_crypto_invoices SET status='review',last_notify_at=now() WHERE false`); e != nil {
+		t.Fatalf("Crypto invoice status update denied: %v", e)
 	}
 	purchaseID := "role-purchase-" + role
 	if _, e = store.DB.ExecContext(ctx, `INSERT INTO cloud_purchases(id,workspace_id,pack_id,credits,price_cents,currency,status,payment_intent,idempotency_key)VALUES($1,$2,'test',100,1000,'usd','paid',$3,$1)`, purchaseID, user.WorkspaceID, "pi_"+role); e != nil {
@@ -91,6 +94,25 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	server.Router().ServeHTTP(response, request)
 	if response.Code != 200 {
 		t.Fatalf("restricted-role dispute webhook: %d %s", response.Code, response.Body.String())
+	}
+	cryptoID := "crypto-role-" + role
+	if _, e = store.DB.ExecContext(ctx, `INSERT INTO cloud_crypto_invoices(id,user_id,workspace_id,purpose,credits,price_cents,idempotency_key,reference,address,network,vm_type,token,token_address,treasury_address,amount,consolidate_amount,amount_net,fee_amount)VALUES($1,$2,$3,'credits',50,100,$1,$1,$4,'base-mainnet','EVM','USDC','token','treasury','1','1','1','0')`, cryptoID, user.ID, user.WorkspaceID, "deposit-"+role); e != nil {
+		t.Fatal(e)
+	}
+	server.Config.CryptoRailsWebhookSecret = "crypto-role-secret"
+	cryptoBody := `{"fromAddress":"deposit-` + role + `","toAddress":"treasury","reference":"` + cryptoID + `","type":"consolidate","status":"confirmed","operationType":"api","txHash":"tx-` + role + `","amount":"1","providerFee":"0","netAmount":"1","tokenName":"USDC","tokenAddress":"token","blockchain":"base-mainnet","transactionCompletedAt":"` + time.Now().UTC().Format(time.RFC3339) + `"}`
+	cryptoMAC := hmac.New(sha256.New, []byte("crypto-role-secret"))
+	cryptoMAC.Write([]byte(cryptoBody))
+	cryptoRequest := httptest.NewRequest(http.MethodPost, "/v1/webhooks/cryptorails", strings.NewReader(cryptoBody))
+	cryptoRequest.Header.Set("x-cr-webhook-signature", hex.EncodeToString(cryptoMAC.Sum(nil)))
+	cryptoResponse := httptest.NewRecorder()
+	server.Router().ServeHTTP(cryptoResponse, cryptoRequest)
+	if cryptoResponse.Code != 200 {
+		t.Fatalf("restricted-role crypto settlement: %d %s", cryptoResponse.Code, cryptoResponse.Body.String())
+	}
+	balance, e := runtimeStore.Credits(ctx, user.WorkspaceID)
+	if e != nil || balance.Available != 0 || !balance.Restricted || len(balance.Transactions) < 1 || balance.Transactions[0].Amount != 50 {
+		t.Fatalf("restricted-role crypto credit grant: %+v %v", balance, e)
 	}
 	server.Close()
 	runtimeStore.Close()

@@ -9,18 +9,22 @@ import (
 )
 
 type Config struct {
-	PremiumPriceCents                                                              int64
-	StoryModel, FFmpegPath                                                         string
-	StoryCredits, StoryMaxCostMicros, AssemblyCredits                              int64
-	S3PublicEndpoint                                                               string
-	AnalyticsBucket                                                                string
-	CashPayoutsEnabled                                                             bool
-	UploadsBucket, TrustedProxyCIDRs                                               string
-	EncodingQueueURL                                                               string
-	MembershipsEnabled, MembershipPolicyConfigured, ConnectEnabled, RewardsEnabled bool
-	MembershipCommissionBPS, RewardBPS, RewardMonthlyCapCents                      int64
-	SupportedPayoutCountries                                                       string
-	ProviderDailyBudgetMicros, ProviderMaxCostMicros                               int64
+	CryptoRailsEnabled, CryptoRailsUSDPegAccepted                                                                                                                                                         bool
+	CryptoRailsAPIURL, CryptoRailsAPIKey, CryptoRailsWebhookSecret, CryptoRailsNetwork, CryptoRailsVMType, CryptoRailsToken, CryptoRailsTokenAddress, CryptoRailsTreasuryAddress, CryptoRailsDepositFixed string
+	CryptoRailsTokenDecimals                                                                                                                                                                              int
+	CryptoRailsDepositFeeBPS                                                                                                                                                                              int64
+	PremiumPriceCents                                                                                                                                                                                     int64
+	StoryModel, FFmpegPath                                                                                                                                                                                string
+	StoryCredits, StoryMaxCostMicros, AssemblyCredits                                                                                                                                                     int64
+	S3PublicEndpoint                                                                                                                                                                                      string
+	AnalyticsBucket                                                                                                                                                                                       string
+	CashPayoutsEnabled                                                                                                                                                                                    bool
+	UploadsBucket, TrustedProxyCIDRs                                                                                                                                                                      string
+	EncodingQueueURL                                                                                                                                                                                      string
+	MembershipsEnabled, MembershipPolicyConfigured, ConnectEnabled, RewardsEnabled                                                                                                                        bool
+	MembershipCommissionBPS, RewardBPS, RewardMonthlyCapCents                                                                                                                                             int64
+	SupportedPayoutCountries                                                                                                                                                                              string
+	ProviderDailyBudgetMicros, ProviderMaxCostMicros                                                                                                                                                      int64
 
 	DatabaseURL, RedisURL, Region, OriginalsBucket, PlaybackBucket, QueueURL, MediaConvertRole, MediaConvertEndpoint, CloudFrontDomain, CloudFrontKeyPairID, CloudFrontPrivateKey, OpenRouterKey, VideoModel, PublicOrigin string
 	StripeSecret, StripeWebhookSecret, MailFrom, MailEndpoint                                                                                                                                                              string
@@ -32,6 +36,39 @@ type Config struct {
 
 func EnvConfig() (Config, error) {
 	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), RedisURL: os.Getenv("REDIS_URL"), Region: os.Getenv("AWS_REGION"), OriginalsBucket: os.Getenv("S3_BUCKET_ORIGINALS"), PlaybackBucket: os.Getenv("S3_BUCKET_PLAYBACK"), QueueURL: os.Getenv("SQS_QUEUE_URL"), MediaConvertRole: os.Getenv("MEDIACONVERT_ROLE_ARN"), MediaConvertEndpoint: os.Getenv("MEDIACONVERT_ENDPOINT"), CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"), CloudFrontKeyPairID: os.Getenv("CLOUDFRONT_KEY_PAIR_ID"), CloudFrontPrivateKey: os.Getenv("CLOUDFRONT_PRIVATE_KEY"), OpenRouterKey: os.Getenv("OPENROUTER_API_KEY"), VideoModel: os.Getenv("OPENROUTER_VIDEO_MODEL"), PublicOrigin: os.Getenv("PUBLIC_ORIGIN"), StripeSecret: os.Getenv("STRIPE_SECRET_KEY"), StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"), MailFrom: os.Getenv("MAIL_FROM"), MailEndpoint: os.Getenv("MAIL_ENDPOINT"), DevMode: os.Getenv("CLOUD_DEV_MODE") == "true", BillingEnabled: os.Getenv("BILLING_ENABLED") == "true", Port: 8000, CreditsPerSecond: 10}
+	c.CryptoRailsEnabled = os.Getenv("CRYPTORAILS_ENABLED") == "true"
+	c.CryptoRailsUSDPegAccepted = os.Getenv("CRYPTORAILS_USD_PEG_ACCEPTED") == "true"
+	c.CryptoRailsAPIURL = os.Getenv("CRYPTORAILS_API_URL")
+	if c.CryptoRailsAPIURL == "" {
+		c.CryptoRailsAPIURL = "https://api.cryptorails.tech/v1"
+	}
+	c.CryptoRailsAPIKey = os.Getenv("CRYPTORAILS_API_KEY")
+	c.CryptoRailsWebhookSecret = os.Getenv("CRYPTORAILS_WEBHOOK_SECRET")
+	c.CryptoRailsNetwork = os.Getenv("CRYPTORAILS_NETWORK")
+	c.CryptoRailsVMType = os.Getenv("CRYPTORAILS_VM_TYPE")
+	if raw := os.Getenv("CRYPTORAILS_TOKEN_DECIMALS"); raw != "" {
+		value, err := strconv.Atoi(raw)
+		if err != nil || value != 0 && (value < 5 || value > 18) {
+			return c, fmt.Errorf("invalid CRYPTORAILS_TOKEN_DECIMALS")
+		}
+		c.CryptoRailsTokenDecimals = value
+	}
+	c.CryptoRailsToken = os.Getenv("CRYPTORAILS_TOKEN")
+	c.CryptoRailsTokenAddress = os.Getenv("CRYPTORAILS_TOKEN_ADDRESS")
+	c.CryptoRailsTreasuryAddress = os.Getenv("CRYPTORAILS_TREASURY_ADDRESS")
+	c.CryptoRailsDepositFixed = os.Getenv("CRYPTORAILS_DEPOSIT_FIXED")
+	if raw := os.Getenv("CRYPTORAILS_DEPOSIT_FEE_BPS"); raw != "" {
+		n, e := strconv.ParseInt(raw, 10, 64)
+		if e != nil || n < 0 || n >= 10000 {
+			return c, fmt.Errorf("invalid CRYPTORAILS_DEPOSIT_FEE_BPS")
+		}
+		c.CryptoRailsDepositFeeBPS = n
+	}
+	if c.CryptoRailsEnabled {
+		if err := c.validateCryptoRails(); err != nil {
+			return c, err
+		}
+	}
 	c.StoryModel = os.Getenv("OPENROUTER_STORY_MODEL")
 	c.FFmpegPath = os.Getenv("FFMPEG_PATH")
 	if c.FFmpegPath == "" {

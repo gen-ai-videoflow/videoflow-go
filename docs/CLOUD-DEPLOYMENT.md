@@ -1,4 +1,4 @@
-> Current product decision: new recurring sales are platform-wide Premium (`BILLING_ENABLED` plus reviewed `PREMIUM_PRICE_CENTS`), not per-channel memberships. See [Premium](PREMIUM.md). Legacy membership settings/records remain only for reconciliation. The original VideoFlow canvas/sidebar and shadcn login-02/signup-02 layouts are the cloud interface.
+> Current product decision: new credit and Premium checkout uses [CryptoRails](CRYPTORAILS.md). Premium is platform-wide prepaid 30-day access with explicit renewal; generation credits are separate. Historical Stripe payments remain reconcilable, with no new Stripe sales. The original VideoFlow canvas/sidebar remains the protected Studio; public browsing uses Discover and starters use Templates.
 
 # Cloud development and AWS deployment
 
@@ -13,7 +13,7 @@ docker compose --env-file .env.cloud -f compose.cloud.yml up -d
 docker compose --env-file .env.cloud -f compose.cloud.yml --profile app up --build
 ```
 
-Studio: http://localhost:8080; API: http://localhost:8081. Infrastructure ports bind to loopback. The frontend local build uses `http://localhost:8081/v1`; production uses same-origin `/api/v1`. Do not use local defaults on a shared host. PostgreSQL persists in a named volume; `down` preserves it. LocalStack initializes private-development S3 buckets and a generation queue with a DLQ. AWS SDK endpoint support requires `AWS_ENDPOINT_URL`; LocalStack is not MediaConvert, CloudFront, email, or a payment processor. Development cloud mode may use local adapters; verify actual adapter selection in the current binary. Blank Stripe settings keep real checkout unavailable; no development response constitutes paid credit purchase. Do not copy production data or credentials into this stack.
+Studio: http://localhost:8080; API: http://localhost:8081. Infrastructure ports bind to loopback. The frontend local build uses `http://localhost:8081/v1`; production uses same-origin `/api/v1`. Do not use local defaults on a shared host. PostgreSQL persists in a named volume; `down` preserves it. LocalStack initializes private-development S3 buckets and a generation queue with a DLQ. AWS SDK endpoint support requires `AWS_ENDPOINT_URL`; LocalStack is not MediaConvert, CloudFront, email, or a payment processor. Development cloud mode may use local adapters; verify actual adapter selection in the current binary. Blank CryptoRails credentials and disabled billing/payment switches keep new checkout unavailable; no development response constitutes a paid purchase. Stripe settings are optional for historical payment reconciliation. Do not copy production data or credentials into this stack.
 
 ## Terraform foundation
 

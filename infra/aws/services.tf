@@ -32,7 +32,7 @@ resource "aws_iam_role_policy" "secrets" {
   role = aws_iam_role.execution.id
   policy = jsonencode({
     Version = "2012-10-17", Statement = [{
-      Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = values(var.secret_arns)
+      Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = concat(values(var.secret_arns), values(var.cryptorails_secret_arns))
     }]
   })
 }
@@ -92,8 +92,8 @@ resource "aws_ecs_task_definition" "services" {
       containerPort = 8080, protocol = "tcp"
     }],
     environment = each.key == "web" ? [{
-      name = "PORT", value = "8080"
-      }, { name = "ORIGIN", value = var.public_origin }, { name = "CLOUD_API_INTERNAL_URL", value = "https://${var.alb_origin_domain}/v1" }] : [
+      name      = "PORT", value = "8080"
+      }, { name = "ORIGIN", value = var.public_origin }, { name = "CLOUD_API_INTERNAL_URL", value = "https://${var.alb_origin_domain}/v1" }] : concat([
       {
         name = "PORT", value = "8080"
         }, {
@@ -153,10 +153,10 @@ resource "aws_ecs_task_definition" "services" {
         name = "CLOUDFRONT_DOMAIN", value = var.media_domain
         }, {
         name = "CLOUDFRONT_KEY_PAIR_ID", value = aws_cloudfront_public_key.media.id
-    }],
-    secrets = each.key == "web" ? [] : [for name, arn in var.secret_arns : {
+    }], each.key == "api" ? local.cryptorails_environment : []),
+    secrets = each.key == "web" ? [] : concat([for name, arn in var.secret_arns : {
       name = name, valueFrom = arn
-    }],
+    }], each.key == "api" ? [for name, arn in var.cryptorails_secret_arns : { name = name, valueFrom = arn }] : []),
     logConfiguration = {
       logDriver = "awslogs", options = {
         "awslogs-group" = aws_cloudwatch_log_group.services[each.key].name, "awslogs-region" = var.region, "awslogs-stream-prefix" = each.key

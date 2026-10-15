@@ -18,8 +18,9 @@ redis_auth_secret_arn = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secr
 secret_arns = {
  DATABASE_URL = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:database-url-REPLACE"
  REDIS_URL = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:redis-url-REPLACE"
- STRIPE_SECRET_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-key-REPLACE"
- STRIPE_WEBHOOK_SECRET = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-webhook-REPLACE"
+ # Optional only for historical Stripe reconciliation:
+ # STRIPE_SECRET_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-key-REPLACE"
+ # STRIPE_WEBHOOK_SECRET = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:stripe-webhook-REPLACE"
  OPENROUTER_API_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:openrouter-REPLACE"
  CLOUDFRONT_PRIVATE_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:playback-signing-REPLACE"
 }
@@ -42,3 +43,17 @@ ffmpeg_path = "ffmpeg"
 # Optional one-off operations task; owner DSN never enters runtime task definitions.
 migration_database_secret_arn = ""
 runtime_database_password_secret_arn = ""
+
+# New CryptoRails checkout is disabled by default; no tenant or network assumed.
+cryptorails_enabled = false
+cryptorails_secret_arns = {}
+cryptorails_api_url = "https://api.cryptorails.tech/v1"
+cryptorails_network = ""
+cryptorails_vm_type = ""
+cryptorails_token = ""
+cryptorails_token_decimals = 0
+cryptorails_token_address = ""
+cryptorails_treasury_address = ""
+cryptorails_deposit_fixed = ""
+cryptorails_deposit_fee_bps = 0
+cryptorails_usd_peg_accepted = false

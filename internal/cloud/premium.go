@@ -15,14 +15,14 @@ import (
 )
 
 func (s *Server) premiumEnabled() bool {
-	return s.Config.BillingEnabled && s.Config.PremiumPriceCents >= 100 && s.Config.PremiumPriceCents <= 100000 && s.Config.StripeSecret != ""
+	return s.cryptoEnabled() && s.Config.PremiumPriceCents >= 100 && s.Config.PremiumPriceCents <= 100000
 }
 func (s *Store) HasPremium(ctx context.Context, userID string) (bool, error) {
 	if userID == "" {
 		return false, nil
 	}
 	var active bool
-	e := s.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_premium_subscriptions p WHERE p.user_id=$1 AND p.status='active' AND p.paid_through>now() AND p.paid_through>p.revoked_through AND NOT EXISTS(SELECT 1 FROM cloud_premium_disputes d WHERE d.user_id=p.user_id AND d.status NOT IN ('won','warning_closed')))`, userID).Scan(&active)
+	e := s.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_crypto_premium WHERE user_id=$1 AND paid_through>now()) OR EXISTS(SELECT 1 FROM cloud_premium_subscriptions p WHERE p.user_id=$1 AND p.status='active' AND p.paid_through>now() AND p.paid_through>p.revoked_through AND NOT EXISTS(SELECT 1 FROM cloud_premium_disputes d WHERE d.user_id=p.user_id AND d.status NOT IN ('won','warning_closed')))`, userID).Scan(&active)
 	return active, e
 }
 func (s *Server) premiumRoutes(r chi.Router) {
@@ -39,9 +39,10 @@ func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	var end any
 	status := "none"
+	legacyActive := false
 	if u.ID != "" {
 		var paid time.Time
-		err := s.Store.DB.QueryRowContext(r.Context(), `SELECT status,paid_through FROM cloud_premium_subscriptions WHERE user_id=$1`, u.ID).Scan(&status, &paid)
+		err := s.Store.DB.QueryRowContext(r.Context(), `SELECT status,paid_through,(status='active' AND paid_through>now() AND paid_through>revoked_through AND NOT EXISTS(SELECT 1 FROM cloud_premium_disputes WHERE user_id=$1 AND status NOT IN ('won','warning_closed'))) FROM cloud_premium_subscriptions WHERE user_id=$1`, u.ID).Scan(&status, &paid, &legacyActive)
 		if err != nil && err != sql.ErrNoRows {
 			s.fail(w, err)
 			return
@@ -51,6 +52,22 @@ func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
 		}
 		if !active && status == "active" {
 			status = "expired_or_held"
+		}
+	}
+	if u.ID != "" {
+		var cryptoEnd time.Time
+		err := s.Store.DB.QueryRowContext(r.Context(), `SELECT paid_through FROM cloud_crypto_premium WHERE user_id=$1`, u.ID).Scan(&cryptoEnd)
+		if err != nil && err != sql.ErrNoRows {
+			s.fail(w, err)
+			return
+		}
+		if err == nil {
+			if prior, ok := end.(time.Time); !ok || !legacyActive || cryptoEnd.After(prior) {
+				end = cryptoEnd
+			}
+			if active {
+				status = "active"
+			}
 		}
 	}
 	canManage := false
@@ -63,7 +80,7 @@ func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
 			status = "pending"
 		}
 	}
-	s.json(w, 200, map[string]any{"enabled": s.premiumEnabled(), "price_cents": s.Config.PremiumPriceCents, "currency": "usd", "interval": "month", "active": active, "paid_through": end, "status": status, "can_manage": canManage})
+	s.json(w, 200, map[string]any{"enabled": s.premiumEnabled(), "price_cents": s.Config.PremiumPriceCents, "currency": "usd", "interval": "30_days", "auto_renew": false, "active": active, "paid_through": end, "status": status, "can_manage": canManage})
 }
 func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
 	if !s.premiumEnabled() {
@@ -84,8 +101,8 @@ func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, ErrValidation)
 		return
 	}
-	result, e := s.startPremiumCheckout(r.Context(), u, key)
-	s.result(w, map[string]string{"url": result}, e)
+	result, e := s.newCryptoInvoice(r.Context(), u, "premium", "", key)
+	s.result(w, result, e)
 }
 func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (string, error) {
 	tx, e := s.Store.DB.BeginTx(ctx, nil)

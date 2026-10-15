@@ -65,9 +65,11 @@ func (s *Server) Router() http.Handler {
 		s.json(w, 200, map[string]string{"status": "ok"})
 	})
 	r.Post("/v1/webhooks/stripe", s.paymentWebhook)
+	r.Post("/v1/webhooks/cryptorails", s.cryptoWebhook)
 	r.Get("/authorize", s.authorizeMedia)
 	r.Route("/v1", func(r chi.Router) {
 		s.premiumRoutes(r)
+		s.cryptoRoutes(r)
 		r.Post("/auth/register", s.register)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/logout", s.auth(s.logout))
@@ -82,7 +84,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/videos/{id}/playback-grant", s.issuePlayback)
 		r.Get("/channels/{handle}", s.publicChannel)
 		r.Get("/billing/packs", func(w http.ResponseWriter, r *http.Request) {
-			s.json(w, 200, map[string]any{"packs": Packs, "checkout_enabled": s.Config.BillingEnabled && s.Config.StripeSecret != ""})
+			s.json(w, 200, map[string]any{"packs": Packs, "checkout_enabled": s.cryptoEnabled()})
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
@@ -118,8 +120,8 @@ func (s *Server) Router() http.Handler {
 				if !s.decode(w, r, &b) {
 					return
 				}
-				v, e := s.checkout(r.Context(), currentUser(r), b.PackID, r.Header.Get("Idempotency-Key"))
-				s.result(w, map[string]string{"url": v}, e)
+				v, e := s.newCryptoInvoice(r.Context(), currentUser(r), "credits", b.PackID, r.Header.Get("Idempotency-Key"))
+				s.result(w, v, e)
 			})
 			r.Post("/watch-sessions", s.beginWatch)
 			r.Post("/watch-events", s.watchEvent)

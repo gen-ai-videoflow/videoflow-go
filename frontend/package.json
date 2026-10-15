@@ -20,6 +20,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.0",
 		"@types/node": "^25.9.2",
+		"@types/qrcode": "^1.5.6",
 		"bits-ui": "^2.18.1",
 		"clsx": "^2.1.1",
 		"mode-watcher": "^1.1.0",
@@ -42,6 +43,7 @@
 		"@xyflow/svelte": "^1.6.0",
 		"ai": "^6.0.199",
 		"hls.js": "^1.7.3",
+		"qrcode": "^1.5.4",
 		"runed": "^0.37.1",
 		"streamdown-svelte": "^3.0.6"
 	}

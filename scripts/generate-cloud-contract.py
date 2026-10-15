@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 schemas={
+ 'PaymentInvoice':{'id':'string','purpose':'string','status':'string','address':'string','network':'string','token':'string','token_address':'string','amount':'string','amount_net':'string','fee_amount':'string','price_cents':'integer','pack_id':'string','credits':'integer','expires_at':'string','created_at':'string'},
  'User':{'id':'string','email':'string','name':'string','workspace_id':'string','channel_id':'string','handle':'string','verified':'boolean'},
  'Project':{'id':'string','workspace_id':'string','name':'string','description':'string','created_at':'string'},
  'Quote':{'id':'string','credits':'integer','expires_at':'string'},
@@ -21,6 +22,7 @@ objects['PipelineProgress']=obj({'stage':S,'status':S,'script':S,'scenes':{'type
 objects['CanvasGraph']=obj({'nodes':{'type':'array','items':obj({'id':S,'type':S,'label':S,'data':{'type':'object'}},('id','type','label'))},'edges':{'type':'array','items':obj({'source':S,'target':S,'label':S},('source','target','label'))}},('nodes','edges'))
 requests={
  'empty':obj({}),
+ 'payment_invoice':obj({'purpose':{'type':'string','enum':['credits','premium']},'pack_id':S},('purpose',)),
  'edge':obj({'source':S,'target':S,'label':{'type':'string','enum':['casts','uses','reference']}},('source','target','label')),
  'canvas':obj({'title':S,'name':S,'description':S,'summary':S,'prompt':S,'duration':{'type':'number'},'aspect_ratio':S,'camera':S,'movement':S,'shot_order':I,'scene_id':S,'object_key':S}),
  'studio':obj({'title':{'type':'string','maxLength':180},'content':{'type':'string','maxLength':100000},'description':{'type':'string','maxLength':8000},'prompt':{'type':'string','maxLength':8000},'object_key':S,'duration':{'type':'number','minimum':0,'maximum':3600},'position':{'type':'integer','minimum':0,'maximum':10000},'metadata':{'type':'object'}},('title',)),
@@ -52,11 +54,12 @@ requests={
 }
 # method, route, request schema, response schema, anonymous
 routes=[
- ('get','/premium',None,None,True),('post','/premium/checkout','empty',None,False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
+ ('get','/payments/options',None,None,True),('post','/payments/invoices','payment_invoice','PaymentInvoice',False),('get','/payments/invoices',None,'PaymentInvoice[]',False),('get','/payments/invoices/{id}',None,'PaymentInvoice',False),('post','/payments/invoices/{id}/notify','empty','PaymentInvoice',False),
+ ('get','/premium',None,None,True),('post','/premium/checkout','empty','PaymentInvoice',False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
  ('post','/auth/register','register','User',True),('post','/auth/login','login','User',True),('post','/auth/logout',None,None,False),
  ('post','/auth/forgot-password','email',None,True),('post','/auth/resend-verification','email',None,True),('post','/auth/verify-email','token',None,True),('post','/auth/reset-password','reset',None,True),
  ('get','/me',None,'User',False),('get','/projects',None,'Project[]',False),('post','/projects','project','Project',False),
- ('get','/credits',None,None,False),('get','/billing/packs',None,None,True),('post','/billing/checkout','checkout',None,False),
+ ('get','/credits',None,None,False),('get','/billing/packs',None,None,True),('post','/billing/checkout','checkout','PaymentInvoice',False),
  ('get','/jobs',None,'Job[]',False),('get','/jobs/{id}',None,'Job',False),('get','/jobs/{id}/events',None,None,False),('get','/jobs/{id}/download',None,None,False),('post','/jobs/{id}/cancel',None,None,False),
  ('get','/projects/{project}/jobs',None,'Job[]',False),('get','/jobs/{id}/pipeline',None,'PipelineProgress',False),('post','/projects/{project}/pipelines/quotes','pipeline_quote','Quote',False),('post','/projects/{project}/assembly/quotes','assembly_quote','Quote',False),
  ('post','/generation/quotes','quote','Quote',False),('post','/generation/jobs','job','Job',False),
@@ -78,8 +81,8 @@ for base in ('/projects/{project}/scenes/{scene}/cast/{character}','/projects/{p
 paths={}
 for method,path,body,response,anonymous in routes:
  params=[{'name':part[1:-1],'in':'path','required':True,'schema':S}for part in path.split('/')if part.startswith('{')]
- if path in ('/generation/jobs','/memberships/checkout','/billing/checkout','/premium/checkout'):
-  params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':128}})
+ if path in ('/generation/jobs','/memberships/checkout','/billing/checkout','/premium/checkout','/payments/invoices'):
+  params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':200 if path in ('/payments/invoices','/premium/checkout','/billing/checkout') else 128}})
  op={'operationId':method+'_'+path.strip('/').replace('/','_').replace('{','').replace('}','').replace('-','_'),'security':[] if anonymous else [{'session':[]}],'parameters':params,'responses':{'200':{'description':'Success'},'400':{'description':'Invalid input'},'401':{'description':'Authentication or authorization required'},'409':{'description':'State conflict'},'503':{'description':'Integration disabled or unavailable'}}}
  if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':requests[body]}}}
  if response:

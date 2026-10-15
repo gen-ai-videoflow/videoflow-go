@@ -1,0 +1,40 @@
+<script lang="ts">
+  import { goto } from '$app/navigation';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import * as Card from '$lib/components/ui/card';
+  import { Clapperboard, BookOpen, Package, ArrowRight, LoaderCircle, Check } from '@lucide/svelte';
+  import { request } from './api';
+  let {userId}:{userId:string}=$props();
+  const templates=[
+    {id:'explainer',name:'Explainer',icon:BookOpen,description:'Introduce a problem, show the idea, and finish with a clear takeaway.',script:'Opening: Explain the problem your audience recognizes.\n\nMiddle: Introduce your idea and show how it helps.\n\nClosing: Summarize one clear takeaway.',scenes:[{title:'The problem',prompt:'Show the situation or challenge your audience will recognize. Establish the setting and the subject.',shot:'Opening context'},{title:'The idea',prompt:'Introduce the main idea. Show its effect through one clear action or visual example.',shot:'Demonstrate the idea'},{title:'The takeaway',prompt:'Resolve the opening challenge and finish on the key lesson or next step.',shot:'Closing takeaway'}]},
+    {id:'product-story',name:'Product story',icon:Package,description:'Start with a need, demonstrate a product, and show the result.',script:'Opening: Introduce the customer and what they need.\n\nDemonstration: Show the product being used in one specific situation.\n\nResult: Show the useful outcome and an honest next step.',scenes:[{title:'A real need',prompt:'Introduce a person and a specific need. Keep the setting and the task clear.',shot:'Customer context'},{title:'In use',prompt:'Show the product in use with a clear, believable action. Describe the product and its defining details.',shot:'Product demonstration'},{title:'The result',prompt:'Show the outcome of the action. End with a clean final view of the product or result.',shot:'Result and final frame'}]},
+    {id:'short-story',name:'Short story',icon:Clapperboard,description:'A four-scene narrative with a character, an obstacle, a turning point, and a resolution.',script:'Scene 1: Introduce the main character, their world, and what they want.\n\nScene 2: An obstacle makes the goal harder to reach.\n\nScene 3: A choice or discovery changes the direction of the story.\n\nScene 4: Resolve the central action and leave a final image.',scenes:[{title:'A world and a wish',prompt:'Establish the main character, their setting, and a clear goal.',shot:'Introduce the character'},{title:'An obstacle',prompt:'Show an obstacle interrupting the character’s attempt to reach their goal.',shot:'Present the conflict'},{title:'A turning point',prompt:'The character makes a choice or discovers something that changes what happens next.',shot:'The defining choice'},{title:'A resolution',prompt:'Resolve the central action and finish with a memorable final image.',shot:'Resolve the story'}]}
+  ];
+  let selected=$state('explainer');let projectName=$state('');let busy=$state(false);let error=$state('');
+  const current=$derived(templates.find(template=>template.id===selected)||templates[0]);
+  function choose(id:string){selected=id;projectName='';error='';}
+  async function create(){
+    busy=true;error='';
+    try{
+      const entities:any[]=[{id:'template-script',kind:'scripts',title:`${current.name} script`,content:current.script,description:'Editable starter script. Replace the outline with your own story.',position:1,duration:0,metadata:{template:current.id}}];
+      for(const [index,scene]of current.scenes.entries()){
+        const id=`template-scene-${index+1}`;
+        entities.push({id,kind:'scenes',title:scene.title,description:'Editable template scene.',prompt:scene.prompt,position:index+1,duration:5,metadata:{template:current.id}});
+        entities.push({id:`template-shot-${index+1}`,scene_id:id,kind:'shots',title:scene.shot,prompt:scene.prompt,position:0,duration:5,metadata:{template:current.id}});
+      }
+      const result=await request('/projects/import',{version:1,project:{name:projectName.trim()||`${current.name} project`,description:`Created from the ${current.name.toLowerCase()} starter template.`},entities});
+      if(!result.id)throw new Error('The project was created but its identifier was not returned. Check your Projects page before trying again.');
+      localStorage.setItem(`videoflow.cloud.project.${userId}`,result.id);
+      await goto(`/studio?project=${encodeURIComponent(result.id)}`);
+    }catch(e){error=(e as Error).message;}finally{busy=false;}
+  }
+</script>
+<div class="page-heading"><h1>Templates</h1><p>Start with an editable structure, then make it your own on the original VideoFlow canvas.</p></div>
+{#if error}<div class="cloud-alert" role="alert">{error}</div>{/if}
+<div class="template-grid">{#each templates as template}<Card.Root class={`template-card ${selected===template.id?'template-selected':''}`}><Card.Header><div class="template-card-top"><template.icon class="size-6 text-muted-foreground"/>{#if selected===template.id}<Check class="size-4"/>{/if}</div><Card.Title>{template.name}</Card.Title><Card.Description>{template.description}</Card.Description></Card.Header><Card.Content><p class="subtle">{template.scenes.length} scenes · {template.scenes.length} shots · editable script</p></Card.Content><Card.Footer><Button variant={selected===template.id?'secondary':'outline'} class="w-full" disabled={busy} aria-pressed={selected===template.id} onclick={()=>choose(template.id)}>{selected===template.id?'Selected':'Choose template'}</Button></Card.Footer></Card.Root>{/each}</div>
+<div class="template-review"><section class="cloud-panel"><h2>{current.name} structure</h2><ol>{#each current.scenes as scene,index}<li><span>{String(index+1).padStart(2,'0')}</span><div><strong>{scene.title}</strong><p>{scene.prompt}</p></div></li>{/each}</ol></section><form class="cloud-panel" onsubmit={(event)=>{event.preventDefault();void create();}}><h2>Create your project</h2><Label for="template-project-name">Project name</Label><Input id="template-project-name" bind:value={projectName} placeholder={`${current.name} project`} maxlength={120} disabled={busy}/><p class="field-help">Creates a private project with a script, connected scenes, and shots. The canvas opens after the server creates the project.</p><p class="field-help">No video generation starts and no generation credits are spent when you use a template.</p><Button type="submit" disabled={busy}>{#if busy}<LoaderCircle class="size-4 animate-spin"/>{/if}Create project from template<ArrowRight class="size-4"/></Button></form></div>
+<style>
+.template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.template-grid :global(.template-card){box-shadow:none;border-color:var(--border);background:var(--card)}.template-grid :global(.template-selected){border-color:var(--foreground)}.template-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.template-grid :global([data-slot=card-title]){font-size:17px}.template-grid :global([data-slot=card-description]){font-size:13px;line-height:1.8}.template-review{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start;margin-top:28px}.template-review ol{list-style:none;margin:0;padding:0}.template-review li{display:flex;gap:15px;padding:18px 0;border-bottom:1px solid var(--border)}.template-review li:last-child{border:0;padding-bottom:0}.template-review li>span{font-size:12px;color:var(--muted-foreground);padding-top:2px}.template-review li strong{font-size:13px;font-weight:500}.template-review li p{font-size:13px;color:var(--muted-foreground);margin-top:6px;line-height:1.8}.template-review form>:global(button){margin-top:24px}@media(max-width:1000px){.template-grid{grid-template-columns:1fr}.template-review{grid-template-columns:1fr}}
+</style>

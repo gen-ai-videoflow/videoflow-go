@@ -38,7 +38,7 @@ variable "cloudfront_public_key_pem" {
 variable "secret_arns" {
   type = map(string)
   validation {
-    condition     = !contains(keys(var.secret_arns), "MIGRATION_DATABASE_URL") && !contains(keys(var.secret_arns), "RUNTIME_DATABASE_PASSWORD") && alltrue([for key in ["DATABASE_URL", "REDIS_URL", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "CLOUDFRONT_PRIVATE_KEY", "OPENROUTER_API_KEY"] : contains(keys(var.secret_arns), key)]) && alltrue([for arn in values(var.secret_arns) : can(regex("^arn:aws:secretsmanager:", arn))])
+    condition     = !contains(keys(var.secret_arns), "MIGRATION_DATABASE_URL") && !contains(keys(var.secret_arns), "RUNTIME_DATABASE_PASSWORD") && !contains(keys(var.secret_arns), "CRYPTORAILS_API_KEY") && !contains(keys(var.secret_arns), "CRYPTORAILS_WEBHOOK_SECRET") && alltrue([for key in ["DATABASE_URL", "REDIS_URL", "CLOUDFRONT_PRIVATE_KEY", "OPENROUTER_API_KEY"] : contains(keys(var.secret_arns), key)]) && alltrue([for arn in values(var.secret_arns) : can(regex("^arn:aws:secretsmanager:", arn))])
     error_message = "Supply required runtime Secrets Manager ARNs, never plaintext values."
   }
 }
@@ -64,8 +64,8 @@ variable "multi_az" {
   type    = bool
   default = false
 }
-# secret_arns must include DATABASE_URL, REDIS_URL, STRIPE_SECRET_KEY,
-# STRIPE_WEBHOOK_SECRET, CLOUDFRONT_PRIVATE_KEY. Values are full secret ARNs.
+# secret_arns requires DATABASE_URL, REDIS_URL, CLOUDFRONT_PRIVATE_KEY and OPENROUTER_API_KEY.
+# Historical Stripe keys are optional; new checkout uses cryptorails_secret_arns.
 # redis_auth_secret_arn stores the raw Redis AUTH token, NOT REDIS_URL.
 
 variable "provider_daily_budget_micros" {
@@ -149,7 +149,7 @@ variable "premium_price_cents" {
   default = 0
   validation {
     condition     = var.premium_price_cents == 0 || (var.premium_price_cents >= 100 && var.premium_price_cents <= 100000 && floor(var.premium_price_cents) == var.premium_price_cents)
-    error_message = "Premium monthly USD price must be 0 (disabled) or 100..100000 cents."
+    error_message = "Premium prepaid 30-day USD price must be 0 (disabled) or 100..100000 cents."
   }
 }
 

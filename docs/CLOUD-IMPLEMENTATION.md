@@ -4,6 +4,8 @@ This branch implements an initial SaaS application, not a completed production l
 
 ## Implemented
 
+- Separate public Discover/Watch navigation and private original-canvas Studio. Three editable project templates create real connected scenes/shots without starting paid jobs. Local QR crypto invoices support history, pending/review states and recovery; sign-in preserves safe same-origin viewer destinations.
+
 - Separate PostgreSQL cloud API, background worker, and audited operator CLI; existing desktop server remains separate.
 - SvelteKit cloud mode reuses the original interactive entity canvas, original sidebar/theme and resizable canvas/assistant layout. Full-page login-02/signup-02 layouts use existing shadcn-svelte components. Cloud-only adapters connect the original canvas to project-scoped PostgreSQL data; account recovery, credits, jobs, channels, public discovery, Premium and protected HLS remain available.
 - Application-owned Argon2id credentials, opaque hashed sessions, verification/recovery tokens, expiry/revocation, origin checks and Redis-backed sensitive request admission. No Cognito.
@@ -18,7 +20,7 @@ This branch implements an initial SaaS application, not a completed production l
 - Explicit operator migrations and runtime-role provisioning. Production API/worker startup checks schema compatibility and rejects elevated/owner database credentials. Runtime cannot change schema or mutate journal history; financial operator tables remain separate.
 - Size/type-bound quarantine uploads with verified-user checks and durable per-workspace quotas. Quarantine objects are not automatically promoted into trusted project assets.
 - Channels, follows, private/unlisted/public access, member-only grants, basic search/following/trending feeds, hidden-channel preferences, rate-limited watch events, deduplicated view counters, and a per-viewer elapsed-time clock.
-- One platform-wide monthly Premium subscription unlocks Premium videos across creators. Provider-verified checkout, paid-through entitlements, refunds/disputes and owned billing portal management are durable. Generation credits are separate. New per-channel subscription checkout/pricing is retired; legacy receipts remain for reconciliation. Premium invoices do not automatically mint per-channel creator earnings. See PREMIUM.md.
+- CryptoRails invoices replace new credit and Premium checkouts. Exact frozen asset/network/fee terms, server-only credentials, raw-body HMAC, replay-safe net settlement, restricted financial journals, provider cooldowns and audited recovery are implemented. One prepaid 30-day platform Premium purchase unlocks eligible videos across creators; renewal is explicit and generation credits remain separate. Historical Stripe receipts, refunds/disputes and owned recurring-subscription management remain reconcilable. No payment or Premium invoice automatically creates creator earnings. See CRYPTORAILS.md and PREMIUM.md.
 - Capped deterministic engagement reward allocation/monthly close using externally approved accounting and qualified-watch inputs. Operator payout holds/thresholds, country/capability checks, frozen batches and stable provider transfer keys.
 - Bounded operational cleanup, confirmed-deletion upload quota recovery, archive-before-delete analytics retention, viewing-history clearing and account-deletion requests that revoke sessions while preserving financial records.
 - Private AWS Terraform foundation, local PostgreSQL/Redis/LocalStack compose, Dockerfiles, CI, API contract/shared wire types, and safe source-repository extraction.
@@ -48,3 +50,7 @@ Terraform creates CloudFront distributions but does not subscribe them to a flat
 Local PostgreSQL-backed tests cover account lifecycle, concurrent reservations, webhook/checkout replay, refunds/debt/dispute holds, late-refund payout checks, concurrent operator resolution, pipeline stage fencing, daily rollover admission, real FFmpeg mixed-audio/duration bounds, lease fencing, encoding event correlation, upload quota races, signed-cookie scope/single-use grants, provider budgets, membership lifecycle, reward rounding/overflow and payout timeout/concurrent retry safety. Frontend checks and desktop/cloud builds, Terraform schema/format validation, compose configuration and source extraction are verified separately.
 
 The collaborative browser preview failed to navigate/snapshot reliably in this session. HTTP smoke checks through the SvelteKit gateway passed; this is not equivalent to browser interaction, visual QA or live streaming verification. Container builds and final test outcomes are recorded in the implementation plan ledger after completion.
+
+## Crypto launch boundary
+
+Local implementation, mock settlement, Postgres/Redis/race checks and UI fixture tests are complete; actual tenant onboarding, funded wallet tests, missed-webhook delivery recovery and AWS activation remain external launch steps. Payments stay disabled by default. The exact current evidence and remaining activation work are recorded in [the execution checklist](ops/CRYPTORAILS-EXECUTION-CHECKLIST.md).

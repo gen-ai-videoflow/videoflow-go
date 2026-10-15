@@ -18,11 +18,13 @@ func main() {
 }
 func run() error {
 	if len(os.Args) < 2 {
-		return fmt.Errorf("usage: cloud-admin report-list|block-video|resolve-job|reward-close|payout-prepare|payout-execute")
+		return fmt.Errorf("usage: cloud-admin report-list|block-video|resolve-job|reward-close|payout-prepare|payout-execute|crypto-inspect|crypto-recover-address|crypto-replay")
 	}
 	flags := flag.NewFlagSet(os.Args[1], flag.ContinueOnError)
 	id := flags.String("id", "", "resource or batch ID")
 	reason := flags.String("reason", "", "moderation reason")
+	address := flags.String("address", "", "provider-confirmed recovered deposit address")
+	signature := flags.String("signature", "", "original CryptoRails webhook HMAC signature")
 	provider := flags.String("provider-id", "", "reconciled provider job ID")
 	fail := flags.Bool("fail", false, "explicitly fail an ambiguous job and release its reserved credits")
 	input := flags.String("input", "", "approved reward period JSON input")
@@ -55,6 +57,21 @@ func run() error {
 	}
 	var result any = map[string]bool{"ok": true}
 	switch os.Args[1] {
+	case "crypto-inspect", "crypto-recover-address", "crypto-replay":
+		server := cloud.NewServer(store, cfg)
+		defer server.Close()
+		switch os.Args[1] {
+		case "crypto-inspect":
+			result, err = server.InspectCryptoPayment(ctx, *id, *actor)
+		case "crypto-recover-address":
+			err = server.RecoverCryptoAddress(ctx, *id, *address, *actor, *reason)
+		case "crypto-replay":
+			var raw []byte
+			raw, err = os.ReadFile(*input)
+			if err == nil {
+				err = server.ReplayCryptoWebhook(ctx, raw, *signature, *actor)
+			}
+		}
 	case "report-list":
 		result, err = store.OpenReports(ctx)
 	case "block-video":

@@ -1,3 +1,5 @@
+> CryptoRails amendment (2026-10-15): [the implemented checkout/journey contract](../../CRYPTORAILS.md) supersedes new Stripe sales and recurring monthly Premium assumptions below. New Premium is prepaid 30 days with explicit renewal. Historical Stripe records and reconciliation remain intact; production activation is separately gated.
+
 # Current decision amendment
 
 The user subsequently chose one platform-wide Premium subscription, like Medium, replacing per-channel subscription pricing described below. Premium grants viewing access across creators; generation credits remain separate and creator payouts use the capped approved platform-revenue pool. The original VideoFlow canvas/sidebar design is preserved, with shadcn login-02/signup-02 layouts. See [Premium implementation](../../PREMIUM.md) and [UI/Premium execution record](../plans/2026-10-15-original-ui-premium.md). Historical design sections below remain context, not authority for new channel subscriptions.
