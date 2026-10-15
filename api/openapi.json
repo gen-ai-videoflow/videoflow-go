@@ -10,6 +10,202 @@
     }
   ],
   "paths": {
+    "/projects/{project}/prompt-templates": {
+      "get": {
+        "operationId": "get_projects_project_prompt_templates",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromptTemplate"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put_projects_project_prompt_templates",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "story",
+                      "character",
+                      "scene",
+                      "shot",
+                      "asset",
+                      "video"
+                    ]
+                  },
+                  "title_en": {
+                    "type": "string"
+                  },
+                  "title_zh": {
+                    "type": "string"
+                  },
+                  "body_en": {
+                    "type": "string"
+                  },
+                  "body_zh": {
+                    "type": "string"
+                  },
+                  "defaults": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "revision",
+                  "category"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/prompt-templates/{template}": {
+      "delete": {
+        "operationId": "delete_projects_project_prompt_templates_template",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "template",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
     "/projects/{project}/editor": {
       "get": {
         "operationId": "get_projects_project_editor",
@@ -7919,6 +8115,38 @@
       }
     },
     "schemas": {
+      "PromptTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "category": {
+            "type": "string"
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_zh": {
+            "type": "string"
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_zh": {
+            "type": "string"
+          },
+          "defaults": {
+            "type": "object"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
       "MediaAsset": {
         "type": "object",
         "properties": {

@@ -241,3 +241,237 @@ a:focus-visible {
     display: none;
   }
 }
+.vf-header {
+  height: 64px;
+  padding: 0 18px;
+  gap: 14px;
+  background: var(--background);
+}
+.vf-project-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  max-width: 220px;
+}
+.vf-project-title strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.vf-project-title > span {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vf-header > .vf-save-status {
+  font-size: 10px;
+  max-width: 30ch;
+  line-height: 1.6;
+}
+.vf-header-actions {
+  gap: 8px;
+}
+.vf-header-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: var(--foreground);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.vf-header-actions > button:hover {
+  background: var(--accent);
+}
+.vf-header-actions > .vf-generate-button {
+  border: 1px solid var(--border);
+}
+.vf-project-menu {
+  position: relative;
+  font-size: 11px;
+}
+.vf-project-menu summary {
+  padding: 8px 10px;
+  list-style: none;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  border-radius: 6px;
+}
+.vf-project-menu summary:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+.vf-project-menu > div {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 225px;
+  padding: 6px;
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  z-index: 100;
+  box-shadow: 0 10px 30px #0003;
+}
+.vf-project-menu button {
+  display: block;
+  text-align: left;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.vf-project-menu button:hover {
+  background: var(--accent);
+}
+.vf-project-menu p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+  padding: 8px 10px;
+}
+.vf-workspace {
+  grid-template-columns: 72px 272px minmax(260px, 1fr) 248px;
+  gap: 1px;
+  background: var(--border);
+}
+.vf-tools {
+  background: var(--background);
+  padding: 12px 6px;
+  gap: 8px;
+  border: 0;
+}
+.vf-tools button {
+  padding: 12px 0;
+  gap: 7px;
+  min-height: 64px;
+  font-size: 10px;
+}
+.vf-assets,
+.vf-properties {
+  background: var(--card);
+}
+.vf-preview {
+  background: #080908;
+  padding: 12px;
+}
+.vf-timeline {
+  height: clamp(220px, 31vh, 340px);
+  background: var(--card);
+}
+.vf-foot {
+  min-height: 30px;
+  font-size: 10px;
+  background: var(--background);
+  padding: 6px 18px;
+}
+.vf-foot button {
+  padding: 3px 0;
+}
+.vf-foot a {
+  color: var(--muted-foreground);
+}
+.vf-tools button:hover {
+  background: var(--accent);
+}
+.vf-assets input,
+.vf-properties input {
+  font-variant-numeric: tabular-nums;
+}
+::selection {
+  background: #ff5b1f55;
+  color: var(--foreground);
+}
+* {
+  scrollbar-color: #4b4c45 transparent;
+  scrollbar-width: thin;
+}
+@media (max-width: 1200px) {
+  .vf-workspace {
+    grid-template-columns: 64px 240px minmax(240px, 1fr);
+  }
+  .vf-properties {
+    display: none;
+  }
+  .vf-header > .vf-save-status {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .vf-header {
+    height: 56px;
+    padding: 0 8px;
+    gap: 7px;
+  }
+  .vf-project-title {
+    max-width: 105px;
+  }
+  .vf-header-actions {
+    gap: 1px;
+  }
+  .vf-header-actions > button {
+    padding: 7px;
+    font-size: 10px;
+  }
+  .vf-header-actions > .vf-source-button {
+    display: none;
+  }
+  .vf-project-menu summary {
+    padding: 7px;
+    font-size: 10px;
+  }
+  .vf-generate-button svg {
+    display: none;
+  }
+  .vf-workspace {
+    grid-template-columns: 54px minmax(130px, 1fr);
+    grid-template-rows: minmax(180px, 1fr) minmax(140px, 1fr);
+  }
+  .vf-tools {
+    grid-row: 1/3;
+    padding: 6px 3px;
+    gap: 2px;
+  }
+  .vf-tools button {
+    min-height: 58px;
+    padding: 9px 0;
+  }
+  .vf-assets {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .vf-preview {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 6px;
+  }
+  .vf-timeline {
+    height: 200px;
+  }
+  .vf-foot {
+    display: none;
+  }
+}
+@font-face {
+  font-family: Inter;
+  src: url("/editor-app/fonts/videoflow-inter.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+body {
+  font-family:
+    Inter, "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+}
+.vf-project-menu summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.vf-assets :is(button, input, textarea),
+.vf-properties :is(button, input, textarea) {
+  font-family: inherit;
+}

@@ -30,6 +30,22 @@ func TestCloudCanvasGraphAndRelationshipIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if updateErr := s.PatchCanvasEntity(ctx, u, p.ID, "characters", character["id"].(string), map[string]any{"name": "安娜 / Ana", "description": "A patient explorer", "content": "短发，蓝色外套", "prompt": "Keep the blue coat consistent"}); updateErr != nil {
+		t.Fatal(updateErr)
+	}
+	designGraph, graphErr := s.CloudCanvasGraph(ctx, u, p.ID)
+	if graphErr != nil {
+		t.Fatal(graphErr)
+	}
+	foundDesign := false
+	for _, node := range designGraph.Nodes {
+		if node.ID == character["id"] {
+			foundDesign = node.Data["content"] == "短发，蓝色外套" && node.Data["prompt"] == "Keep the blue coat consistent"
+		}
+	}
+	if !foundDesign {
+		t.Fatal("character design missing from canvas graph")
+	}
 	edge := CanvasEdge{Source: scene["id"].(string), Target: character["id"].(string), Label: "casts"}
 	if err = s.SetCanvasEdge(ctx, u, p.ID, edge, false); err != nil {
 		t.Fatal(err)

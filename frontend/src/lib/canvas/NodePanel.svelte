@@ -14,6 +14,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { request } from '$lib/cloud/api';
+ import PromptWorkbench from '$lib/cloud/prompts/PromptWorkbench.svelte';
+ import {beforeNavigate} from '$app/navigation';
   const cloudMode = import.meta.env.VITE_CLOUD_MODE === 'true';
   let downloadError = $state('');
   async function downloadCloudOutput() {
@@ -55,6 +57,7 @@
   // True once any form field was touched; reset on seed/save/refine/revert.
   let formDirty = $state(false);
   const markFormDirty = () => (formDirty = true);
+  beforeNavigate(navigation=>{if(formDirty&&!navigation.willUnload&&!window.confirm('Discard your unsaved design changes?'))navigation.cancel();});
   let saving = $state(false);
   let refineInstruction = $state('');
   let refining = $state(false);
@@ -81,7 +84,7 @@
   $effect(() => {
     const next = node;
     untrack(() => {
-      if ((next?.id ?? null) === (shown?.id ?? null)) return;
+      if ((next?.id ?? null) === (shown?.id ?? null)){if(!formDirty&&next!==shown)shown=next;return;}
       if (formDirty && shown && !confirm('Discard unsaved changes?')) return;
       shown = next;
     });
@@ -99,6 +102,7 @@
       form = {
         title: d.label ?? '',
         summary: d.summary ?? '',
+ prompt:d.prompt??'',
         duration: d.duration ?? 0,
         aspect_ratio: d.aspect_ratio ?? ''
       };
@@ -110,7 +114,8 @@
         movement: d.movement ?? '',
         shot_order: d.shot_order ?? 0
       };
-    } else {
+    } else if(shown&&['character','asset'].includes(String(d.kind))){form={name:d.label??'',description:d.description??'',content:d.content??'',prompt:d.prompt??''};
+ } else {
       form = {};
     }
     if (!cloudMode && shown && String(d.kind) === 'output') void loadCaptionConfig();
@@ -196,6 +201,7 @@
         await patch(`/scenes/${shown.id}`, {
           title: form.title,
           summary: form.summary,
+ ...(cloudMode?{prompt:form.prompt}:{}),
           duration: Number(form.duration),
           aspect_ratio: form.aspect_ratio
         });
@@ -208,6 +214,8 @@
           shot_order: Number(form.shot_order)
         });
       }
+      if(kind==='character'&&cloudMode)await patch(`/characters/${shown.id}`,{name:form.name,description:form.description,content:form.content,prompt:form.prompt});
+ if(kind==='asset'&&cloudMode)await patch(`/assets/${shown.id}`,{name:form.name,description:form.description,prompt:form.prompt});
       formDirty = false;
       toast.success('Saved');
       onsaved();
@@ -340,7 +348,7 @@
     canvas stays pannable behind/around it, the chat stays reachable, and
     clicking another node just switches the panel. -->
   <aside
-    class="bg-popover/95 text-popover-foreground absolute right-3 top-3 z-40 flex max-h-[calc(100%-12rem)] w-[340px] max-w-[calc(100%-1.5rem)] flex-col gap-4 rounded-lg border border-border text-sm shadow-xl backdrop-blur"
+    class="bg-popover text-popover-foreground absolute right-3 top-3 z-40 flex max-h-[calc(100%-12rem)] w-[340px] max-w-[calc(100%-1.5rem)] flex-col gap-4 rounded-lg border border-border text-sm shadow-lg"
     aria-label="{kind} details"
     data-testid="node-panel"
   >
@@ -368,7 +376,8 @@
           <Label for="np-summary">Summary</Label>
           <Textarea id="np-summary" rows={4} bind:value={form.summary} oninput={markFormDirty} />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        {#if cloudMode}<div class="grid gap-1.5"><Label for="np-scene-prompt">Generation direction</Label><Textarea id="np-scene-prompt" rows={4} maxlength={8000} bind:value={form.prompt} oninput={markFormDirty}/></div>{/if}
+<div class="grid grid-cols-2 gap-3">
           <div class="grid gap-1.5">
             <Label for="np-duration">Duration (s)</Label>
             <Input id="np-duration" type="number" bind:value={form.duration} oninput={markFormDirty} />
@@ -483,6 +492,7 @@
           </p>
         </div>
       {:else if kind === 'asset'}
+{#if cloudMode}<div class="grid gap-1.5"><Label for="np-asset-name">Name</Label><Input id="np-asset-name" bind:value={form.name} maxlength={180} oninput={markFormDirty}/><Label for="np-asset-description">Description</Label><Textarea id="np-asset-description" rows={3} bind:value={form.description} oninput={markFormDirty}/><Label for="np-asset-prompt">Generation direction</Label><Textarea id="np-asset-prompt" rows={5} maxlength={8000} bind:value={form.prompt} oninput={markFormDirty}/><Button onclick={save} disabled={saving||!formDirty||!form.name?.trim()}>{saving?'Saving…':'Save asset details'}</Button><p class="text-xs text-muted-foreground">Media references remain private and unavailable for playback until validated.</p></div>{/if}
         {#if imageSrc}
           <img src={imageSrc} alt={String(data.label ?? '')} class="w-full rounded-md border border-border object-cover" />
         {/if}
@@ -512,9 +522,17 @@
           >
         </div>
       {:else if kind === 'character'}
-        <p class="text-sm">{data.label}</p>
+ {#if cloudMode}<div class="character-identity"><span>{String(data.label||'?').slice(0,2).toUpperCase()}</span><div><strong>Character design</strong><p>Define the details that stay consistent across your story.</p></div></div>
+ <div class="grid gap-1.5"><Label for="np-character-name">Name</Label><Input id="np-character-name" bind:value={form.name} maxlength={180} oninput={markFormDirty}/></div>
+ <div class="grid gap-1.5"><Label for="np-character-description">Role & personality</Label><Textarea id="np-character-description" rows={3} bind:value={form.description} maxlength={8000} oninput={markFormDirty}/></div>
+ <div class="grid gap-1.5"><Label for="np-character-appearance">Appearance & wardrobe</Label><Textarea id="np-character-appearance" rows={5} bind:value={form.content} maxlength={100000} oninput={markFormDirty}/></div>
+ <div class="grid gap-1.5"><Label for="np-character-prompt">Generation direction</Label><Textarea id="np-character-prompt" rows={5} bind:value={form.prompt} maxlength={8000} oninput={markFormDirty}/></div>
+ <Button onclick={save} disabled={saving||!formDirty||!form.name?.trim()}>{saving?'Saving…':'Save character'}</Button>{:else}<p class="text-sm">{data.label}</p>{/if}
       {/if}
 
+{#if cloudMode&&['character','scene','shot','asset'].includes(kind)&&data.project_id}
+ {#key shown.id}<PromptWorkbench projectId={data.project_id} category={kind==='character'?'character':kind==='scene'?'scene':kind==='asset'?'asset':'shot'} initialValues={{subject:String(data.label||'')}} onapply={(text)=>{if(kind==='character')form.content=text;else form.prompt=text;markFormDirty();}}/>{/key}
+ {/if}
       {#if !cloudMode && (kind === 'scene' || kind === 'shot')}
         <div class="grid gap-2 border-t border-border pt-3">
           <Button variant="ghost" size="sm" class="justify-start" onclick={toggleHistory}>
@@ -550,3 +568,5 @@
     </div>
   </aside>
 {/if}
+
+<style>.character-identity{display:flex;gap:12px;align-items:center;padding:8px 0}.character-identity>span{display:grid;place-items:center;width:52px;height:60px;background:var(--muted);border-radius:10px;font-size:20px;color:var(--foreground)}.character-identity strong{font-size:13px}.character-identity p{font-size:11px;line-height:1.7;color:var(--muted-foreground);margin-top:4px;max-width:23ch}</style>

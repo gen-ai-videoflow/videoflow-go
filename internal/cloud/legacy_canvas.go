@@ -32,7 +32,7 @@ func canvasData(e StudioEntity) map[string]any {
 	meta := map[string]any{}
 	_ = json.Unmarshal(e.Metadata, &meta)
 	text := func(key string) string { v, _ := meta[key].(string); return v }
-	d := map[string]any{"id": e.ID, "project_id": e.ProjectID, "title": e.Title, "name": e.Title, "description": e.Description, "duration": e.Duration, "prompt": e.Prompt, "position": e.Position}
+	d := map[string]any{"id": e.ID, "project_id": e.ProjectID, "title": e.Title, "name": e.Title, "description": e.Description, "content": e.Content, "duration": e.Duration, "prompt": e.Prompt, "position": e.Position}
 	switch e.Kind {
 	case "scenes":
 		d["summary"] = e.Description
@@ -46,6 +46,9 @@ func canvasData(e StudioEntity) map[string]any {
 		d["status"] = "quarantined"
 		d["file_path"] = ""
 		d["asset_type"] = text("asset_type")
+		if d["asset_type"] == "" {
+			d["asset_type"] = text("type")
+		}
 	}
 	return d
 }
@@ -68,7 +71,7 @@ func (s *Store) CloudCanvasGraph(ctx context.Context, u User, project string) (C
 		kind := strings.TrimSuffix(e.Kind, "s")
 		label := e.Title
 		if kind == "shot" {
-			label = fmt.Sprintf("#%d %s", e.Position+1, e.Prompt)
+			label = fmt.Sprintf("#%d %s", e.Position+1, e.Title)
 		}
 		g.Nodes = append(g.Nodes, CanvasNode{ID: e.ID, Type: kind, Label: label, Data: canvasData(e)})
 		known[e.ID] = true
@@ -176,13 +179,13 @@ func canvasApply(e *StudioEntity, kind string, patch map[string]any) error {
 	allowed := []string{"description"}
 	switch kind {
 	case "scenes":
-		allowed = append(allowed, "title", "summary", "duration", "aspect_ratio")
+		allowed = append(allowed, "title", "summary", "prompt", "duration", "aspect_ratio")
 	case "shots":
 		allowed = append(allowed, "title", "scene_id", "prompt", "duration", "camera", "movement", "shot_order")
 	case "characters":
-		allowed = append(allowed, "name")
+		allowed = append(allowed, "name", "content", "prompt")
 	case "assets":
-		allowed = append(allowed, "name", "object_key", "asset_type")
+		allowed = append(allowed, "name", "object_key", "asset_type", "prompt")
 	default:
 		return ErrValidation
 	}
@@ -215,6 +218,8 @@ func canvasApply(e *StudioEntity, kind string, patch map[string]any) error {
 				e.Description = text
 			case "prompt":
 				e.Prompt = text
+			case "content":
+				e.Content = text
 			case "scene_id":
 				if e.SceneID != "" && e.SceneID != text {
 					return ErrValidation
@@ -287,7 +292,7 @@ func (s *Store) PatchCanvasEntity(ctx context.Context, u User, project, kind, id
 	if err = validateStudio(e); err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `UPDATE cloud_studio_entities SET title=$2,description=$3,prompt=$4,duration=$5,position=$6,metadata=$7,updated_at=now() WHERE id=$1`, id, e.Title, e.Description, e.Prompt, e.Duration, e.Position, string(e.Metadata))
+	_, err = tx.ExecContext(ctx, `UPDATE cloud_studio_entities SET title=$2,description=$3,prompt=$4,duration=$5,position=$6,metadata=$7,content=$8,updated_at=now() WHERE id=$1`, id, e.Title, e.Description, e.Prompt, e.Duration, e.Position, string(e.Metadata), e.Content)
 	if err != nil {
 		return err
 	}

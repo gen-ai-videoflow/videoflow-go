@@ -126,6 +126,9 @@ func (s *Server) Router() http.Handler {
 				v, e := s.Store.CreateProject(r.Context(), currentUser(r), b.Name, b.Description)
 				s.result(w, v, e)
 			})
+			r.Get("/projects/{project}/prompt-templates", s.listPromptTemplates)
+			r.Put("/projects/{project}/prompt-templates", s.savePromptTemplate)
+			r.Delete("/projects/{project}/prompt-templates/{template}", s.deletePromptTemplate)
 			r.Get("/projects/{project}/editor", s.getEditorDocument)
 			r.Put("/projects/{project}/editor", s.saveEditorDocument)
 			r.Get("/credits", func(w http.ResponseWriter, r *http.Request) {

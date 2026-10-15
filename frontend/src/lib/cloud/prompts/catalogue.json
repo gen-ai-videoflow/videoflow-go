@@ -1,0 +1,68 @@
+[
+  {
+    "id": "builtin:character-sheet",
+    "revision": 0,
+    "category": "character",
+    "title_en": "Character design sheet",
+    "title_zh": "角色设定卡",
+    "body_en": "{{style}} character design sheet for {{subject}}.\nIdentity anchors: {{identity}}; body shape and natural stance: {{posture}}.\nWear {{wardrobe}}, with a neutral, natural expression.\nShow a face close-up, front full-body, side full-body and rear full-body in one image. Keep the face readable and every full-body view complete from head to shoes.\nAll views depict the same person, hairstyle, clothing and stance; side and rear structures must correspond.\n{{background}}, with {{lighting}}. No story environment, handheld props, labels or overlay text.",
+    "body_zh": "{{style}}的角色设定资料，{{subject}}。\n核心辨识：{{identity}}；{{posture}}。\n穿着{{wardrobe}}，表情中性自然。\n同一画面依次为面部近景、正面全身、侧面全身、背面全身；面部清楚，三个全身头脚完整。\n四角度是同一人物、同一发型、同一服装与站姿，侧背结构互相对应。\n{{background}}，{{lighting}}；不加入剧情环境或手持道具，不加标签叠字。",
+    "source_url": "https://github.com/HBAI-Ltd/Toonflow-app/blob/d2e94aca7b59659ff6b4ca15f03cf134ec7f0e1d/packages/skills/v118workflow/references/knowledge/assetDesign.md",
+    "attribution": "Adapted and translated from Toonflow · MIT · HBAI-Ltd"
+  },
+  {
+    "id": "builtin:scene-design",
+    "revision": 0,
+    "category": "scene",
+    "title_en": "Scene & environment",
+    "title_zh": "场景与空间设计",
+    "body_en": "{{style}}, {{setting}}, one primary spatial view, {{era}}, {{weather}}.\nSpatial structure: {{layout}}. Fixed furnishings: {{furnishings}}.\nForeground {{foreground}}, midground {{midground}}, background {{background}}; keep the main structure clear.\nMain light comes from {{light_source}}, with {{light_quality}}; {{shadows}}.\n{{materials}}. No people, human shadows or silhouettes. Do not combine multiple views or add overlay text.",
+    "body_zh": "{{style}}，{{setting}}，单幅空间主视图，{{era}}，{{weather}}。\n空间骨架：{{layout}}；固定陈设：{{furnishings}}。\n前景{{foreground}}，中景{{midground}}，后景{{background}}，主体结构清楚。\n主光来自{{light_source}}，{{light_quality}}；{{shadows}}。\n{{materials}}；无人、无人影或人体轮廓，不拼成多视图，不加画外叠字。",
+    "source_url": "https://github.com/HBAI-Ltd/Toonflow-app/blob/d2e94aca7b59659ff6b4ca15f03cf134ec7f0e1d/packages/skills/v118workflow/references/knowledge/assetDesign.md",
+    "attribution": "Adapted and translated from Toonflow · MIT · HBAI-Ltd"
+  },
+  {
+    "id": "builtin:prop-design",
+    "revision": 0,
+    "category": "asset",
+    "title_en": "Prop & object design",
+    "title_zh": "道具与物件设计",
+    "body_en": "{{style}}, isolated still-life of {{subject}}, with {{structure}} and {{proportions}}.\n{{materials}}, current state {{condition}}.\n{{views}}. Keep structures consistent and fully in frame; no people, hands, wearing or gripping gestures.\n{{background}}, {{lighting}}. Show key details clearly, without labels or watermarks.",
+    "body_zh": "{{style}}，{{subject}}独立静物，{{structure}}，{{proportions}}。\n{{materials}}，当前状态{{condition}}。\n{{views}}，结构对应、完整入画，无人、无手、无佩戴或握持动作。\n{{background}}，{{lighting}}，关键细节清楚，不加标签水印。",
+    "source_url": "https://github.com/HBAI-Ltd/Toonflow-app/blob/d2e94aca7b59659ff6b4ca15f03cf134ec7f0e1d/packages/skills/v118workflow/references/knowledge/assetDesign.md",
+    "attribution": "Adapted and translated from Toonflow · MIT · HBAI-Ltd"
+  },
+  {
+    "id": "builtin:storyboard-frame",
+    "revision": 0,
+    "category": "shot",
+    "title_en": "Storyboard frame",
+    "title_zh": "分镜画面",
+    "body_en": "Create one confirmed storyboard frame in {{style}}.\nCharacter identity and wardrobe: {{subject}}.\nConfirmed setting and spatial anchors: {{setting}}.\nFraming and angle: {{camera}}. At this instant: {{action}}.\nKeep the established face, hairstyle, wardrobe, prop ownership, environment and lighting consistent. Change only the confirmed action and framing. Do not invent extra characters, events, subtitles or watermarks. These are text descriptions; no image reference is attached automatically.",
+    "body_zh": "以{{style}}创作一张已确认的分镜画面。\n人物身份与服装：{{subject}}。\n已确认场景与空间锚点：{{setting}}。\n景别与角度：{{camera}}。此刻的动作：{{action}}。\n保持已确认的脸部、发型、服装、道具归属、空间与光照一致。仅改变已确认的动作和构图，不添加人物、事件、画外字幕或水印。这是文字描述，不会自动附加图像参考。",
+    "source_url": "https://github.com/HBAI-Ltd/Toonflow-app/blob/d2e94aca7b59659ff6b4ca15f03cf134ec7f0e1d/packages/skills/v118workflow/references/knowledge/imagePromptCraft.md",
+    "attribution": "Adapted and translated from Toonflow · MIT · HBAI-Ltd"
+  },
+  {
+    "id": "builtin:continuous-video",
+    "revision": 0,
+    "category": "video",
+    "title_en": "Continuous video direction",
+    "title_zh": "连续镜头视频",
+    "body_en": "Visual: {{style}}. Subject and verified identity: {{subject}}. Setting: {{setting}}.\nMotion: begin in {{start_state}}, then {{action}}, ending in {{end_state}}. Keep the action physically coherent.\nCamera: {{camera}}, one continuous path with a clear final framing.\nDialogue and sound direction (only if supported): {{audio}}. Preserve original dialogue exactly and keep speaker ownership clear. Do not add music by default.\nContinuity: preserve identity, wardrobe, setting and prop ownership. Do not add events, characters or unrequested overlay text. The clip duration is configured separately; this text does not enable unsupported audio or reference inputs.",
+    "body_zh": "画面：{{style}}。主体与已确认的身份特征：{{subject}}。场景：{{setting}}。\n动作：从{{start_state}}开始，随后{{action}}，最后停在{{end_state}}。动作应符合物理规律且连贯。\n镜头：{{camera}}，采用一条连续的运镜路径，并明确结束构图。\n对白与声音方向（仅在支持时使用）：{{audio}}。原台词逐字保留，明确说话者，不默认添加配乐。\n连续性：保持身份、服装、场景与道具归属，不添加事件、人物或未要求的画外文字。时长通过独立配置设置；本提示词不会启用不支持的音频或参考输入。",
+    "source_url": "https://github.com/HBAI-Ltd/Toonflow-app/blob/d2e94aca7b59659ff6b4ca15f03cf134ec7f0e1d/packages/skills/v118workflow/references/knowledge/videoPromptCraft.md",
+    "attribution": "Adapted and translated from Toonflow · MIT · HBAI-Ltd"
+  },
+  {
+    "id": "builtin:story-outline",
+    "revision": 0,
+    "category": "story",
+    "title_en": "Story to screenplay",
+    "title_zh": "故事转剧本",
+    "body_en": "Develop an original short story from this idea: {{idea}}.\nAudience: {{audience}}. Visual style: {{style}}. Main character and stable appearance: {{subject}}.\nSetting: {{setting}}. Emotional arc: {{arc}}.\nCreate a clear opening, a visible obstacle and an earned resolution within the configured scene count and duration. Use self-contained visual directions, consistent characters and concrete actions. Write screenplay and scene titles in English. Preserve any quoted dialogue in its original language. Unknown details must remain proposals rather than facts.",
+    "body_zh": "根据以下创意发展原创短故事：{{idea}}。\n观众：{{audience}}。视觉风格：{{style}}。主角及固定外观：{{subject}}。\n场景：{{setting}}。情绪变化：{{arc}}。\n在已配置的场景数量与时长内，安排清晰的开场、可见的阻碍与合理的结局。各镜头描述应独立完整，保持角色一致，使用具体可见的动作。剧本和场景标题使用简体中文，已引用的对白保留原语言。未知信息应标为提案，不能当作已确认事实。",
+    "source_url": "",
+    "attribution": "VideoFlow original"
+  }
+]

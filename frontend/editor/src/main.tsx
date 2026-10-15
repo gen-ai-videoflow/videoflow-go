@@ -27,6 +27,7 @@ import {
   Sparkles,
   Settings,
   ArrowLeft,
+  ChevronDown,
 } from "lucide-react";
 import "@/globals.css";
 import "./videoflow.css";
@@ -295,18 +296,50 @@ function App() {
           >
             <ArrowLeft size={18} />
           </button>
-          <strong>{name}</strong>
-          <span role="status">{status}</span>
+          <div className="vf-project-title">
+            <strong>Video editor</strong>
+            <span title={name}>{name}</span>
+          </div>
+          <span className="vf-save-status" role="status" title={status}>
+            {status.startsWith("Timeline saved")
+              ? "Saved to account"
+              : status.startsWith("Timeline ready")
+                ? "Ready to edit"
+                : status}
+          </span>
           <div className="vf-header-actions">
-            <button onClick={() => void backup()}>Timeline backup</button>
-            <button onClick={() => parent("videoflow:editor:storyboard")}>
-              Storyboard
-            </button>
-            <button onClick={() => parent("videoflow:editor:generate")}>
-              Generate clip
-            </button>
-            <button onClick={() => parent("videoflow:editor:sources")}>
+            <details className="vf-project-menu">
+              <summary aria-label="More project actions">
+                Project <ChevronDown size={12} />
+              </summary>
+              <div>
+                <button onClick={() => parent("videoflow:editor:storyboard")}>
+                  Open Storyboard
+                </button>
+                <button onClick={() => void backup()}>
+                  Download timeline backup
+                </button>
+                <button onClick={() => parent("videoflow:editor:sources")}>
+                  Import generated sources
+                </button>
+                <p>
+                  Source media stays in this browser. Keep your original files.
+                </p>
+              </div>
+            </details>
+            <button
+              className="vf-source-button"
+              onClick={() => parent("videoflow:editor:sources")}
+            >
+              <FolderOpen size={14} />
               Project sources
+            </button>
+            <button
+              className="vf-generate-button"
+              onClick={() => parent("videoflow:editor:generate")}
+            >
+              <Sparkles size={14} />
+              Generate clip
             </button>
             <ExportButton />
           </div>
@@ -323,6 +356,8 @@ function App() {
             ].map(([label, Icon]: any) => (
               <button
                 key={label}
+                aria-pressed={tab === label}
+                title={label}
                 className={tab === label ? "active" : ""}
                 onClick={() => setTab(label)}
               >
@@ -331,7 +366,7 @@ function App() {
               </button>
             ))}
           </aside>
-          <section className="vf-assets">
+          <section className="vf-assets" aria-label={`${tab} panel`}>
             {tab === "Media" ? (
               <MediaView />
             ) : tab === "Text" ? (
@@ -351,7 +386,10 @@ function App() {
               onOverlayVisibilityChange={() => {}}
             />
           </section>
-          <aside className="vf-properties">
+          <aside
+            className="vf-properties"
+            aria-label="Selected clip properties"
+          >
             <PropertiesPanel />
           </aside>
         </div>
@@ -359,7 +397,7 @@ function App() {
           <Timeline />
         </section>
         <footer className="vf-foot">
-          Powered by OpenCut Classic · Editing and exports run in your browser.{" "}
+          Browser editing · Source files stay on this device.{" "}
           <a href="/editor-app/notices.txt" target="_blank">
             Open-source notices
           </a>

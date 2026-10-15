@@ -75,7 +75,7 @@ export function toFlow(g: ApiGraph): { nodes: Node[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
-const posKey = () => import.meta.env.VITE_CLOUD_MODE === 'true' ? canvasStorageKey() : 'videoflow.canvas.positions';
+const posKey = () => import.meta.env.VITE_CLOUD_MODE === 'true' ? canvasStorageKey()+'.design-v2' : 'videoflow.canvas.positions';
 
 export function loadPositions(): Record<string, { x: number; y: number }> {
   try {

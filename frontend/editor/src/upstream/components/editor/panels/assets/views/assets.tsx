@@ -192,7 +192,7 @@ export function MediaView() {
 			<input {...fileInputProps} />
 
 			<PanelView
-				title="Assets"
+				title="Project media"
 				actions={
 					<MediaActions
 						mediaViewMode={mediaViewMode}
@@ -217,7 +217,7 @@ export function MediaView() {
 					/>
 				) : (
 					<SelectableSurface
-						ariaLabel="Assets"
+						ariaLabel="Project media"
 						orderedIds={orderedMediaIds}
 						revealId={highlightMediaId}
 						onRevealComplete={clearHighlight}
@@ -530,7 +530,8 @@ function MediaActions({
 						<Button
 							size="icon"
 							variant="ghost"
-							onClick={() =>
+							aria-label={mediaViewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
+ onClick={() =>
 								setMediaViewMode(mediaViewMode === "grid" ? "list" : "grid")
 							}
 							disabled={isProcessing}

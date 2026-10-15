@@ -37,6 +37,9 @@ if (src/'.impeccable/config.json').exists():
     (web/'.impeccable').mkdir(exist_ok=True)
     shutil.copy2(src/'.impeccable/config.json',web/'.impeccable/config.json')
     if (src/'.impeccable/design.json').exists(): shutil.copy2(src/'.impeccable/design.json',web/'.impeccable/design.json')
+if (src/'docs/BILINGUAL-PROMPTS.md').is_file():
+    (web/'docs').mkdir(exist_ok=True)
+    shutil.copy2(src/'docs/BILINGUAL-PROMPTS.md',web/'docs/BILINGUAL-PROMPTS.md')
 if (src/'docs/EDITOR-OPERATIONS.md').is_file():
     (web/'docs').mkdir(exist_ok=True)
     shutil.copy2(src/'docs/EDITOR-OPERATIONS.md',web/'docs/EDITOR-OPERATIONS.md')

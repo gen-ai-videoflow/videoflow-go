@@ -1,13 +1,13 @@
-import dagre from '@dagrejs/dagre';
-import type { Node, Edge } from '@xyflow/svelte';
+import dagre from "@dagrejs/dagre";
+import type { Node, Edge } from "@xyflow/svelte";
 
-const W = 180,
-  H = 36;
+const W = 240,
+  H = 160;
 
 // Orphan grid: cell size and nodes per row for entities with no edges.
-const GRID_COLS = 6,
-  CELL_W = 200,
-  CELL_H = 90;
+const GRID_COLS = 4,
+  CELL_W = 280,
+  CELL_H = 210;
 
 // Gap between tiled clusters and around the orphan grid.
 const CLUSTER_GAP = 140;
@@ -24,13 +24,13 @@ const IMG_RE = /\.(png|jpe?g|webp|gif)$/i;
  * status badge adds ~24px. Slightly padded so dagre never under-reserves. */
 export function nodeSize(n: Node): { w: number; h: number } {
   const d = (n.data ?? {}) as Record<string, unknown>;
-  const kind = String(d.kind ?? '');
+  const kind = String(d.kind ?? "");
   let h = H;
   const hasPreview =
-    (kind === 'asset' && IMG_RE.test(String(d.file_path ?? ''))) ||
-    (kind === 'output' && !!d.thumbnail_path);
-  if (hasPreview) h += 70;
-  if (kind === 'render_job') h += 26;
+    (kind === "asset" && IMG_RE.test(String(d.file_path ?? ""))) ||
+    (kind === "output" && !!d.thumbnail_path);
+  if (hasPreview) h += 124;
+
   return { w: W, h };
 }
 
@@ -41,10 +41,15 @@ type Pos = { x: number; y: number };
 function dagreLayout(
   nodes: Node[],
   edges: Edge[],
-  sizes: Map<string, { w: number; h: number }>
+  sizes: Map<string, { w: number; h: number }>,
 ): { pos: Map<string, Pos>; w: number; h: number } {
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: 'LR', nodesep: 28, ranksep: 110, ranker: 'tight-tree' });
+  g.setGraph({
+    rankdir: "LR",
+    nodesep: 28,
+    ranksep: 110,
+    ranker: "tight-tree",
+  });
   g.setDefaultEdgeLabel(() => ({}));
   const ids = new Set(nodes.map((n) => n.id));
   nodes.forEach((n) => {
@@ -95,7 +100,9 @@ function clusterize(nodes: Node[], edges: Edge[]): Node[][] {
     }
   });
 
-  const seeds = nodes.filter((n) => String((n.data as any)?.kind ?? '') === 'scene');
+  const seeds = nodes.filter(
+    (n) => String((n.data as any)?.kind ?? "") === "scene",
+  );
   if (seeds.length < 2) return [nodes];
 
   const owner = new Map<string, string>();
@@ -114,7 +121,7 @@ function clusterize(nodes: Node[], edges: Edge[]): Node[][] {
     });
     const next: string[] = [];
     claims.forEach((votes, id) => {
-      let best = '',
+      let best = "",
         bestN = -1;
       votes.forEach((v, s) => {
         if (v > bestN) {
@@ -131,7 +138,7 @@ function clusterize(nodes: Node[], edges: Edge[]): Node[][] {
   // Anything unreachable from a scene (rare) becomes its own trailing cluster.
   const clusters = new Map<string, Node[]>();
   nodes.forEach((n) => {
-    const o = owner.get(n.id) ?? '__rest__';
+    const o = owner.get(n.id) ?? "__rest__";
     if (!clusters.has(o)) clusters.set(o, []);
     clusters.get(o)!.push(n);
   });
@@ -141,7 +148,10 @@ function clusterize(nodes: Node[], edges: Edge[]): Node[][] {
 type Packing = { offsets: Pos[]; w: number; h: number };
 
 /** Shelf-pack boxes (tallest first) into rows no wider than targetW. */
-function shelfPack(order: { w: number; h: number; i: number }[], targetW: number): Packing {
+function shelfPack(
+  order: { w: number; h: number; i: number }[],
+  targetW: number,
+): Packing {
   const offsets: Pos[] = order.map(() => ({ x: 0, y: 0 }));
   let shelfX = 0,
     shelfY = 0,
@@ -212,12 +222,18 @@ export function layout(nodes: Node[], edges: Edge[]): Node[] {
     // a tall column (typical: many parallel scene-chains sharing character
     // hubs), re-lay it out per scene-cluster and tile the clusters wide.
     const whole = dagreLayout(main, edges, sizes);
-    let use: { groups: Node[][]; results: { pos: Map<string, Pos>; w: number; h: number }[] };
+    let use: {
+      groups: Node[][];
+      results: { pos: Map<string, Pos>; w: number; h: number }[];
+    };
     if (whole.h > 0 && whole.w / whole.h >= 1.0) {
       use = { groups: [main], results: [whole] };
     } else {
       const groups = clusterize(main, edges);
-      use = { groups, results: groups.map((g) => dagreLayout(g, edges, sizes)) };
+      use = {
+        groups,
+        results: groups.map((g) => dagreLayout(g, edges, sizes)),
+      };
     }
     const packed = packClusters(use.results.map((r) => ({ w: r.w, h: r.h })));
     use.groups.forEach((group, gi) => {
@@ -249,7 +265,7 @@ function intersects(
   a: { x: number; y: number },
   b: { x: number; y: number },
   w = W,
-  h = 110
+  h = 110,
 ): boolean {
   return a.x < b.x + w && a.x + w > b.x && a.y < b.y + h && a.y + h > b.y;
 }
@@ -264,12 +280,10 @@ function intersects(
 export function layoutFresh(
   nodes: Node[],
   edges: Edge[],
-  saved: Record<string, { x: number; y: number }>
+  saved: Record<string, { x: number; y: number }>,
 ): Node[] {
   const laidOut = layout(nodes, edges);
-  const pinned = laidOut
-    .filter((n) => saved[n.id])
-    .map((n) => saved[n.id]);
+  const pinned = laidOut.filter((n) => saved[n.id]).map((n) => saved[n.id]);
 
   return laidOut.map((n) => {
     if (saved[n.id]) return { ...n, position: saved[n.id] };

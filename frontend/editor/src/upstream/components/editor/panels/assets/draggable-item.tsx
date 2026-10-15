@@ -220,7 +220,8 @@ function PlusButton({
 				e.stopPropagation();
 				onClick?.();
 			}}
-			title={tooltipText}
+			title={tooltipText || "Add to timeline"}
+ aria-label={tooltipText || "Add to timeline"}
 		>
 			<Plus />
 		</Button>
