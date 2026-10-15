@@ -1,0 +1,4 @@
+CREATE TABLE cloud_admin_audit(id bigserial PRIMARY KEY,actor text NOT NULL,action text NOT NULL,resource_id text NOT NULL,reason text NOT NULL DEFAULT '',created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE cloud_payout_batches(id text PRIMARY KEY,user_id text NOT NULL REFERENCES cloud_users(id),destination text NOT NULL,country text NOT NULL,amount_cents bigint NOT NULL CHECK(amount_cents>=5000),currency text NOT NULL CHECK(currency='usd'),status text NOT NULL CHECK(status IN ('prepared','submitting','paid')),provider_transfer text UNIQUE,created_at timestamptz NOT NULL DEFAULT now(),first_attempt_at timestamptz,paid_at timestamptz);
+CREATE UNIQUE INDEX ON cloud_payout_batches(user_id) WHERE status IN ('prepared','submitting');
+CREATE TABLE cloud_payout_batch_entries(batch_id text NOT NULL REFERENCES cloud_payout_batches(id),earning_id text NOT NULL UNIQUE REFERENCES cloud_earnings(id),PRIMARY KEY(batch_id,earning_id));

@@ -1,0 +1,3825 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VideoFlow Cloud API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "operationId": "post_auth_register",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "handle": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password",
+                  "name",
+                  "handle"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "post_auth_login",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "post_auth_logout",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "post_auth_forgot_password",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-verification": {
+      "post": {
+        "operationId": "post_auth_resend_verification",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "operationId": "post_auth_verify_email",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "post_auth_reset_password",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "get_me",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "operationId": "get_projects",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credits": {
+      "get": {
+        "operationId": "get_credits",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/billing/packs": {
+      "get": {
+        "operationId": "get_billing_packs",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/billing/checkout": {
+      "post": {
+        "operationId": "post_billing_checkout",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "pack_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pack_id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "operationId": "get_jobs",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "operationId": "get_jobs_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/jobs/{id}/events": {
+      "get": {
+        "operationId": "get_jobs_id_events",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized job snapshots as resumable progress hints",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/jobs/{id}/download": {
+      "get": {
+        "operationId": "get_jobs_id_download",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/jobs/{id}/cancel": {
+      "post": {
+        "operationId": "post_jobs_id_cancel",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/generation/quotes": {
+      "post": {
+        "operationId": "post_generation_quotes",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "project_id": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 30
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "16:9",
+                      "9:16",
+                      "1:1"
+                    ]
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "prompt",
+                  "duration",
+                  "aspect_ratio"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generation/jobs": {
+      "post": {
+        "operationId": "post_generation_jobs",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "quote_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "quote_id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed": {
+      "get": {
+        "operationId": "get_feed",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Video"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "get_search",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Video"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos": {
+      "get": {
+        "operationId": "get_videos",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Video"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_videos",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "job_id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "unlisted",
+                      "private"
+                    ]
+                  },
+                  "audience": {
+                    "type": "string",
+                    "enum": [
+                      "free",
+                      "members"
+                    ]
+                  }
+                },
+                "required": [
+                  "job_id",
+                  "title",
+                  "visibility",
+                  "audience"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos/{id}": {
+      "get": {
+        "operationId": "get_videos_id",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch_videos_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/publish": {
+      "post": {
+        "operationId": "post_videos_id_publish",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/playback-grant": {
+      "post": {
+        "operationId": "post_videos_id_playback_grant",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/report": {
+      "post": {
+        "operationId": "post_videos_id_report",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/channel": {
+      "get": {
+        "operationId": "get_channel",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch_channel",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/channels/{handle}": {
+      "get": {
+        "operationId": "get_channels_handle",
+        "security": [],
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/channels/{id}/follow": {
+      "post": {
+        "operationId": "post_channels_id_follow",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/memberships": {
+      "get": {
+        "operationId": "get_memberships",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/memberships/checkout": {
+      "post": {
+        "operationId": "post_memberships_checkout",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "channel_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "channel_id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/membership-plan": {
+      "get": {
+        "operationId": "get_creator_membership_plan",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put_creator_membership_plan",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "price_cents": {
+                    "type": "integer"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "usd"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "price_cents",
+                  "currency",
+                  "enabled"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/payout-account": {
+      "get": {
+        "operationId": "get_creator_payout_account",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_creator_payout_account",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  }
+                },
+                "required": [
+                  "country"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/analytics": {
+      "get": {
+        "operationId": "get_creator_analytics",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/creator/earnings": {
+      "get": {
+        "operationId": "get_creator_earnings",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/watch-sessions": {
+      "post": {
+        "operationId": "post_watch_sessions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "video_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "video_id"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/watch-events": {
+      "post": {
+        "operationId": "post_watch_events",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 15
+                  }
+                },
+                "required": [
+                  "session_id",
+                  "event_id",
+                  "seconds"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewer/preferences": {
+      "post": {
+        "operationId": "post_viewer_preferences",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "channel_id": {
+                    "type": "string"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "channel_id",
+                  "hidden"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/upload-grant": {
+      "post": {
+        "operationId": "post_assets_upload_grant",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "filename": {
+                    "type": "string"
+                  },
+                  "content_type": {
+                    "type": "string"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 104857600
+                  }
+                },
+                "required": [
+                  "filename",
+                  "content_type",
+                  "bytes"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/scripts": {
+      "get": {
+        "operationId": "get_projects_project_scripts",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudioEntity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects_project_scripts",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "object_key": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 3600
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/scripts/{entity}": {
+      "patch": {
+        "operationId": "patch_projects_project_scripts_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_projects_project_scripts_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/{project}/characters": {
+      "get": {
+        "operationId": "get_projects_project_characters",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudioEntity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects_project_characters",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "object_key": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 3600
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/characters/{entity}": {
+      "patch": {
+        "operationId": "patch_projects_project_characters_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_projects_project_characters_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/{project}/scenes": {
+      "get": {
+        "operationId": "get_projects_project_scenes",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudioEntity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects_project_scenes",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "object_key": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 3600
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/scenes/{entity}": {
+      "patch": {
+        "operationId": "patch_projects_project_scenes_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_projects_project_scenes_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/{project}/assets": {
+      "get": {
+        "operationId": "get_projects_project_assets",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudioEntity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects_project_assets",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "object_key": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 3600
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/assets/{entity}": {
+      "patch": {
+        "operationId": "patch_projects_project_assets_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_projects_project_assets_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/{project}/scenes/{scene}/shots": {
+      "get": {
+        "operationId": "get_projects_project_scenes_scene_shots",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudioEntity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_projects_project_scenes_scene_shots",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "object_key": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 3600
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/scenes/{scene}/shots/{entity}": {
+      "patch": {
+        "operationId": "patch_projects_project_scenes_scene_shots_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "position": {
+                    "type": "integer"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_projects_project_scenes_scene_shots_entity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/{project}/export": {
+      "get": {
+        "operationId": "get_projects_project_export",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/projects/import": {
+      "post": {
+        "operationId": "post_projects_import",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "const": 1
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "project": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "entities": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StudioEntity"
+                    }
+                  }
+                },
+                "required": [
+                  "version",
+                  "project",
+                  "entities"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/captions": {
+      "get": {
+        "operationId": "get_jobs_id_captions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put_jobs_id_captions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "segments": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "start": {
+                          "type": "number"
+                        },
+                        "end": {
+                          "type": "number"
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "end",
+                        "text"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "segments"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewer/history": {
+      "delete": {
+        "operationId": "delete_viewer_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/account/deletion": {
+      "post": {
+        "operationId": "post_account_deletion",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "videoflow_session"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "channel_id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "credits": {
+            "type": "integer"
+          },
+          "expires_at": {
+            "type": "string"
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quote_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "credits": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "CreditEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "Video": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "audience": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "views": {
+            "type": "integer"
+          },
+          "watch_seconds": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "channel_name": {
+            "type": "string"
+          },
+          "thumbnail_url": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "StudioEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scene_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "object_key": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
