@@ -650,6 +650,36 @@
           },
           "503": {
             "description": "Integration disabled or unavailable"
+          },
+          "202": {
+            "description": "Second factor required; challenge is not an authenticated session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mfa_required": {
+                      "type": "boolean"
+                    },
+                    "challenge": {
+                      "type": "string"
+                    },
+                    "methods": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "mfa_required",
+                    "challenge",
+                    "methods"
+                  ]
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -1712,7 +1742,29 @@
       "get": {
         "operationId": "get_feed",
         "security": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
@@ -2757,6 +2809,600 @@
                   "content_type",
                   "bytes"
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security": {
+      "get": {
+        "operationId": "get_security",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/auth/mfa": {
+      "post": {
+        "operationId": "post_auth_mfa",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "challenge": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "challenge",
+                  "code"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/totp/begin": {
+      "post": {
+        "operationId": "post_security_totp_begin",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/totp/confirm": {
+      "post": {
+        "operationId": "post_security_totp_confirm",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/totp/disable": {
+      "post": {
+        "operationId": "post_security_totp_disable",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/passkeys/register/options": {
+      "post": {
+        "operationId": "post_security_passkeys_register_options",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/passkeys/register/verify": {
+      "post": {
+        "operationId": "post_security_passkeys_register_verify",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "challenge": {
+                    "type": "string"
+                  },
+                  "credential": {
+                    "type": "object"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "challenge",
+                  "credential"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/passkeys/{id}": {
+      "delete": {
+        "operationId": "delete_security_passkeys_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkeys/options": {
+      "post": {
+        "operationId": "post_auth_passkeys_options",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkeys/verify": {
+      "post": {
+        "operationId": "post_auth_passkeys_verify",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "challenge": {
+                    "type": "string"
+                  },
+                  "credential": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "challenge",
+                  "credential"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "operationId": "get_profile",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch_profile",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "website": {
+                    "type": "string"
+                  },
+                  "avatar_url": {
+                    "type": "string"
+                  },
+                  "banner_url": {
+                    "type": "string"
+                  },
+                  "featured_video_id": {
+                    "type": "string"
+                  },
+                  "social_links": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "url"
+                      ]
+                    }
+                  }
+                },
+                "required": []
               }
             }
           }

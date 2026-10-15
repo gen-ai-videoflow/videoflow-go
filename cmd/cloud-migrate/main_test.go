@@ -76,6 +76,20 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	if _, e = runtimeStore.DB.ExecContext(ctx, `UPDATE cloud_crypto_invoices SET status='review',last_notify_at=now() WHERE false`); e != nil {
 		t.Fatalf("Crypto invoice status update denied: %v", e)
 	}
+	// Exercise newly migrated security/profile tables with the actual restricted login.
+	for _, query := range []string{
+		`INSERT INTO cloud_totp(user_id,secret_ciphertext) VALUES($1,'encrypted-fixture')`,
+		`INSERT INTO cloud_recovery_codes(user_id,code_hash) VALUES($1,'hashed-fixture')`,
+		`INSERT INTO cloud_auth_challenges(token_hash,user_id,purpose) VALUES('role-'||$1,$1,'password_mfa')`,
+		`INSERT INTO cloud_passkeys(id,user_id,credential,name) VALUES('role-'||$1,$1,'{}','Fixture')`,
+		`UPDATE cloud_channels SET bio='Updated profile' WHERE user_id=$1`,
+		`DELETE FROM cloud_auth_challenges WHERE user_id=$1`,
+	} {
+		if _, e = runtimeStore.DB.ExecContext(ctx, query, user.ID); e != nil {
+			t.Fatalf("security/profile runtime grant: %v", e)
+		}
+	}
+
 	purchaseID := "role-purchase-" + role
 	if _, e = store.DB.ExecContext(ctx, `INSERT INTO cloud_purchases(id,workspace_id,pack_id,credits,price_cents,currency,status,payment_intent,idempotency_key)VALUES($1,$2,'test',100,1000,'usd','paid',$3,$1)`, purchaseID, user.WorkspaceID, "pi_"+role); e != nil {
 		t.Fatal(e)

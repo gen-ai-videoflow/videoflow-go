@@ -124,28 +124,78 @@ func rawToken() (string, error) {
 	_, err := rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b), err
 }
-func (s *Store) Login(ctx context.Context, email, password string) (User, string, error) {
+func (s *Store) verifyPassword(ctx context.Context, email, password string) (User, error) {
 	var id, hash string
 	err := s.DB.QueryRowContext(ctx, "SELECT id,password_hash FROM cloud_users WHERE email=$1", strings.ToLower(strings.TrimSpace(email))).Scan(&id, &hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return User{}, "", ErrInvalidCredentials
+			return User{}, ErrInvalidCredentials
 		}
-		return User{}, "", err
+		return User{}, err
 	}
 	if !checkPassword(hash, password) {
-		return User{}, "", ErrInvalidCredentials
+		return User{}, ErrInvalidCredentials
 	}
-	u, err := scanUser(s.DB.QueryRowContext(ctx, userSelect+" WHERE u.id=$1", id))
-	if err != nil {
-		return User{}, "", err
+	return scanUser(s.DB.QueryRowContext(ctx, userSelect+" WHERE u.id=$1", id))
+}
+func (s *Store) Login(ctx context.Context, email, password string) (User, string, error) {
+	u, token, challenge, e := s.beginSecurityLogin(ctx, email, password)
+	if e != nil {
+		return User{}, "", e
 	}
-	token, err := rawToken()
-	if err != nil {
-		return User{}, "", err
+	if challenge != "" {
+		return User{}, "", ErrMFARequired
 	}
-	_, err = s.DB.ExecContext(ctx, "INSERT INTO cloud_sessions(token_hash,user_id) VALUES($1,$2)", tokenHash(token), id)
-	return u, token, err
+	return u, token, nil
+}
+func (s *Store) beginSecurityLogin(ctx context.Context, email, password string) (User, string, string, error) {
+	if len(password) > 1024 {
+		return User{}, "", "", ErrInvalidCredentials
+	}
+	tx, e := s.DB.BeginTx(ctx, nil)
+	if e != nil {
+		return User{}, "", "", e
+	}
+	defer tx.Rollback()
+	var id, hash string
+	e = tx.QueryRowContext(ctx, `SELECT id,password_hash FROM cloud_users WHERE email=$1 FOR UPDATE`, strings.ToLower(strings.TrimSpace(email))).Scan(&id, &hash)
+	if e != nil {
+		if errors.Is(e, sql.ErrNoRows) {
+			return User{}, "", "", ErrInvalidCredentials
+		}
+		return User{}, "", "", e
+	}
+	if !checkPassword(hash, password) {
+		return User{}, "", "", ErrInvalidCredentials
+	}
+	u, e := scanUser(tx.QueryRowContext(ctx, userSelect+" WHERE u.id=$1", id))
+	if e != nil {
+		return User{}, "", "", e
+	}
+	var required bool
+	e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_totp WHERE user_id=$1 AND enabled) OR EXISTS(SELECT 1 FROM cloud_passkeys WHERE user_id=$1)`, id).Scan(&required)
+	if e != nil {
+		return User{}, "", "", e
+	}
+	raw, e := rawToken()
+	if e != nil {
+		return User{}, "", "", e
+	}
+	if required {
+		_, e = tx.ExecContext(ctx, `INSERT INTO cloud_auth_challenges(token_hash,user_id,purpose)VALUES($1,$2,'password_mfa')`, tokenHash(raw), id)
+	} else {
+		_, e = tx.ExecContext(ctx, `INSERT INTO cloud_sessions(token_hash,user_id)VALUES($1,$2)`, tokenHash(raw), id)
+	}
+	if e != nil {
+		return User{}, "", "", e
+	}
+	if e = tx.Commit(); e != nil {
+		return User{}, "", "", e
+	}
+	if required {
+		return u, "", raw, nil
+	}
+	return u, raw, "", nil
 }
 func (s *Store) Authenticate(ctx context.Context, token string) (User, error) {
 	if len(token) != 43 {
@@ -232,6 +282,9 @@ func (s *Store) consumeAccountToken(ctx context.Context, token, purpose, hash st
 		_, err = tx.ExecContext(ctx, "UPDATE cloud_users SET password_hash=$2 WHERE id=$1", id, hash)
 		if err == nil {
 			_, err = tx.ExecContext(ctx, "DELETE FROM cloud_sessions WHERE user_id=$1", id)
+			if err == nil {
+				_, err = tx.ExecContext(ctx, "DELETE FROM cloud_auth_challenges WHERE user_id=$1", id)
+			}
 		}
 	}
 	if err != nil {

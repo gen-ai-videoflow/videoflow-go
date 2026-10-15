@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	AuthEncryptionKey                                                                                                                                                                                     string
 	CryptoRailsEnabled, CryptoRailsUSDPegAccepted                                                                                                                                                         bool
 	CryptoRailsAPIURL, CryptoRailsAPIKey, CryptoRailsWebhookSecret, CryptoRailsNetwork, CryptoRailsVMType, CryptoRailsToken, CryptoRailsTokenAddress, CryptoRailsTreasuryAddress, CryptoRailsDepositFixed string
 	CryptoRailsTokenDecimals                                                                                                                                                                              int
@@ -36,6 +37,12 @@ type Config struct {
 
 func EnvConfig() (Config, error) {
 	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), RedisURL: os.Getenv("REDIS_URL"), Region: os.Getenv("AWS_REGION"), OriginalsBucket: os.Getenv("S3_BUCKET_ORIGINALS"), PlaybackBucket: os.Getenv("S3_BUCKET_PLAYBACK"), QueueURL: os.Getenv("SQS_QUEUE_URL"), MediaConvertRole: os.Getenv("MEDIACONVERT_ROLE_ARN"), MediaConvertEndpoint: os.Getenv("MEDIACONVERT_ENDPOINT"), CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"), CloudFrontKeyPairID: os.Getenv("CLOUDFRONT_KEY_PAIR_ID"), CloudFrontPrivateKey: os.Getenv("CLOUDFRONT_PRIVATE_KEY"), OpenRouterKey: os.Getenv("OPENROUTER_API_KEY"), VideoModel: os.Getenv("OPENROUTER_VIDEO_MODEL"), PublicOrigin: os.Getenv("PUBLIC_ORIGIN"), StripeSecret: os.Getenv("STRIPE_SECRET_KEY"), StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"), MailFrom: os.Getenv("MAIL_FROM"), MailEndpoint: os.Getenv("MAIL_ENDPOINT"), DevMode: os.Getenv("CLOUD_DEV_MODE") == "true", BillingEnabled: os.Getenv("BILLING_ENABLED") == "true", Port: 8000, CreditsPerSecond: 10}
+	c.AuthEncryptionKey = os.Getenv("AUTH_ENCRYPTION_KEY")
+	if c.AuthEncryptionKey != "" {
+		if _, err := authCipher(c.AuthEncryptionKey); err != nil {
+			return c, fmt.Errorf("AUTH_ENCRYPTION_KEY must be base64 encoded 32 bytes")
+		}
+	}
 	c.CryptoRailsEnabled = os.Getenv("CRYPTORAILS_ENABLED") == "true"
 	c.CryptoRailsUSDPegAccepted = os.Getenv("CRYPTORAILS_USD_PEG_ACCEPTED") == "true"
 	c.CryptoRailsAPIURL = os.Getenv("CRYPTORAILS_API_URL")

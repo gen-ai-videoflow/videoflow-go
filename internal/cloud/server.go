@@ -70,6 +70,7 @@ func (s *Server) Router() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		s.premiumRoutes(r)
 		s.cryptoRoutes(r)
+		s.securityRoutes(r)
 		r.Post("/auth/register", s.register)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/logout", s.auth(s.logout))
@@ -88,6 +89,7 @@ func (s *Server) Router() http.Handler {
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
+			s.profileRoutes(r)
 			s.studioRoutes(r)
 			s.canvasRoutes(r)
 			s.pipelineRoutes(r)
@@ -383,9 +385,25 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	if !s.rate(w, r, "email-login:"+strings.ToLower(strings.TrimSpace(b.Email)), 10, 15*time.Minute, true) {
 		return
 	}
-	u, token, e := s.Store.Login(r.Context(), b.Email, b.Password)
+	u, token, challenge, e := s.Store.beginSecurityLogin(r.Context(), b.Email, b.Password)
 	if e != nil {
 		s.fail(w, e)
+		return
+	}
+	if challenge != "" {
+		methods := []string{}
+		var totpEnabled, keys bool
+		if err := s.Store.DB.QueryRowContext(r.Context(), `SELECT EXISTS(SELECT 1 FROM cloud_totp WHERE user_id=$1 AND enabled),EXISTS(SELECT 1 FROM cloud_passkeys WHERE user_id=$1)`, u.ID).Scan(&totpEnabled, &keys); err != nil {
+			s.fail(w, err)
+			return
+		}
+		if totpEnabled {
+			methods = append(methods, "totp", "recovery")
+		}
+		if keys {
+			methods = append(methods, "passkey")
+		}
+		s.json(w, 202, map[string]any{"mfa_required": true, "challenge": challenge, "methods": methods})
 		return
 	}
 	s.cookie(w, token, 30*24*3600)
@@ -519,7 +537,7 @@ func (s *Server) cancelJob(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"ok": true}, s.Store.FinishJob(r.Context(), j.ID, "cancelled", "", "Cancelled before generation"))
 }
 func (s *Server) feed(w http.ResponseWriter, r *http.Request) {
-	v, e := s.Store.Discovery(r.Context(), s.optionalUser(r), r.URL.Query().Get("q"), r.URL.Query().Get("category"))
+	v, e := s.Store.DiscoveryFeed(r.Context(), s.optionalUser(r), r.URL.Query().Get("q"), r.URL.Query().Get("category"), r.URL.Query().Get("filter"))
 	s.result(w, v, e)
 }
 func (s *Server) video(w http.ResponseWriter, r *http.Request) {
@@ -579,14 +597,7 @@ func (s *Server) download(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]string{"url": u}, e)
 }
 func (s *Server) channelData(ctx context.Context, handle string) (map[string]any, error) {
-	var id, name, description, avatar, banner string
-	err := s.Store.DB.QueryRowContext(ctx, `SELECT id,name,description,avatar_url,banner_url FROM cloud_channels WHERE handle=$1`, handle).Scan(&id, &name, &description, &avatar, &banner)
-	if err != nil {
-		return nil, ErrNotFound
-	}
-	var followers int64
-	err = s.Store.DB.QueryRowContext(ctx, `SELECT count(*) FROM cloud_follows WHERE channel_id=$1`, id).Scan(&followers)
-	return map[string]any{"id": id, "name": name, "handle": handle, "description": description, "avatar_url": avatar, "banner_url": banner, "followers": followers}, err
+	return s.richChannelData(ctx, handle)
 }
 func (s *Server) publicChannel(w http.ResponseWriter, r *http.Request) {
 	c, e := s.channelData(r.Context(), chi.URLParam(r, "handle"))
@@ -594,6 +605,12 @@ func (s *Server) publicChannel(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, e)
 		return
 	}
+	var following bool
+	if err := s.Store.DB.QueryRowContext(r.Context(), `SELECT EXISTS(SELECT 1 FROM cloud_follows WHERE user_id=$1 AND channel_id=$2)`, s.optionalUser(r).ID, c["id"]).Scan(&following); err != nil {
+		s.fail(w, err)
+		return
+	}
+	c["is_following"] = following
 	v, e := s.Store.Videos(r.Context(), c["id"].(string), false)
 	var price int64
 	var currency string

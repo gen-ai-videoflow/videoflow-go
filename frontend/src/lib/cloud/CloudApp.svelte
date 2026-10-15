@@ -11,10 +11,16 @@
   import { safeReturnTo, authHref } from './auth';
   import type { Project, Quote } from './generated';
   import './cloud.css';
+  import ViewerShell from './ViewerShell.svelte';
+  import PublicProfile from './PublicProfile.svelte';
+  import ProfileEditor from './ProfileEditor.svelte';
+  import SecurityPanel from './SecurityPanel.svelte';
   import VideoPlayer from './VideoPlayer.svelte';
   import Studio from './Studio.svelte';
   import OriginalStudio from './OriginalStudio.svelte';
   import AuthForm from './AuthForm.svelte';
+  import RecoveryForm from './RecoveryForm.svelte';
+  import { usePasskey } from './webauthn';
   import Payments from './Payments.svelte';
   import Templates from './Templates.svelte';
   import GenerationJobs from './GenerationJobs.svelte';
@@ -29,7 +35,7 @@
   let data = $state<any>(page.data.cloudPublic || {});
   let projects = $state<Project[]>([]);
   let jobs = $state<any[]>([]);
-  let email = $state(''); let password = $state(''); let name = $state(''); let handle = $state('');
+  let mfaChallenge=$state('');let mfaMethods=$state<string[]>([]);
   let prompt = $state(''); let duration = $state('10'); let ratio = $state('16:9'); let projectId = $state('');
   let projectName = $state(''); let projectDescription = $state('');
   let quote = $state<Quote | null>(null); let quoteKey = '';
@@ -54,45 +60,48 @@
       await goto(`/payments?invoice=${encodeURIComponent(invoice.id)}`);
     });
   }
-  let token = $state(''); let developmentToken = $state('');
-  const path = $derived(page.url.pathname);
+  let developmentToken = $state('');
+  const rawPath=$derived(page.url.pathname);
+  const aliases:Record<string,string>={'/studio/projects':'/projects','/studio/templates':'/templates','/studio/videos':'/render','/studio/channel':'/channel','/studio/earnings':'/earnings'};
+  const path = $derived(aliases[rawPath] || rawPath);
+  let searchQuery=$state('');
+  $effect(()=>{searchQuery=page.url.searchParams.get('q') || '';});
+  const feedQuery=$derived(page.url.searchParams.get('q') || '');
   const recoveryPage = $derived(['/forgot-password','/reset-password','/verify-email'].includes(path));
   const authPage = $derived(path === '/login' || path === '/register' || recoveryPage);
   const signInPage=$derived(path==='/login'||path==='/register');
-  const canvasPage=$derived(['/','/studio','/scenes','/characters','/assets'].includes(path));
-  const viewerPage=$derived(path==='/discover'||path.startsWith('/watch/')||path.startsWith('/channels/'));
-  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || (canvasPage ? page.url.pathname+page.url.search+page.url.hash : '/'),page.url.origin));
+  const canvasPage=$derived(['/studio','/scenes','/characters','/assets'].includes(path));
+  const viewerPage=$derived(['/', '/discover','/following','/search','/settings','/security','/profile','/payments','/premium','/memberships','/credits'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/'));
+  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || (canvasPage ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
   const signInHref=$derived(authHref('/login',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const signUpHref=$derived(authHref('/register',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const displayAuth=$derived(signInPage||(canvasPage&&sessionKnown&&!user));
-  const publicPage = $derived(path==='/discover'||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
-  const createNav=[{url:'/create',label:'Create video',icon:Clapperboard},{url:'/templates',label:'Templates',icon:LayoutTemplate}];
+  const publicPage = $derived(['/','/discover','/search'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
+  const createNav=[{url:'/create',label:'Create video',icon:Clapperboard},{url:'/studio/templates',label:'Templates',icon:LayoutTemplate}];
   const browseNav=[{url:'/discover',label:'Discover',icon:Compass}];
-  const outputNav=[{url:'/render',label:'My videos',icon:Film}];
-  const advancedNav=[{url:'/',label:'Studio',icon:Clapperboard},{url:'/scenes',label:'Scenes',icon:ListVideo},{url:'/characters',label:'Characters',icon:Users},{url:'/assets',label:'Assets',icon:Image},{url:'/workspace',label:'Project details',icon:FolderOpen}];
-  const systemNav=[{url:'/payments',label:'Payments',icon:Wallet},{url:'/credits',label:'Credits',icon:Coins},{url:'/premium',label:'Premium',icon:Crown},{url:'/channel',label:'Channel',icon:Radio},{url:'/earnings',label:'Earnings',icon:ChartNoAxesCombined},{url:'/settings',label:'Settings',icon:SlidersHorizontal}];
+  const outputNav=[{url:'/studio/videos',label:'My videos',icon:Film}];
+  const advancedNav=[{url:'/studio',label:'Studio',icon:Clapperboard},{url:'/scenes',label:'Scenes',icon:ListVideo},{url:'/characters',label:'Characters',icon:Users},{url:'/assets',label:'Assets',icon:Image},{url:'/workspace',label:'Project details',icon:FolderOpen}];
+  const systemNav=[{url:'/payments',label:'Payments',icon:Wallet},{url:'/credits',label:'Credits',icon:Coins},{url:'/premium',label:'Premium',icon:Crown},{url:'/studio/channel',label:'Channel',icon:Radio},{url:'/studio/earnings',label:'Earnings',icon:ChartNoAxesCombined},{url:'/settings',label:'Settings',icon:SlidersHorizontal}];
   const mobileNav=[{url:'/projects',label:'Projects',icon:FolderOpen},...createNav,...outputNav,...advancedNav,...browseNav,...systemNav];
-  const active=(url:string)=>url==='/' ? path==='/'||path==='/studio' : path.startsWith(url);
-  const titles: Record<string,string> = {'/':'Studio','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Studio','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
+  const active=(url:string)=>path===(aliases[url] || url);
+  const titles: Record<string,string> = {'/':'Discover','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Studio','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
   const list = (value:any):any[] => Array.isArray(value) ? value : value?.items || value?.videos || value?.projects || value?.jobs || [];
   const money = (cents:number | undefined, currency = 'USD') => cents == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency}).format(cents/100);
   const date = (value:string) => value ? new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
   onMount(() => {
-    token = page.url.searchParams.get('token') || '';
     request('/me').then(v => user = v.user || v).catch(e => {
       if (!(e instanceof CloudError && e.status === 401)) error = e.message;
     }).finally(() => {ready=true;sessionKnown=true;});
 
   });
-  $effect(() => { const incoming=page.url.searchParams.get('token'); if (recoveryPage && incoming) token=incoming; });
-  $effect(() => { if (ready) { const current = path; if (page.data.cloudPath === current && page.data.cloudPublic) { data = page.data.cloudPublic; loading = false; } else void load(current); } });
+  $effect(() => { if (ready) { const current = path; const query=feedQuery; if (!user && !query && page.data.cloudPath === current && page.data.cloudPublic) { data = page.data.cloudPublic; loading = false; } else void load(current); } });
   async function load(current:string) {
     loading = true; loadFailed = false; error = ''; notice = ''; data = {}; playback = ''; quote = null; showReport = false; reportReason = ''; followed = false;
     if (authPage) { loading = false; return; }
     if (!user && !publicPage) { loading = false; return; }
     try {
       if (canvasPage) data = {};
-      else if(current==='/discover')data={videos:list(await request('/feed'))};
+      else if(['/', '/discover','/following','/search'].includes(current))data={videos:list(await request(`/feed?${new URLSearchParams({...((current==='/following')?{filter:'following'}:{}),...(feedQuery?{q:feedQuery}:{})})}`))};
       else if (current === '/projects') data = {projects:list(await request('/projects'))};
       else if (current === '/create') { const [p,j] = await Promise.all([request('/projects'),request('/jobs')]); projects = list(p); jobs = list(j); }
       else if (current === '/credits') { const [balance,payments] = await Promise.all([request('/credits'),request('/payments/options')]); data = {...balance,payments}; }
@@ -105,7 +114,13 @@
     } catch(e) { error = (e as Error).message; loadFailed = true; } finally { loading = false; }
   }
   async function action(fn:()=>Promise<void>) { busy = true; error = ''; notice = ''; try { await fn(); } catch(e) { error = (e as Error).message; } finally { busy = false; } }
-  async function authenticate(fields:{email:string;password:string;name:string;handle:string}) { const target=authReturnTo; const signup=path==='/register'; await action(async () => { await request(signup ? '/auth/register' : '/auth/login', signup ? fields : {email:fields.email,password:fields.password}); user = await request('/me'); await goto(target); }); }
+  async function authenticate(fields:{email:string;password:string;name:string;handle:string}) {
+    const target=authReturnTo;const signup=path==='/register';
+    await action(async()=>{const result=await request(signup?'/auth/register':'/auth/login',signup?fields:{email:fields.email,password:fields.password});if(result.mfa_required){mfaChallenge=result.challenge;mfaMethods=result.methods||[];return;}mfaChallenge='';mfaMethods=[];user=await request('/me');await goto(target);});
+  }
+  async function completeMFA(code:string){const target=authReturnTo;await action(async()=>{await request('/auth/mfa',{challenge:mfaChallenge,code});mfaChallenge='';mfaMethods=[];user=await request('/me');await goto(target);});}
+  async function signInWithPasskey(){const target=authReturnTo;await action(async()=>{const begin=await request('/auth/passkeys/options',{});const credential=await usePasskey(begin.options);await request('/auth/passkeys/verify',{challenge:begin.challenge,credential});mfaChallenge='';mfaMethods=[];user=await request('/me');await goto(target);});}
+
   function getQuote() { void action(async () => { quote = await request('/generation/quotes',{prompt,duration:Number(duration),aspect_ratio:ratio,project_id:projectId || undefined}); quoteKey = crypto.randomUUID(); }); }
   function generate() { const quoteId=quote?.id; if(!quoteId)return; void action(async () => { await request('/generation/jobs',{quote_id:quoteId},'POST',{'Idempotency-Key':quoteKey}); quote = null; jobs = list(await request('/jobs')); notice = 'Generation submitted. Your progress is saved here.'; }); }
   function createProject() { void action(async () => { await request('/projects',{name:projectName,description:projectDescription}); projectName = ''; projectDescription = ''; data = {projects:list(await request('/projects'))}; notice = 'Project created.'; }); }
@@ -113,20 +128,14 @@
 </script>
 
 <svelte:head><title>{titles[path] || (authPage ? 'Welcome' : data.title || data.channel?.name || data.name || 'Watch')} · VideoFlow</title>{#if publicPage}<link rel="canonical" href={page.url.origin + path}/><meta property="og:title" content={`${data.title || data.channel?.name || data.name || titles[path] || 'VideoFlow'} · VideoFlow`}/><meta property="og:description" content={data.description || data.channel?.description || 'VideoFlow video studio.'}/>{/if}<meta name="description" content="Create your next story with VideoFlow. Your video studio, channel, and creative community." /></svelte:head>
-{#if canvasPage&&!sessionKnown}
+{#if recoveryPage}
+  <RecoveryForm mode={path==='/forgot-password'?'forgot-password':path==='/reset-password'?'reset-password':'verify-email'} returnTo={authReturnTo} onVerified={async()=>{try{user=await request('/me');}catch{user=null;}}}/>
+{:else if canvasPage&&!sessionKnown}
   <div class="flex h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground" role="status"><LoaderCircle class="size-4 animate-spin"/>Loading VideoFlow…</div>
 {:else if displayAuth}
-  <AuthForm mode={path==='/register'?'register':'login'} {busy} {error} {notice} returnTo={authReturnTo} onSubmit={authenticate}/>
+  <AuthForm mode={path==='/register'?'register':'login'} {busy} {error} {notice} returnTo={authReturnTo} onSubmit={authenticate} {mfaChallenge} {mfaMethods} onMFA={completeMFA} onPasskey={signInWithPasskey} onCancelMFA={()=>{mfaChallenge='';mfaMethods=[];error='';}}/>
 {:else}
-<div class:viewer-shell={viewerPage} class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
-  {#if viewerPage}<header class="viewer-header"><a href="/discover" class="text-sm font-semibold tracking-wide">VideoFlow</a><nav aria-label="Viewing navigation"><a href="/discover" aria-current={path==='/discover'?'page':undefined}>Discover</a><a href="/premium">Premium</a></nav><div class="viewer-account"><Button href="/studio" variant="outline" size="sm">Open Studio</Button>{#if user}<a href="/settings" class="text-sm" title={user.email}>Your account</a>{:else}<Button href={signInHref} size="sm">Sign in</Button>{/if}</div></header>{:else}
-  <nav aria-label="Primary" class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-2 py-1.5 md:hidden">{#each mobileNav as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="shrink-0 rounded-md px-2 py-1.5 text-xs hover:bg-accent">{item.label}</a>{/each}</nav>
-  <aside class="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-border p-3 md:flex">
-    <a href="/" class="px-2 pt-3 pb-1 text-sm font-semibold tracking-wide">VideoFlow</a>
-    <a href="/projects" class="mb-1 flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-accent {active('/projects')?'bg-accent font-medium':'text-muted-foreground'}"><FolderOpen class="size-3.5 shrink-0"/><span class="truncate">Projects</span></a>
-    {#each [{title:'Create',items:createNav},{title:'Output',items:outputNav},{title:'Advanced',items:advancedNav},{title:'Browse',items:browseNav},{title:'System',items:systemNav}] as group}<div class="px-2 pt-4 pb-1 text-[10px] tracking-wider text-muted-foreground/70 uppercase">{group.title}</div>{#each group.items as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent {active(item.url)?'bg-accent font-medium':'text-muted-foreground'}"><item.icon class="size-4"/>{item.label}</a>{/each}{/each}
-    <div class="mt-auto border-t border-border pt-3">{#if user}<div class="flex items-center justify-between gap-2 px-2 text-xs"><span class="truncate text-muted-foreground" title={user.email}>{user.name || user.email}</span><button aria-label="Sign out" class="rounded p-1 hover:bg-accent" onclick={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/login');})}><LogOut class="size-3.5"/></button></div>{:else}<Button href={signInHref} size="sm" variant="outline" class="w-full">Sign in</Button>{/if}</div>
-  </aside>{/if}
+{#snippet cloudContent()}
   <div class="cloud-body min-h-0 min-w-0 flex-1 overflow-hidden">
     {#if !canvasPage&&!viewerPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
     <main class="cloud-main" class:cloud-canvas-main={canvasPage} class:viewer-main={viewerPage}>
@@ -134,20 +143,12 @@
       {#if notice}<div class="cloud-notice" role="status"><Check size={17}/>{notice}</div>{/if}
       {#if !ready || loading}<div class="cloud-loading" role="status"><LoaderCircle class="animate-spin" size={25}/><span>Opening your creative space…</span></div>
       {:else if loadFailed}<div class="cloud-empty"><Film size={35}/><h1>Let's try that again.</h1><p>This page couldn't be loaded. Your saved work is still in your account.</p><Button onclick={()=>load(path)}>Reload page</Button></div>
-      {:else if recoveryPage}
-        <form class="auth-form" style="margin:30px auto" onsubmit={(e)=>{e.preventDefault();action(async()=>{ const endpoint=path === '/forgot-password' ? '/auth/forgot-password' : path === '/verify-email' ? '/auth/verify-email' : '/auth/reset-password'; const result=await request(endpoint,path === '/forgot-password' ? {email} : path === '/verify-email' ? {token} : {token,password});developmentToken=result.development_token || '';if(path === '/verify-email' && user)user=await request('/me');notice=path === '/forgot-password' ? 'If this email is registered, recovery instructions have been sent.' : path === '/verify-email' ? 'Email verified. You can return to your studio.' : 'Password reset. Sign in with your new password.';});}}>
-          <span class="eyebrow">YOUR ACCOUNT</span><h2>{path === '/forgot-password' ? 'Reset your password.' : path === '/verify-email' ? 'Verify your email.' : 'A fresh start.'}</h2>
-          {#if path === '/forgot-password'}<label for="recovery-email">Email address</label><Input id="recovery-email" type="email" bind:value={email} required autocomplete="email"/>{:else}<label for="token">Token from your email</label><Input id="token" bind:value={token} required autocomplete="one-time-code"/>{/if}
-          {#if path === '/reset-password'}<label for="new-password">New password</label><Input id="new-password" type="password" bind:value={password} minlength={12} required autocomplete="new-password"/>{/if}
-          {#if developmentToken}<p class="field-help">Local development token: <code>{developmentToken}</code></p><a href="/reset-password">Enter reset token</a>{/if}
-          <Button type="submit" disabled={busy} class="w-full">Continue <ArrowRight size={16}/></Button><p class="auth-switch"><a href={signInHref}>Back to sign in</a></p>
-        </form>
       {:else if !user && !publicPage}
-        <div class="cloud-empty"><ShieldCheck size={38}/><h1>Your studio is waiting.</h1><p>Sign in to create videos, manage projects, and grow your channel.</p><Button href={signInHref}>Sign in <ArrowRight size={16}/></Button><a href={signUpHref}>Create an account</a></div>
+        <div class="cloud-empty"><ShieldCheck size={38}/><h1>{viewerPage?'Sign in to continue':'Your studio is waiting.'}</h1><p>{viewerPage?'Use your VideoFlow account to follow creators and manage your profile, payments, and preferences.':'Sign in to create videos, manage projects, and grow your channel.'}</p><Button href={signInHref}>Sign in <ArrowRight size={16}/></Button><a href={signUpHref}>Create an account</a></div>
       {:else if canvasPage}
         <OriginalStudio/>
-      {:else if path==='/discover'}
-        <div class="page-heading"><h1>Discover</h1><p>Public videos from VideoFlow creators.</p></div>{#if data.videos?.length}<div class="video-grid">{#each data.videos as video}<a class="video-tile" href={`/watch/${video.id}`}><div class="video-image">{#if video.thumbnail_url}<img src={video.thumbnail_url} alt="" loading="lazy"/>{:else}<Film class="size-8"/>{/if}</div><h3>{video.title}</h3><p class="subtle">{video.channel_name || video.handle || 'VideoFlow creator'}</p></a>{/each}</div>{:else}<div class="cloud-empty compact"><Film class="size-8"/><h2>No public videos yet</h2><p>Published public videos will appear here.</p><Button variant="outline" href="/create">Create video</Button></div>{/if}
+      {:else if ['/', '/discover','/following','/search'].includes(path)}
+        <div class="page-heading"><h1>{path==='/following'?'Following':path==='/search'?'Search videos':'Discover'}</h1><p>{path==='/following'?'Public videos from creators you follow.':'Find something worth watching.'}</p></div><form class="viewer-search" role="search" onsubmit={(event)=>{event.preventDefault();void goto(`/search?q=${encodeURIComponent(searchQuery)}`);}}><label for="viewer-search" class="sr-only">Search public videos</label><Input id="viewer-search" bind:value={searchQuery} placeholder="Search public videos" type="search"/><Button type="submit" variant="outline">Search</Button></form>{#if data.videos?.length}<div class="video-grid">{#each data.videos as video}<a class="video-tile" href={`/watch/${video.id}`}><div class="video-image">{#if video.thumbnail_url}<img src={video.thumbnail_url} alt="" loading="lazy"/>{:else}<Film class="size-8"/>{/if}</div><h3>{video.title}</h3><p class="subtle">{video.channel_name || video.handle || 'VideoFlow creator'}</p></a>{/each}</div>{:else}<div class="cloud-empty compact"><Film class="size-8"/><h2>{feedQuery?'No matching videos':path==='/following'?'Your following feed is quiet':'No public videos yet'}</h2><p>{feedQuery?'Try another search.':path==='/following'?'Follow creators from their profiles to see their videos here.':'Published public videos will appear here.'}</p><Button variant="outline" href="/discover">Browse Discover</Button></div>{/if}
       {:else if path === '/create'}
         <div class="page-heading"><span class="eyebrow">FROM THOUGHT TO FRAME</span><h1>Create video</h1><p>Describe your video. Review the cost. Bring it to life.</p></div><div class="story-entry"><div><span class="eyebrow">MORE THAN A SINGLE CLIP</span><h2>Have a whole story in mind?</h2><p>Plan a screenplay, generate its scenes, and assemble a complete video in your project storyboard.</p></div><Button variant="outline" href={`/studio?tab=storyboard${projectId ? '&project='+encodeURIComponent(projectId) : ''}`}>Open story-to-video <ArrowUpRight size={16}/></Button></div><div class="section-heading clip-heading"><h2>Or start with a single clip</h2></div><div class="creation-layout"><form class="cloud-panel create-form" onsubmit={(e)=>{e.preventDefault();getQuote();}}><label for="prompt" class="strong-label">The idea</label><Textarea id="prompt" bind:value={prompt} oninput={()=>quote=null} placeholder="A quiet coastal town at sunrise. A cyclist follows the winding road as the first light reaches the sea…" required minlength={10} rows={7}/><p class="field-help">Set the scene, describe the action, and tell us how it should feel.</p><div class="form-grid"><div><label for="duration">Duration</label><select id="duration" bind:value={duration} onchange={()=>quote=null}><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></div><div><label for="ratio">Frame</label><select id="ratio" bind:value={ratio} onchange={()=>quote=null}><option>16:9</option><option>9:16</option><option>1:1</option></select></div></div><label for="project">Project</label><select id="project" bind:value={projectId} onchange={()=>quote=null}><option value="">No project</option>{#each projects as project}<option value={project.id}>{project.name}</option>{/each}</select><div class="form-footer"><span><ShieldCheck size={15}/>Private until you publish</span><Button type="submit" disabled={busy || prompt.length < 10}>Review credit cost <ArrowRight size={15}/></Button></div>{#if quote}<div class="quote-box"><div><strong>{quote.credits} credits</strong><p>Quote expires {new Date(quote.expires_at).toLocaleTimeString()}. Credits are reserved when you confirm.</p></div><Button type="button" disabled={busy || Date.parse(quote.expires_at) < Date.now()} onclick={generate}>Confirm generation</Button></div>{/if}</form><aside class="creative-guide"><span class="eyebrow">A STRONG START</span><h2>Give your idea<br/>a little direction.</h2><ol><li><span>01</span><div><strong>Build a world</strong><p>Where are we? A place, a time of day, a feeling.</p></div></li><li><span>02</span><div><strong>Find the movement</strong><p>Describe what happens, from subject to camera.</p></div></li><li><span>03</span><div><strong>Make it yours</strong><p>Natural light, a cinematic mood, or something unexpected.</p></div></li></ol><div class="guide-foot"><Coins size={17}/><p>You see the credit cost before any generation starts.</p></div></aside></div><GenerationJobs {jobs} onrefresh={async()=>{jobs=list(await request('/jobs'));}}/>
       {:else if path === '/workspace'}
@@ -170,16 +171,30 @@
         <div class="page-heading"><h1>VideoFlow Premium</h1><p>Prepaid viewing access across VideoFlow. The same account can watch, create, and publish. Generation credits are separate.</p></div>
         <section class="cloud-panel premium-panel"><Crown class="size-7 text-muted-foreground"/><h2>{data.active?'Your Premium access':'Get 30 days of Premium'}</h2>{#if data.active}<span class="status">{data.status || 'Active'}</span><p>Premium access is active{data.paid_through ? ` through ${date(data.paid_through)}` : ''}.</p>{:else}<p>Watch Premium videos from creators across the platform with one account.</p>{/if}{#if data.payments?.premium_price_cents>0}<strong class="premium-price">{money(data.payments.premium_price_cents,'USD')}<span>for 30 days</span></strong>{/if}<p>Crypto Premium is prepaid for 30 days and does not renew automatically. An additional confirmed payment extends access from the later of your current expiry or today.</p>{#if !data.payments?.enabled||!data.payments?.premium_price_cents}<div class="info-banner"><ShieldCheck class="size-5"/><p>New Premium payments are not available yet. Existing access is shown above; payment availability depends on the configured token and network.</p></div>{/if}<Button disabled={busy||!data.payments?.enabled||!data.payments?.premium_price_cents} onclick={()=>createInvoice('premium')}>{user?(data.active?'Add 30 days':'Get 30 days'):'Sign in to get Premium'}<ArrowUpRight class="size-4"/></Button>{#if user&&data.can_manage}<Button variant="outline" disabled={busy} onclick={()=>action(async()=>{const result=await request('/premium/manage',{});window.location.assign(result.url);})}>Manage historical subscription <ArrowUpRight class="size-4"/></Button>{/if}<p class="field-help">New payments use {data.payments?.token || 'the configured token'} on {data.payments?.network || 'the configured network'}. Your invoice shows the exact token amount, fees/reserve, and deposit address. Access is granted only after server-confirmed settlement.</p><a href="/payments" class="text-sm underline underline-offset-4">View payment invoices</a><p class="field-help">Premium grants viewing access. It does not include studio generation credits or guarantee creator earnings.</p></section>
       {:else if path === '/settings'}
-        <div class="page-heading"><span class="eyebrow">MAKE YOURSELF AT HOME</span><h1>Account settings</h1><p>One account for watching, creating, and publishing across VideoFlow.</p></div><section class="cloud-panel account-panel"><h2>Personal details</h2><dl><div><dt>Name</dt><dd>{user.name}</dd></div><div><dt>Email address</dt><dd>{user.email}</dd></div><div><dt>Channel handle</dt><dd>@{user.handle}</dd></div><div><dt>Email verification</dt><dd>{user.verified ? 'Verified' : 'Verification pending'}</dd></div></dl>{#if !user.verified}<p class="field-help">Check your inbox for a verification email before using features that require a verified account.</p><Button variant="outline" disabled={busy} onclick={()=>action(async()=>{const result=await request('/auth/resend-verification',{email:user.email});developmentToken=result.development_token || '';notice='Verification instructions sent. Check your inbox.';})}>Resend verification email</Button><a href="/verify-email" class="field-help">Enter verification token</a>{#if developmentToken}<p class="field-help">Local development token: <code>{developmentToken}</code></p>{/if}{/if}<Button variant="outline" href="/channel">Edit channel profile <ArrowUpRight size={15}/></Button></section>
+        <div class="page-heading"><span class="eyebrow">MAKE YOURSELF AT HOME</span><h1>Account settings</h1><p>One account for watching, creating, and publishing across VideoFlow.</p></div><section class="cloud-panel account-panel"><h2>Personal details</h2><dl><div><dt>Name</dt><dd>{user.name}</dd></div><div><dt>Email address</dt><dd>{user.email}</dd></div><div><dt>Username</dt><dd>@{user.handle}</dd></div><div><dt>Email verification</dt><dd>{user.verified ? 'Verified' : 'Verification pending'}</dd></div></dl>{#if !user.verified}<p class="field-help">Check your inbox for a verification email before using features that require a verified account.</p><Button variant="outline" disabled={busy} onclick={()=>action(async()=>{const result=await request('/auth/resend-verification',{email:user.email});developmentToken=result.development_token || '';notice='Verification instructions sent. Check your inbox.';})}>Resend verification email</Button><a href="/verify-email" class="field-help">Enter verification token</a>{#if developmentToken}<p class="field-help">Local development token: <code>{developmentToken}</code></p>{/if}{/if}<Button variant="outline" href="/profile">Edit profile <ArrowUpRight size={15}/></Button></section>
         <section class="cloud-panel account-panel jobs-section"><h2>Privacy & account control</h2><p class="field-help">Clear the viewing history used for your account. Your Premium subscription, purchases, and saved projects remain available.</p><Button variant="outline" disabled={busy} onclick={()=>{if(window.confirm('Clear your viewing history? This cannot be undone.'))action(async()=>{await request('/viewer/history',{},'DELETE');notice='Your viewing history has been cleared.';});}}>Clear viewing history</Button><div class="account-deletion"><h3>Request account deletion</h3><p class="field-help">This submits a deletion request and immediately signs you out of all sessions. Financial and legal records follow the platform retention policy; they are not deleted immediately.</p><Button variant="destructive" disabled={busy} onclick={()=>{if(window.confirm('Request account deletion and sign out of all sessions? Financial and legal records are retained under the platform policy.'))action(async()=>{await request('/account/deletion',{});user=null;await goto('/login');notice='Account deletion requested. You have been signed out of all sessions. Financial and legal records follow the platform retention policy.';});}}>Request account deletion</Button></div></section>
       {:else if path.startsWith('/watch/')}
         <div class="watch-layout"><div class="player">{#if playback}<VideoPlayer videoId={data.id || path.split('/')[2]} onerror={(message)=>{error=message;playback='';}}/>{:else}<Film size={48}/><p>{data.status === 'ready' || data.status === 'published' ? 'Ready when you are.' : `Video ${data.status || 'is being prepared'}`}</p><Button disabled={busy} onclick={()=>action(async()=>{playback='play';})}><Play size={17}/>Play video</Button>{/if}</div><div class="watch-title"><h1>{data.title || 'Video'}</h1><span class="status">AI-generated</span></div><p>{data.description}</p>{#if data.channel_handle || data.handle}<a href={`/channels/${data.channel_handle || data.handle}`} class="creator-link">@{data.channel_handle || data.handle}<ArrowUpRight size={15}/></a>{/if}<div class="report-section">{#if user}<button class="report-toggle" onclick={()=>showReport=!showReport}>{showReport ? 'Cancel report' : 'Report this video'}</button>{#if showReport}<form onsubmit={(e)=>{e.preventDefault();action(async()=>{await request(`/videos/${data.id || path.split('/')[2]}/report`,{reason:reportReason});notice='Report submitted for review.';showReport=false;reportReason='';});}}><label for="report-reason">Tell us what should be reviewed</label><Textarea id="report-reason" bind:value={reportReason} minlength={5} maxlength={2000} required rows={3}/><p class="field-help">Include details about a content policy or copyright concern. Reports are reviewed by the platform.</p><Button type="submit" variant="outline" disabled={busy || reportReason.trim().length < 5}>Submit report</Button></form>{/if}{:else}<a class="report-toggle" href={signInHref}>Sign in to report a concern</a>{/if}</div></div>
+      {:else if path==='/profile'}
+        <ProfileEditor onSaved={(updated)=>{if(updated)user=updated;}}/>
+      {:else if path==='/security'}
+        <SecurityPanel/>
       {:else if path.startsWith('/channels/')}
-        <div class="channel-banner"><span class="channel-avatar">{(data.channel?.name || data.name || 'V').slice(0,1)}</span><div><h1>{data.channel?.name || data.name || path.split('/')[2]}</h1><p>@{data.channel?.handle || data.handle || path.split('/')[2]}</p></div></div><p class="channel-about">{data.channel?.description || data.description}</p><div class="community-actions"><span class="subtle">{data.followers ?? data.channel?.followers ?? '—'} followers</span>{#if user?.channel_id !== (data.id || data.channel?.id)}<Button variant="outline" disabled={busy || followed} onclick={()=>{if(!user){void goto(signInHref);return;}action(async()=>{await request(`/channels/${data.id || data.channel?.id}/follow`,{});followed=true;notice='You are now following this channel.';});}}><Heart size={16}/>{followed ? 'Following' : 'Follow for free'}</Button>{/if}</div><h2>Videos</h2><div class="video-grid">{#each data.videos || [] as video}<a class="video-tile" href={`/watch/${video.id}`}><div class="video-image">{#if video.thumbnail_url}<img src={video.thumbnail_url} alt=""/>{:else}<Film size={30}/>{/if}</div><h3>{video.title}</h3></a>{:else}<p class="quiet-empty">This creator hasn't published any public videos yet.</p>{/each}</div>
-      {:else}<div class="cloud-empty"><Compass size={35}/><h1>A little off the beaten path.</h1><p>This page isn't part of your cloud studio.</p><Button href="/">Back to studio</Button></div>{/if}
+        <PublicProfile {data} {user} {busy} followed={followed || data.is_following===true} onFollow={()=>{if(!user){void goto(signInHref);return;}void action(async()=>{await request(`/channels/${data.id || data.channel?.id}/follow`,{});followed=true;data=await request(`/channels/${encodeURIComponent(path.split('/')[2])}`);notice='You are now following this creator.';});}}/>
+      {:else}<div class="cloud-empty"><Compass size={35}/><h1>A little off the beaten path.</h1><p>This page isn't part of your cloud studio.</p><Button href="/studio">Back to studio</Button></div>{/if}
 
     </main>
   </div>
-</div>
+{/snippet}
+{#if viewerPage}<ViewerShell {user} {path} {signInHref} onSignOut={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/');})}>{@render cloudContent()}</ViewerShell>{:else}<div class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
+  <nav aria-label="Primary" class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-2 py-1.5 md:hidden">{#each mobileNav as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="shrink-0 rounded-md px-2 py-1.5 text-xs hover:bg-accent">{item.label}</a>{/each}</nav>
+  <aside class="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-border p-3 md:flex">
+    <a href="/" class="px-2 pt-3 pb-1 text-sm font-semibold tracking-wide">VideoFlow</a>
+    <a href="/studio/projects" class="mb-1 flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-accent {active('/projects')?'bg-accent font-medium':'text-muted-foreground'}"><FolderOpen class="size-3.5 shrink-0"/><span class="truncate">Projects</span></a>
+    {#each [{title:'Create',items:createNav},{title:'Output',items:outputNav},{title:'Advanced',items:advancedNav},{title:'Browse',items:browseNav},{title:'System',items:systemNav}] as group}<div class="px-2 pt-4 pb-1 text-[10px] tracking-wider text-muted-foreground/70 uppercase">{group.title}</div>{#each group.items as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent {active(item.url)?'bg-accent font-medium':'text-muted-foreground'}"><item.icon class="size-4"/>{item.label}</a>{/each}{/each}
+    <div class="mt-auto border-t border-border pt-3">{#if user}<div class="flex items-center justify-between gap-2 px-2 text-xs"><span class="truncate text-muted-foreground" title={user.email}>{user.name || user.email}</span><button aria-label="Sign out" class="rounded p-1 hover:bg-accent" onclick={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/login');})}><LogOut class="size-3.5"/></button></div>{:else}<Button href={signInHref} size="sm" variant="outline" class="w-full">Sign in</Button>{/if}</div>
+  </aside>
+{@render cloudContent()}
+</div>{/if}
 
 {/if}

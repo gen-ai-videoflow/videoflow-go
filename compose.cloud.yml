@@ -67,6 +67,9 @@ services:
     profiles: [app]
     build: {context: ., dockerfile: deploy/Dockerfile.cloud-worker}
     env_file: .env.cloud
+    # Shared development settings do not grant workers the API's TOTP key.
+    environment:
+      AUTH_ENCRYPTION_KEY: ""
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}

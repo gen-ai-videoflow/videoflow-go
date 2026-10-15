@@ -38,7 +38,7 @@ variable "cloudfront_public_key_pem" {
 variable "secret_arns" {
   type = map(string)
   validation {
-    condition     = !contains(keys(var.secret_arns), "MIGRATION_DATABASE_URL") && !contains(keys(var.secret_arns), "RUNTIME_DATABASE_PASSWORD") && !contains(keys(var.secret_arns), "CRYPTORAILS_API_KEY") && !contains(keys(var.secret_arns), "CRYPTORAILS_WEBHOOK_SECRET") && alltrue([for key in ["DATABASE_URL", "REDIS_URL", "CLOUDFRONT_PRIVATE_KEY", "OPENROUTER_API_KEY"] : contains(keys(var.secret_arns), key)]) && alltrue([for arn in values(var.secret_arns) : can(regex("^arn:aws:secretsmanager:", arn))])
+    condition     = !contains(keys(var.secret_arns), "MIGRATION_DATABASE_URL") && !contains(keys(var.secret_arns), "RUNTIME_DATABASE_PASSWORD") && !contains(keys(var.secret_arns), "AUTH_ENCRYPTION_KEY") && !contains(keys(var.secret_arns), "CRYPTORAILS_API_KEY") && !contains(keys(var.secret_arns), "CRYPTORAILS_WEBHOOK_SECRET") && alltrue([for key in ["DATABASE_URL", "REDIS_URL", "CLOUDFRONT_PRIVATE_KEY", "OPENROUTER_API_KEY"] : contains(keys(var.secret_arns), key)]) && alltrue([for arn in values(var.secret_arns) : can(regex("^arn:aws:secretsmanager:", arn))])
     error_message = "Supply required runtime Secrets Manager ARNs, never plaintext values."
   }
 }
