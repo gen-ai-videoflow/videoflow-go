@@ -86,6 +86,7 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
 			s.studioRoutes(r)
+			s.pipelineRoutes(r)
 			r.Delete("/viewer/history", s.clearHistory)
 			r.Post("/account/deletion", s.requestAccountDeletion)
 			r.Get("/me", func(w http.ResponseWriter, r *http.Request) { s.json(w, 200, currentUser(r)) })
@@ -507,7 +508,7 @@ func (s *Server) cancelJob(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, e)
 		return
 	}
-	if j.Status != "queued" {
+	if !j.CanCancel {
 		s.fail(w, ErrConflict)
 		return
 	}

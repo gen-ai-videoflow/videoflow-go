@@ -17,19 +17,21 @@ import (
 	"github.com/redis/go-redis/v9"
 	"io"
 	"log/slog"
+	"net/http"
 	"strings"
 	"time"
 	"videoflow-go/internal/providers"
 )
 
 type Worker struct {
-	redis    *redis.Client
-	store    *Store
-	cfg      Config
-	media    *Media
-	queue    *sqs.Client
-	encoder  *mediaconvert.Client
-	provider *providers.OpenRouterClient
+	storyHTTP *http.Client
+	redis     *redis.Client
+	store     *Store
+	cfg       Config
+	media     *Media
+	queue     *sqs.Client
+	encoder   *mediaconvert.Client
+	provider  *providers.OpenRouterClient
 }
 type workMessage struct {
 	Kind string `json:"kind"`
@@ -199,6 +201,14 @@ func (w *Worker) process(ctx context.Context, body string) error {
 	return w.encodingComplete(ctx, event)
 }
 func (w *Worker) generate(ctx context.Context, id string) error {
+	var pipeline bool
+	if err := w.store.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_pipeline_plans p JOIN cloud_jobs j ON j.quote_id=p.quote_id WHERE j.id=$1)`, id).Scan(&pipeline); err != nil {
+		return err
+	}
+	if pipeline {
+		return w.runPipeline(ctx, id)
+	}
+
 	defer w.notifyProgress(ctx, id)
 	var providerID, workspace string
 	var attempt int
@@ -232,13 +242,11 @@ func (w *Worker) generate(ctx context.Context, id string) error {
 			}
 			return err
 		}
-		claimed, claimErr := w.store.DB.ExecContext(ctx, `UPDATE cloud_jobs SET status='submitting',lease_until=now()+interval '10 minutes',updated_at=now() WHERE id=$1 AND attempt=$2 AND status='running' AND lease_until>now()`, id, attempt)
-		if claimErr != nil {
-			return claimErr
-		}
-		count, _ := claimed.RowsAffected()
-		if count != 1 {
-			return ErrConflict
+		if err = w.claimVideoSubmission(ctx, id, attempt); err != nil {
+			if errors.Is(err, ErrProviderBudget) {
+				return w.pipelineBudgetWait(ctx, id, attempt)
+			}
+			return err
 		}
 		providerID, err = w.provider.CreateVideo(ctx, payload)
 		if err != nil {

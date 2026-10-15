@@ -109,3 +109,66 @@ func TestPayoutRetryUsesSameTransferAndDoesNotDoublePay(t *testing.T) {
 type adminTransport func(*http.Request) (*http.Response, error)
 
 func (f adminTransport) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestConcurrentProviderResolutionCannotRefundAttachedJob(t *testing.T) {
+	s, u := testPolicyStore(t)
+	ctx := context.Background()
+	p, err := s.CreateProject(ctx, u, "Resolution race", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.GrantCredits(ctx, u.WorkspaceID, "resolution-race", 100, ""); err != nil {
+		t.Fatal(err)
+	}
+	q, err := s.CreateQuote(ctx, u, QuoteInput{ProjectID: p.ID, Prompt: "test", Duration: 5, AspectRatio: "16:9"}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	j, err := s.SubmitJob(ctx, u, q.ID, "resolution-race-key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.ExecContext(ctx, `UPDATE cloud_jobs SET status='reconciliation_required' WHERE id=$1`, j.ID); err != nil {
+		t.Fatal(err)
+	}
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	go func() { <-start; results <- s.ResolveProviderJob(ctx, j.ID, "provider-known", "operator", false) }()
+	go func() { <-start; results <- s.ResolveProviderJob(ctx, j.ID, "", "operator", true) }()
+	close(start)
+	successes := 0
+	for i := 0; i < 2; i++ {
+		e := <-results
+		if e == nil {
+			successes++
+		} else if e != ErrConflict {
+			t.Fatal(e)
+		}
+	}
+	if successes != 1 {
+		t.Fatalf("resolution winners=%d", successes)
+	}
+	got, err := s.Job(ctx, u, j.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	balance, err := s.Credits(ctx, u.WorkspaceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Status == "running" {
+		if got.ProviderID != "provider-known" || balance.Reserved != 5 {
+			t.Fatalf("attached job refunded %+v %+v", got, balance)
+		}
+	} else if got.Status == "failed" {
+		if got.ProviderID != "" || balance.Reserved != 0 {
+			t.Fatalf("failed job attached %+v %+v", got, balance)
+		}
+	} else {
+		t.Fatalf("unexpected %+v", got)
+	}
+	var count int
+	if err = s.DB.QueryRowContext(ctx, `SELECT count(*) FROM cloud_admin_audit WHERE resource_id=$1 AND action IN ('resolve_job_fail','resolve_job_provider')`, j.ID).Scan(&count); err != nil || count != 1 {
+		t.Fatalf("audit count=%d %v", count, err)
+	}
+}

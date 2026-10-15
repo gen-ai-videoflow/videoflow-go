@@ -46,6 +46,9 @@ type Quote struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 type Job struct {
+	CanCancel   bool      `json:"can_cancel"`
+	ProjectID   string    `json:"project_id"`
+	Kind        string    `json:"kind"`
 	ID          string    `json:"id"`
 	WorkspaceID string    `json:"-"`
 	QuoteID     string    `json:"quote_id"`
@@ -58,11 +61,11 @@ type Job struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-const jobCols = "id,workspace_id,quote_id,status,credits,provider_id,output_key,error,created_at,updated_at"
+const jobCols = "id,workspace_id,quote_id,status,credits,provider_id,output_key,error,created_at,updated_at,(SELECT project_id FROM cloud_quotes WHERE id=cloud_jobs.quote_id),COALESCE((SELECT CASE WHEN kind='storyboard' THEN 'pipeline' ELSE 'assembly' END FROM cloud_pipeline_plans WHERE quote_id=cloud_jobs.quote_id),'video'),(status IN ('queued','running') AND NOT EXISTS(SELECT 1 FROM cloud_provider_admissions WHERE job_id=cloud_jobs.id))"
 
 func scanJob(row interface{ Scan(...any) error }) (Job, error) {
 	var j Job
-	err := row.Scan(&j.ID, &j.WorkspaceID, &j.QuoteID, &j.Status, &j.Credits, &j.ProviderID, &j.OutputKey, &j.Error, &j.CreatedAt, &j.UpdatedAt)
+	err := row.Scan(&j.ID, &j.WorkspaceID, &j.QuoteID, &j.Status, &j.Credits, &j.ProviderID, &j.OutputKey, &j.Error, &j.CreatedAt, &j.UpdatedAt, &j.ProjectID, &j.Kind, &j.CanCancel)
 	return j, err
 }
 func (s *Store) CreateProject(ctx context.Context, u User, name, description string) (Project, error) {
@@ -132,7 +135,7 @@ func grantCreditsTx(ctx context.Context, tx *sql.Tx, workspace, reference string
 }
 func (s *Store) Credits(ctx context.Context, workspace string) (CreditBalance, error) {
 	b := CreditBalance{Transactions: []CreditEntry{}}
-	err := s.DB.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR debt>0 THEN 0 ELSE balance-reserved END,reserved,debt,restricted FROM cloud_credit_accounts WHERE workspace_id=$1`, workspace).Scan(&b.Available, &b.Reserved, &b.Debt, &b.Restricted)
+	err := s.DB.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR dispute_hold OR debt>0 THEN 0 ELSE balance-reserved END,reserved,debt,(restricted OR dispute_hold) FROM cloud_credit_accounts WHERE workspace_id=$1`, workspace).Scan(&b.Available, &b.Reserved, &b.Debt, &b.Restricted)
 	if err != nil {
 		return b, err
 	}
@@ -179,7 +182,7 @@ func (s *Store) SubmitJob(ctx context.Context, u User, quoteID, key string) (Job
 	defer tx.Rollback()
 	// Account lock serializes reservations and identical submissions, not Redis.
 	var available int64
-	if err = tx.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR debt>0 THEN 0 ELSE balance-reserved END FROM cloud_credit_accounts WHERE workspace_id=$1 FOR UPDATE`, u.WorkspaceID).Scan(&available); err != nil {
+	if err = tx.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR dispute_hold OR debt>0 THEN 0 ELSE balance-reserved END FROM cloud_credit_accounts WHERE workspace_id=$1 FOR UPDATE`, u.WorkspaceID).Scan(&available); err != nil {
 		return Job{}, err
 	}
 	existing, e := scanJob(tx.QueryRowContext(ctx, `SELECT `+jobCols+` FROM cloud_jobs WHERE workspace_id=$1 AND idempotency_key=$2`, u.WorkspaceID, key))
@@ -257,7 +260,7 @@ func (s *Store) FinishJobAttempt(ctx context.Context, id string, attempt int, st
 	}
 	return s.finishJob(ctx, id, attempt, status, key, message)
 }
-func (s *Store) finishJob(ctx context.Context, id string, attempt int, status, key, message string) error {
+func (s *Store) finishJob(ctx context.Context, id string, attempt int, status, key, message string, reconciliationActor ...string) error {
 	if status != "succeeded" && status != "failed" && status != "cancelled" {
 		return ErrValidation
 	}
@@ -270,8 +273,22 @@ func (s *Store) finishJob(ctx context.Context, id string, attempt int, status, k
 	if err != nil {
 		return err
 	}
-	if status == "cancelled" && j.Status != "queued" {
+	if len(reconciliationActor) > 0 && (reconciliationActor[0] == "" || j.Status != "reconciliation_required" || j.ProviderID != "") {
 		return ErrConflict
+	}
+	if status == "cancelled" {
+		if j.Status != "queued" && j.Status != "running" {
+			return ErrConflict
+		}
+		// Read again after obtaining the job row lock. The original SELECT's
+		// snapshot may precede an admission that committed while it waited.
+		var admitted bool
+		if err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_provider_admissions WHERE job_id=$1)`, id).Scan(&admitted); err != nil {
+			return err
+		}
+		if admitted {
+			return ErrConflict
+		}
 	}
 	if attempt > 0 {
 		var owns bool
@@ -306,6 +323,11 @@ func (s *Store) finishJob(ctx context.Context, id string, attempt int, status, k
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_job_events(job_id,status,message)VALUES($1,$2,$3)`, id, status, message); err != nil {
 		return err
+	}
+	if len(reconciliationActor) > 0 {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id,reason)VALUES($1,'resolve_job_fail',$2,'Explicit operator failure/refund')`, reconciliationActor[0], id); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

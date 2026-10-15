@@ -43,3 +43,5 @@
 - Independent repositories created at /home/jienweng/projects/videoflow-saas/videoflow-web and /home/jienweng/projects/videoflow-saas/videoflow-api. Backend tests pass outside the source repository; standalone web Docker build passes. They are source snapshots with no remotes or rewritten source history.
 - Local runtime uses a separate videoflow_app database, so integration test public-video fixtures are not shown in the app.
 - Remaining verification gates: browser visual automation (tool failed), deployed AWS HLS/SES/provider tests, payment sandbox integration, restore/load drills and commercial activation. Full master-spec remaining features are explicit in docs/CLOUD-IMPLEMENTATION.md.
+
+- Continuation delivered durable screenplay/scene/clip assembly, flow graph/timing UI, current-day spend fencing, dispute/payout race fixes and explicit restricted-role migrations. See [continuation ledger](2026-10-15-cloud-saas-continuation.md) for final tests and local runtime evidence. Task 6 remains open for the unverified browser/deployed-service gates.

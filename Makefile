@@ -50,3 +50,14 @@ cloud-build:
 
 cloud-dev:
 	docker compose --env-file .env.cloud -f compose.cloud.yml --profile app up --build
+
+.PHONY: cloud-migrate cloud-schema-check cloud-provision-runtime
+# Owner/role passwords are environment variables, never command flags.
+cloud-migrate:
+	go run ./cmd/cloud-migrate migrate
+
+cloud-schema-check:
+	go run ./cmd/cloud-migrate check
+
+cloud-provision-runtime:
+	go run ./cmd/cloud-migrate provision-role

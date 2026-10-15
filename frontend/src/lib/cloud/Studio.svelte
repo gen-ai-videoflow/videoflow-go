@@ -8,14 +8,16 @@
   import * as Tabs from '$lib/components/ui/tabs';
   import * as Card from '$lib/components/ui/card';
   import * as Dialog from '$lib/components/ui/dialog';
-  import { FileText, Users, ListVideo, Image, Captions, Plus, Save, Trash2, LoaderCircle, FolderOpen, ArrowUpRight } from '@lucide/svelte';
+  import { FileText, Users, ListVideo, Image, Captions, Plus, Save, Trash2, LoaderCircle, FolderOpen, ArrowUpRight, Sparkles } from '@lucide/svelte';
+  import Storyboard from './Storyboard.svelte';
   import { request } from './api';
   import type { Project } from './generated';
 
-  type Kind = 'scripts' | 'characters' | 'scenes' | 'assets' | 'shots' | 'captions';
+  type Kind = 'storyboard' | 'scripts' | 'characters' | 'scenes' | 'assets' | 'shots' | 'captions';
   interface Entity { id:string; project_id:string; scene_id?:string; kind:string; title:string; content:string; description:string; prompt:string; object_key?:string; duration:number; position:number; metadata:Record<string,any>; created_at:string; }
   interface Segment { start:number; end:number; text:string; }
   const sections = [
+    {value:'storyboard',label:'Storyboard',singular:'storyboard',icon:Sparkles,help:'Plan, generate, and assemble a complete project video.'},
     {value:'scripts',label:'Scripts',singular:'script',icon:FileText,help:'Write and refine the words behind your video.'},
     {value:'characters',label:'Characters',singular:'character',icon:Users,help:'Keep your cast and their appearance consistent.'},
     {value:'scenes',label:'Scenes',singular:'scene',icon:ListVideo,help:'Shape your story one scene at a time.'},
@@ -65,6 +67,7 @@
 
   beforeNavigate((navigation)=>{if(dirty && !navigation.willUnload && !window.confirm('Discard your unsaved studio changes?'))navigation.cancel();});
   onMount(() => {
+    if(page.url.searchParams.get('tab')==='storyboard')kind='storyboard';
     void request('/projects').then(value=>{
       projects=list(value);
       const requested=page.url.searchParams.get('project');
@@ -87,6 +90,7 @@
     loadedKind=nextKind;
     void load(nextProject,nextKind as Kind);
   });
+  function requestKind(next:string){if(next===kind)return;if(dirty){pendingSwitch={project:projectId,kind:next};switchOpen=true;return;}kind=next;}
   function discardAndSwitch() {
     if(!pendingSwitch)return;
     dirty=false; projectId=pendingSwitch.project;kind=pendingSwitch.kind;
@@ -95,6 +99,7 @@
   async function load(project=projectId,section=kind as Kind) {
     const version=++sequence;
     loading=true;loadFailed=false;error='';notice='';formOpen=false;selected=null;entities=[];dirty=false;captionsLoaded=false;jobId='';captions=[];
+    if(section==='storyboard'){loading=false;return;}
     try {
       const result=await request(section==='captions' ? '/jobs' : `/projects/${encodeURIComponent(project)}/${section==='shots' ? 'scenes' : section}`);
       if(version!==sequence)return;
@@ -216,13 +221,14 @@
   {#if initialLoading}<div class="cloud-loading" role="status"><LoaderCircle size={23} class="animate-spin"/>Opening your workspace…</div>
   {:else if !projects.length}<div class="cloud-empty compact"><FolderOpen size={35}/><h2>A project is your starting point.</h2><p>Create a project to organize scripts, characters, scenes, and assets.</p><Button href="/projects">Create a project <Plus size={15}/></Button></div>
   {:else}
-    <div class="studio-project"><div><label for="studio-project">Working in</label><select id="studio-project" bind:value={projectId} disabled={saving}>{#each projects as project}<option value={project.id}>{project.name}</option>{/each}</select></div><span class="subtle">Private workspace · {dirty ? 'Unsaved changes' : 'Changes are saved explicitly'}</span></div>
-    <Tabs.Root bind:value={kind}>
+    <div class="studio-project"><div><label for="studio-project">Working in</label><select id="studio-project" value={projectId} disabled={saving} onchange={(event)=>{const next=event.currentTarget.value;if(dirty){pendingSwitch={project:next,kind};switchOpen=true;event.currentTarget.value=projectId;return;}projectId=next;}}>{#each projects as project}<option value={project.id}>{project.name}</option>{/each}</select></div><span class="subtle">Private workspace · {dirty ? 'Unsaved changes' : 'Changes are saved explicitly'}</span></div>
+    <Tabs.Root bind:value={() => kind, requestKind}>
       <div class="studio-tabs"><Tabs.List variant="line" aria-label="Project resources">{#each sections as section}<Tabs.Trigger value={section.value} disabled={saving}><section.icon size={15}/>{section.label}</Tabs.Trigger>{/each}</Tabs.List></div>
-      {#each sections as section}<Tabs.Content value={section.value}>
-        <div class="section-heading studio-section-heading"><div><h2>{section.label}</h2><p class="subtle">{section.help}</p></div>{#if kind!=='captions'}<Button disabled={loading||saving||(kind==='shots'&&!sceneId)} onclick={()=>edit(null)}><Plus size={15}/>New {section.singular}</Button>{/if}</div>
+      {#each sections as section}<Tabs.Content value={section.value}>{#if kind===section.value}
+        {#if kind!=='storyboard'}<div class="section-heading studio-section-heading"><div><h2>{section.label}</h2><p class="subtle">{section.help}</p></div>{#if kind!=='captions'}<Button disabled={loading||saving||(kind==='shots'&&!sceneId)} onclick={()=>edit(null)}><Plus size={15}/>New {section.singular}</Button>{/if}</div>{/if}
         {#if loading}<div class="cloud-loading studio-loading" role="status"><LoaderCircle size={20} class="animate-spin"/>Loading {section.label.toLowerCase()}…</div>{/if}
-        {#if loadFailed}<div class="studio-list-empty"><FolderOpen size={27}/><h3>This resource could not be loaded.</h3><p>The server may be unavailable or this project may no longer be accessible. Reload to check your current access.</p><Button variant="outline" onclick={()=>load()}>Reload resources</Button></div>
+        {#if kind==='storyboard'}<Storyboard {projectId} onDirtyChange={(value)=>dirty=value}/>
+        {:else if loadFailed}<div class="studio-list-empty"><FolderOpen size={27}/><h3>This resource could not be loaded.</h3><p>The server may be unavailable or this project may no longer be accessible. Reload to check your current access.</p><Button variant="outline" onclick={()=>load()}>Reload resources</Button></div>
         {:else if kind==='captions'}
           <div class="caption-job-select"><div><label for="caption-job">Completed generation</label><select id="caption-job" bind:value={jobId} disabled={saving||loading}><option value="">Choose a completed generation</option>{#each jobs as job}<option value={job.id}>{job.name || job.prompt || job.id}</option>{/each}</select></div><Button variant="outline" disabled={!jobId||saving||loading} onclick={loadCaptions}>Load captions</Button></div>
           {#if !loading && !jobs.length}<p class="quiet-empty">Completed video generations will appear here when they are ready for captions.</p>{/if}
@@ -243,7 +249,7 @@
             </form>{:else}<div class="studio-editor-placeholder"><section.icon size={42}/><p>Your creative decisions belong here.</p></div>{/if}
           </Card.Content></Card.Root></div>
         {/if}
-      </Tabs.Content>{/each}
+      {/if}</Tabs.Content>{/each}
     </Tabs.Root>
   {/if}
 </div>

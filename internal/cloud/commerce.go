@@ -343,7 +343,7 @@ func (s *Server) payoutAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodGet {
-		s.json(w, 200, map[string]any{"configured": account != "", "country": country, "charges_enabled": charges, "payouts_enabled": payouts, "onboarding_enabled": s.Config.ConnectEnabled && s.Config.StripeSecret != "", "cash_payouts_enabled": false})
+		s.json(w, 200, map[string]any{"configured": account != "", "country": country, "charges_enabled": charges, "payouts_enabled": payouts, "onboarding_enabled": s.Config.ConnectEnabled && s.Config.StripeSecret != "", "cash_payouts_enabled": s.Config.CashPayoutsEnabled})
 		return
 	}
 	if !s.Config.ConnectEnabled || s.Config.StripeSecret == "" || !u.Verified {
@@ -426,7 +426,7 @@ func (s *Server) creatorEarnings(w http.ResponseWriter, r *http.Request) {
 	rows.Close()
 	var available, pending, paid int64
 	e = s.Store.DB.QueryRowContext(r.Context(), `SELECT coalesce(sum(amount_cents)FILTER(WHERE status='available'),0),coalesce(sum(amount_cents)FILTER(WHERE status='pending'),0),coalesce(sum(amount_cents)FILTER(WHERE status='paid'),0) FROM cloud_earnings WHERE user_id=$1 AND currency='usd'`, currentUser(r).ID).Scan(&available, &pending, &paid)
-	s.result(w, map[string]any{"available_cents": available, "pending_cents": pending, "paid_cents": paid, "currency": "usd", "rewards_enabled": false, "payouts_enabled": false, "entries": entries}, e)
+	s.result(w, map[string]any{"available_cents": available, "pending_cents": pending, "paid_cents": paid, "currency": "usd", "rewards_enabled": s.Config.RewardsEnabled, "payouts_enabled": s.Config.CashPayoutsEnabled, "entries": entries}, e)
 }
 
 // StripeID accepts expanded objects as well as provider ID strings.
@@ -723,6 +723,10 @@ func (s *Server) membershipRefunded(ctx context.Context, eventID string, raw jso
 	}
 	if obj.Refunded < 0 || obj.Refunded > gross {
 		return ErrValidation
+	}
+	// Serialize refund adjustments against the final payout eligibility check.
+	if _, e = tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,814037226))`, creator); e != nil {
+		return e
 	}
 	// Match invoice processing lock order: scope lock precedes invoice row lock.
 	_, e = tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, "membership:"+user+":"+channel)

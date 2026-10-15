@@ -45,7 +45,12 @@ func run() error {
 		return err
 	}
 	defer store.Close()
-	if err = store.Migrate(ctx); err != nil {
+	if cfg.DevMode {
+		err = store.Migrate(ctx)
+	} else {
+		err = store.CheckMigrations(ctx)
+	}
+	if err != nil {
 		return err
 	}
 	var result any = map[string]bool{"ok": true}

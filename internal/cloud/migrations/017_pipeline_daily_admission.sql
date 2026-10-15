@@ -1,0 +1,1 @@
+CREATE TABLE cloud_pipeline_budget_days(job_id text NOT NULL REFERENCES cloud_jobs(id),day date NOT NULL REFERENCES cloud_provider_budget_days(day),max_cost_micros bigint NOT NULL CHECK(max_cost_micros>0),PRIMARY KEY(job_id,day));

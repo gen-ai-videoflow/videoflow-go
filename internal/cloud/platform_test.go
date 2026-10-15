@@ -102,3 +102,57 @@ func TestStripeSignatureRejectsTamperingAndOldMessages(t *testing.T) {
 		t.Fatal("expired accepted")
 	}
 }
+
+func TestUnfundedRunningJobCanCancelButAdmittedJobCannot(t *testing.T) {
+	s, u := testPlatform(t)
+	ctx := context.Background()
+	p, err := s.CreateProject(ctx, u, "Waiting budget", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.GrantCredits(ctx, u.WorkspaceID, "waiting-budget", 100, ""); err != nil {
+		t.Fatal(err)
+	}
+	makeJob := func(key string) Job {
+		t.Helper()
+		q, e := s.CreateQuote(ctx, u, QuoteInput{ProjectID: p.ID, Prompt: "test", Duration: 5, AspectRatio: "16:9"}, 1)
+		if e != nil {
+			t.Fatal(e)
+		}
+		j, e := s.SubmitJob(ctx, u, q.ID, key)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = s.DB.ExecContext(ctx, `UPDATE cloud_jobs SET status='running' WHERE id=$1`, j.ID); e != nil {
+			t.Fatal(e)
+		}
+		return j
+	}
+	j := makeJob("unfunded-cancel-key")
+	got, err := s.Job(ctx, u, j.ID)
+	if err != nil || !got.CanCancel {
+		t.Fatalf("unfunded %+v %v", got, err)
+	}
+	if err = s.FinishJob(ctx, j.ID, "cancelled", "", "Cancelled before paid work"); err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.Credits(ctx, u.WorkspaceID)
+	if err != nil || b.Reserved != 0 || b.Available != 100 {
+		t.Fatalf("cancel balance %+v %v", b, err)
+	}
+	admitted := makeJob("admitted-cancel-key")
+	if err = s.TryProviderBudget(ctx, admitted.ID, 1, 1<<60); err != nil {
+		t.Fatal(err)
+	}
+	got, err = s.Job(ctx, u, admitted.ID)
+	if err != nil || got.CanCancel {
+		t.Fatalf("admitted %+v %v", got, err)
+	}
+	if err = s.FinishJob(ctx, admitted.ID, "cancelled", "", ""); err != ErrConflict {
+		t.Fatalf("admitted cancellation %v", err)
+	}
+	b, err = s.Credits(ctx, u.WorkspaceID)
+	if err != nil || b.Reserved != 5 {
+		t.Fatalf("admitted reserve %+v %v", b, err)
+	}
+}

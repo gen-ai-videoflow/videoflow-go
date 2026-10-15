@@ -34,3 +34,11 @@ openrouter_video_model = ""
 # Pre-verified SES email/domain identity; blank leaves SES IAM grant absent.
 ses_identity = ""
 ses_from = ""
+openrouter_story_model = ""
+story_credits = 0
+story_max_cost_micros = 0
+assembly_credits = 0
+ffmpeg_path = "ffmpeg"
+# Optional one-off operations task; owner DSN never enters runtime task definitions.
+migration_database_secret_arn = ""
+runtime_database_password_secret_arn = ""

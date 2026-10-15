@@ -72,20 +72,10 @@ func (s *Store) ResolveProviderJob(ctx context.Context, id, providerID, actor st
 	if actor == "" || (providerID == "") == !fail {
 		return ErrValidation
 	}
-	if fail { // Operator explicitly accepts the financial consequence of releasing credits.
-		var status string
-		if err := s.DB.QueryRowContext(ctx, `SELECT status FROM cloud_jobs WHERE id=$1`, id).Scan(&status); err != nil {
-			return err
-		}
-		if status != "reconciliation_required" {
-			return ErrConflict
-		}
-		if err := s.FinishJob(ctx, id, "failed", "", "Operator reconciled ambiguous provider submission: "+actor); err != nil {
-			return err
-		}
-		_, err := s.DB.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id,reason)VALUES($1,'resolve_job_fail',$2,'Explicit operator failure/refund')`, actor, id)
-		return err
+	if fail { // Check state, release reservation, and audit under one job row lock.
+		return s.finishJob(ctx, id, 0, "failed", "", "Operator reconciled ambiguous provider submission: "+actor, actor)
 	}
+
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -113,9 +103,21 @@ func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (Payout
 		return PayoutBatch{}, err
 	}
 	defer tx.Rollback()
-	var locked string
-	if err = tx.QueryRowContext(ctx, `SELECT id FROM cloud_users WHERE id=$1 FOR UPDATE`, userID).Scan(&locked); err != nil {
+	// Keep creator lock ordering identical to dispute/refund writers. Acquire
+	// the advisory lock before touching the user row or earnings FK rows.
+	if _, err = tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,814037226))`, userID); err != nil {
 		return PayoutBatch{}, err
+	}
+	var locked string
+	if err = tx.QueryRowContext(ctx, `SELECT id FROM cloud_users WHERE id=$1 FOR NO KEY UPDATE`, userID).Scan(&locked); err != nil {
+		return PayoutBatch{}, err
+	}
+	var disputed bool
+	if err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed'))`, userID).Scan(&disputed); err != nil {
+		return PayoutBatch{}, err
+	}
+	if disputed {
+		return PayoutBatch{}, ErrConflict
 	}
 	existing, e := scanPayout(tx.QueryRowContext(ctx, `SELECT `+payoutColumns+` FROM cloud_payout_batches WHERE user_id=$1 AND status IN ('prepared','submitting')`, userID))
 	if e == nil {
@@ -193,9 +195,31 @@ func (s *Server) ExecutePayout(ctx context.Context, batchID, actor string, execu
 	if b.Status == "paid" {
 		return nil
 	}
+	if _, err = conn.ExecContext(ctx, `SELECT pg_advisory_lock(hashtextextended($1,814037226))`, b.UserID); err != nil {
+		return err
+	}
+	defer conn.ExecContext(context.Background(), `SELECT pg_advisory_unlock(hashtextextended($1,814037226))`, b.UserID)
+	var disputed bool
+	if err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed'))`, b.UserID).Scan(&disputed); err != nil {
+		return err
+	}
+	if disputed {
+		return ErrConflict
+	}
 	var first sql.NullTime
 	if err = conn.QueryRowContext(ctx, `SELECT first_attempt_at FROM cloud_payout_batches WHERE id=$1`, batchID).Scan(&first); err != nil {
 		return err
+	}
+	// A refund posted after preparation must reduce the spendable creator balance.
+	// Pending positive earnings do not cover a matured payout; negative entries do.
+	if !first.Valid {
+		var net int64
+		if err = conn.QueryRowContext(ctx, `SELECT COALESCE(sum(amount_cents),0) FROM cloud_earnings WHERE user_id=$1 AND currency=$2 AND (status='available' OR (status='pending' AND amount_cents<0) OR id IN(SELECT earning_id FROM cloud_payout_batch_entries WHERE batch_id=$3))`, b.UserID, b.Currency, batchID).Scan(&net); err != nil {
+			return err
+		}
+		if net < b.AmountCents {
+			return ErrConflict
+		}
 	}
 	if first.Valid && time.Since(first.Time) > 23*time.Hour {
 		return fmt.Errorf("%w: old ambiguous payout requires provider reconciliation", ErrConflict)

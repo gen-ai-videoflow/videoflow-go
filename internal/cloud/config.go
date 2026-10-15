@@ -9,6 +9,8 @@ import (
 )
 
 type Config struct {
+	StoryModel, FFmpegPath                                                         string
+	StoryCredits, StoryMaxCostMicros, AssemblyCredits                              int64
 	S3PublicEndpoint                                                               string
 	AnalyticsBucket                                                                string
 	CashPayoutsEnabled                                                             bool
@@ -29,6 +31,11 @@ type Config struct {
 
 func EnvConfig() (Config, error) {
 	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), RedisURL: os.Getenv("REDIS_URL"), Region: os.Getenv("AWS_REGION"), OriginalsBucket: os.Getenv("S3_BUCKET_ORIGINALS"), PlaybackBucket: os.Getenv("S3_BUCKET_PLAYBACK"), QueueURL: os.Getenv("SQS_QUEUE_URL"), MediaConvertRole: os.Getenv("MEDIACONVERT_ROLE_ARN"), MediaConvertEndpoint: os.Getenv("MEDIACONVERT_ENDPOINT"), CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"), CloudFrontKeyPairID: os.Getenv("CLOUDFRONT_KEY_PAIR_ID"), CloudFrontPrivateKey: os.Getenv("CLOUDFRONT_PRIVATE_KEY"), OpenRouterKey: os.Getenv("OPENROUTER_API_KEY"), VideoModel: os.Getenv("OPENROUTER_VIDEO_MODEL"), PublicOrigin: os.Getenv("PUBLIC_ORIGIN"), StripeSecret: os.Getenv("STRIPE_SECRET_KEY"), StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"), MailFrom: os.Getenv("MAIL_FROM"), MailEndpoint: os.Getenv("MAIL_ENDPOINT"), DevMode: os.Getenv("CLOUD_DEV_MODE") == "true", BillingEnabled: os.Getenv("BILLING_ENABLED") == "true", Port: 8000, CreditsPerSecond: 10}
+	c.StoryModel = os.Getenv("OPENROUTER_STORY_MODEL")
+	c.FFmpegPath = os.Getenv("FFMPEG_PATH")
+	if c.FFmpegPath == "" {
+		c.FFmpegPath = "ffmpeg"
+	}
 	c.CashPayoutsEnabled = os.Getenv("CASH_PAYOUTS_ENABLED") == "true"
 	c.S3PublicEndpoint = os.Getenv("S3_PUBLIC_ENDPOINT")
 	c.AnalyticsBucket = os.Getenv("S3_BUCKET_ANALYTICS")
@@ -39,7 +46,7 @@ func EnvConfig() (Config, error) {
 	c.ConnectEnabled = os.Getenv("CONNECT_ENABLED") == "true"
 	c.SupportedPayoutCountries = os.Getenv("SUPPORTED_PAYOUT_COUNTRIES")
 	c.RewardsEnabled = os.Getenv("REWARDS_ENABLED") == "true"
-	for key, target := range map[string]*int64{"MEMBERSHIP_COMMISSION_BPS": &c.MembershipCommissionBPS, "REWARD_BPS": &c.RewardBPS, "REWARD_MONTHLY_CAP_CENTS": &c.RewardMonthlyCapCents, "PROVIDER_DAILY_BUDGET_MICROS": &c.ProviderDailyBudgetMicros, "PROVIDER_MAX_COST_MICROS": &c.ProviderMaxCostMicros} {
+	for key, target := range map[string]*int64{"STORY_CREDITS": &c.StoryCredits, "STORY_MAX_COST_MICROS": &c.StoryMaxCostMicros, "ASSEMBLY_CREDITS": &c.AssemblyCredits, "MEMBERSHIP_COMMISSION_BPS": &c.MembershipCommissionBPS, "REWARD_BPS": &c.RewardBPS, "REWARD_MONTHLY_CAP_CENTS": &c.RewardMonthlyCapCents, "PROVIDER_DAILY_BUDGET_MICROS": &c.ProviderDailyBudgetMicros, "PROVIDER_MAX_COST_MICROS": &c.ProviderMaxCostMicros} {
 		if raw := os.Getenv(key); raw != "" {
 			n, e := strconv.ParseInt(raw, 10, 64)
 			if e != nil || n < 0 {

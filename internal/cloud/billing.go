@@ -159,6 +159,11 @@ func (s *Server) paymentWebhook(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, ErrValidation)
 		return
 	}
+	if strings.HasPrefix(rawEvent.Type, "charge.dispute.") {
+		err := s.paymentDispute(r.Context(), rawEvent.ID, rawEvent.Data.Object)
+		s.result(w, map[string]bool{"received": true}, err)
+		return
+	}
 	if rawEvent.Type == "charge.refunded" {
 		handled, e := s.creditRefund(r.Context(), rawEvent.ID, rawEvent.Data.Object)
 		if handled || e != nil {

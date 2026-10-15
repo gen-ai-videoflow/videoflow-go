@@ -25,6 +25,9 @@ export interface Quote {
 }
 
 export interface Job {
+  can_cancel: boolean;
+  project_id: string;
+  kind: string;
   id: string;
   quote_id: string;
   status: string;
@@ -81,6 +84,9 @@ export interface StudioEntity {
   created_at: string;
   updated_at: string;
 }
+
+export interface PipelineScene { title: string; prompt: string; duration: number; status: string; }
+export interface PipelineProgress { stage: string; status: string; script: string; scenes: PipelineScene[]; }
 
 export type VideoVisibility = 'public' | 'unlisted' | 'private';
 export type VideoAudience = 'free' | 'members';

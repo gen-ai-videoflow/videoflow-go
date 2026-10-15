@@ -23,7 +23,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer store.Close()
-	if err = store.Migrate(ctx); err != nil {
+	if cfg.DevMode {
+		err = store.Migrate(ctx)
+	} else {
+		err = store.CheckMigrations(ctx)
+		if err == nil {
+			err = store.CheckRuntimeRole(ctx)
+		}
+	}
+	if err != nil {
 		slog.Error("migration failed", "error", err)
 		os.Exit(1)
 	}

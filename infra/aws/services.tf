@@ -116,6 +116,16 @@ resource "aws_ecs_task_definition" "services" {
         }, {
         name = "PROVIDER_MAX_COST_MICROS", value = tostring(var.provider_max_cost_micros)
         }, {
+        name = "OPENROUTER_STORY_MODEL", value = var.openrouter_story_model
+        }, {
+        name = "STORY_CREDITS", value = tostring(var.story_credits)
+        }, {
+        name = "STORY_MAX_COST_MICROS", value = tostring(var.story_max_cost_micros)
+        }, {
+        name = "ASSEMBLY_CREDITS", value = tostring(var.assembly_credits)
+        }, {
+        name = "FFMPEG_PATH", value = var.ffmpeg_path
+        }, {
         name = "OPENROUTER_VIDEO_MODEL", value = var.openrouter_video_model
         }, {
         name = "MAIL_FROM", value = var.ses_from

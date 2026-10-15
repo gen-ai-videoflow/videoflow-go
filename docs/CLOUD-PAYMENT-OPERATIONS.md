@@ -1,0 +1,11 @@
+# Payment disputes and payout holds
+
+The signed Stripe webhook endpoint accepts `charge.dispute.*` events. It serializes each dispute, retrieves the current dispute from the pinned Stripe API, then records its status and a deduplicated event receipt in one database transaction. A failed lookup or an unknown payment correlation rolls back the receipt so a delivery retry can reconcile a payment that arrived later.
+
+A prepaid-credit dispute blocks new credit reservations for its workspace. Membership-charge disputes block both preparing a new creator payout and executing an already-prepared one. The final transfer gate and dispute/refund adjustment writes share a creator advisory lock. A refund recorded after preparation also requires the matured net payable balance to cover the batch before the first transfer attempt. An ambiguous previous transfer keeps its stable idempotency key and requires the existing operator reconciliation procedure after the retry window.
+
+`won` and `warning_closed` clear only the dispute hold. They cannot clear a separate operator account restriction. Other statuses, including `lost`, remain held. Losing a dispute does **not** automatically become a refund, debit the user a second time, or reverse a previously completed creator transfer. Finance must reconcile the actual Stripe balance transactions, dispute fee, refunds, any already-spent credits, creator adjustments and prior transfers before resolving a loss. This release deliberately supplies no generic “clear all restrictions” action.
+
+Every reconciled dispute transition writes an append-only operator audit fact with actor `stripe:webhook`. Financial records and event receipts remain durable. Subscribe the production webhook endpoint to the dispute lifecycle events as well as existing credit-checkout, membership invoice/refund, subscription and Connect account events.
+
+The implementation follows the current-state approach because Stripe distinguishes closed outcomes and funds movement events. See [Stripe dispute statuses](https://docs.stripe.com/api/disputes) and [Stripe event types](https://docs.stripe.com/api/events/types). Local tests use mocked Stripe HTTP responses and real PostgreSQL transactions; they do not claim live payment-provider validation.

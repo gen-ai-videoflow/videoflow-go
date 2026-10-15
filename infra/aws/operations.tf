@@ -76,3 +76,7 @@ resource "aws_iam_role_policy" "email" {
     Condition = { StringEquals = { "ses:FromAddress" = var.ses_from } }
   }] })
 }
+
+output "database_identifier" { value = aws_db_instance.main.identifier }
+output "database_subnet_group_name" { value = aws_db_subnet_group.main.name }
+output "database_security_group_id" { value = aws_security_group.data.id }
