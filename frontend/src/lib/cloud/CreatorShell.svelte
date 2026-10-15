@@ -5,7 +5,7 @@
  let {path,children}:{path:string;children:Snippet}=$props();
 </script>
 <div class="cloud-app creator-shell flex h-screen min-w-0 flex-col bg-background text-foreground">
- <header><a class="studio-link" href="/studio"><BrandLogo compact/><span class="studio-label">Studio</span></a><a class="settings-link" href="/settings/account" aria-label="Account settings"><Settings class="size-4"/></a><a href="/discover" class="watch-link"><ArrowLeft class="size-4"/>Watch videos</a></header>
+ <header><a class="studio-link" href="/studio/dashboard"><BrandLogo compact/><span class="studio-label">Studio</span></a><a class="settings-link" href="/settings/account" aria-label="Account settings"><Settings class="size-4"/></a><a href="/discover" class="watch-link"><ArrowLeft class="size-4"/>Watch videos</a></header>
  <nav aria-label="Publishing navigation"><a href="/channel" aria-current={path==='/channel'?'page':undefined}>My content</a><a href="/studio/videos">Finished outputs</a><a href="/studio/upload" aria-current={path==='/studio/upload'?'page':undefined}>Upload video</a></nav>
  {@render children()}
 </div>

@@ -96,6 +96,7 @@ jobs:
           npm run check
           node scripts/check-payments.mjs
           node scripts/check-settings.mjs
+          node scripts/check-studio-navigation.mjs
           node scripts/check-short-state.mjs
           VITE_CLOUD_MODE=false npm run build
           VITE_CLOUD_MODE=true VITE_CLOUD_API_BASE=/api/v1 npm run build

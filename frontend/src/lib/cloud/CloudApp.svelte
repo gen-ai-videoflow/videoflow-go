@@ -7,7 +7,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Textarea } from '$lib/components/ui/textarea';
-  import { Compass, Clapperboard, FolderOpen, Coins, Radio, ChartNoAxesCombined, Settings, ArrowUpRight, ArrowRight, Plus, Play, Film, LogOut, LoaderCircle, Sparkles, Check, ShieldCheck, Heart, ListVideo, Users, Image, SlidersHorizontal, Crown, Wallet, LayoutTemplate } from '@lucide/svelte';
+  import { Menu, UserRound, Compass, Clapperboard, FolderOpen, Coins, Radio, ChartNoAxesCombined, Settings, ArrowUpRight, ArrowRight, Plus, Play, Film, LogOut, LoaderCircle, Sparkles, Check, ShieldCheck, Heart, ListVideo, Users, Image, SlidersHorizontal, Crown, Wallet, LayoutTemplate } from '@lucide/svelte';
   import { request, CloudError } from './api';
   import { safeReturnTo, authHref } from './auth';
   import type { Project, Quote } from './generated';
@@ -22,7 +22,9 @@
   import DiscoverFeed from './viewing/DiscoverFeed.svelte';
   import WatchPage from './viewing/WatchPage.svelte';
   import ShortsFeed from './viewing/ShortsFeed.svelte';
-  import {settingsSection} from './navigation';
+  import {settingsSection,studioSection} from './navigation';
+ import Dashboard from './Dashboard.svelte';
+ import * as Dropdown from '$lib/components/ui/dropdown-menu';
   import PublicProfile from './PublicProfile.svelte';
   import Studio from './Studio.svelte';
   import OriginalStudio from './OriginalStudio.svelte';
@@ -32,6 +34,8 @@
   import Payments from './Payments.svelte';
   import Templates from './Templates.svelte';
   import GenerationJobs from './GenerationJobs.svelte';
+  let sidebarCollapsed = $state(false);
+  function toggleSidebar(){sidebarCollapsed=!sidebarCollapsed;try{localStorage.setItem("videoflow.studio.sidebar",sidebarCollapsed?"collapsed":"expanded");}catch{}}
   let user = $state<any>(null);
   let sessionKnown=$state(false);
   let ready = $state(!!page.data.cloudPublic);
@@ -71,7 +75,7 @@
   let developmentToken = $state('');
   const rawPath=$derived(page.url.pathname);
   const settingsTab=$derived(settingsSection(rawPath));
-  const aliases:Record<string,string>={'/studio/projects':'/projects','/studio/templates':'/templates','/studio/videos':'/render','/studio/channel':'/channel','/studio/earnings':'/earnings','/studio/content':'/channel'};
+  const aliases:Record<string,string>={'/studio/projects':'/projects','/studio/templates':'/templates','/studio/videos':'/render','/studio/channel':'/channel','/studio/earnings':'/earnings','/studio/content':'/channel','/studio/scenes':'/scenes','/studio/characters':'/characters','/studio/assets':'/assets'};
   const path = $derived(aliases[rawPath] || rawPath);
   let searchQuery=$state('');
   $effect(()=>{searchQuery=page.url.searchParams.get('q') || '';});
@@ -79,27 +83,30 @@
   const recoveryPage = $derived(['/forgot-password','/reset-password','/verify-email'].includes(path));
   const authPage = $derived(path === '/login' || path === '/register' || recoveryPage);
   const signInPage=$derived(path==='/login'||path==='/register');
-  const canvasPage=$derived(['/studio','/scenes','/characters','/assets'].includes(path));
+  const resourceSection=$derived(studioSection(path,page.url.searchParams.get('tab')||''));
+  const canvasPage=$derived(path==='/studio'&&!resourceSection);
+  const dashboardPage=$derived(path==='/studio/dashboard');
   const viewingRoute=$derived(['/','/discover','/following','/search','/library','/history','/shorts'].includes(path)||path.startsWith('/watch/')||path.startsWith('/shorts/'));
   const creatorUtilityPage=$derived(path.startsWith('/studio/publish')||path.startsWith('/studio/upload')||path.startsWith('/studio/outputs/')||path==='/channel');
   const viewerPage=$derived(viewingRoute||!!settingsTab||['/', '/discover','/following','/search','/settings','/security','/profile','/payments','/premium','/memberships','/credits'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/'));
-  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || (canvasPage ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
+  const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || ((canvasPage||resourceSection||dashboardPage) ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
   const signInHref=$derived(authHref('/login',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const signUpHref=$derived(authHref('/register',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
-  const displayAuth=$derived(signInPage||(canvasPage&&sessionKnown&&!user));
+  const displayAuth=$derived(signInPage||((canvasPage||resourceSection||dashboardPage)&&sessionKnown&&!user));
   const publicPage = $derived(path==='/shorts'||path.startsWith('/shorts/')||['/','/discover','/search'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
   const createNav=[{url:'/create',label:'Create video',icon:Clapperboard},{url:'/studio/templates',label:'Templates',icon:LayoutTemplate}];
   const browseNav=[{url:'/discover',label:'Discover',icon:Compass}];
   const outputNav=[{url:'/studio/videos',label:'My videos',icon:Film}];
-  const advancedNav=[{url:'/studio',label:'Studio',icon:Clapperboard},{url:'/scenes',label:'Scenes',icon:ListVideo},{url:'/characters',label:'Characters',icon:Users},{url:'/assets',label:'Assets',icon:Image},{url:'/workspace',label:'Project details',icon:FolderOpen}];
-  const systemNav=[{url:'/payments',label:'Payments',icon:Wallet},{url:'/credits',label:'Credits',icon:Coins},{url:'/premium',label:'Premium',icon:Crown},{url:'/studio/channel',label:'Channel',icon:Radio},{url:'/studio/earnings',label:'Earnings',icon:ChartNoAxesCombined},{url:'/settings',label:'Settings',icon:SlidersHorizontal}];
-  const mobileNav=[{url:'/projects',label:'Projects',icon:FolderOpen},...createNav,...outputNav,...advancedNav,...browseNav,...systemNav];
-  const active=(url:string)=>path===(aliases[url] || url);
-  const titles: Record<string,string> = {'/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Studio','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
+  const advancedNav=[{url:'/studio',label:'Canvas',icon:Clapperboard},{url:'/workspace',label:'Project workspace',icon:FolderOpen}];
+  const systemNav=[{url:'/channel',label:'My content',icon:Radio}];
+  const mobileNav=[{url:'/studio/dashboard',label:'Overview',icon:LayoutTemplate},{url:'/projects',label:'Projects',icon:FolderOpen},...createNav,...outputNav,...advancedNav,...browseNav,...systemNav];
+  const active=(url:string)=>url==='/workspace'?!!resourceSection:url==='/studio'?canvasPage:path===(aliases[url]||url);
+  const titles: Record<string,string> = {'/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Canvas','/studio/dashboard':'Overview','/workspace':'Project workspace','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
   const list = (value:any):any[] => Array.isArray(value) ? value : value?.items || value?.videos || value?.projects || value?.jobs || [];
   const money = (cents:number | undefined, currency = 'USD') => cents == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency}).format(cents/100);
   const date = (value:string) => value ? new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
   onMount(() => {
+    try{sidebarCollapsed=localStorage.getItem("videoflow.studio.sidebar")==="collapsed";}catch{}
     request('/me').then(v => user = v.user || v).catch(e => {
       if (!(e instanceof CloudError && e.status === 401)) error = e.message;
     }).finally(() => {ready=true;sessionKnown=true;});
@@ -110,7 +117,7 @@
   async function load(current:string) {
     const sequence=++loadSequence;
     loading = true; loadFailed = false; error = ''; notice = ''; data = {}; playback = ''; quote = null; showReport = false; reportReason = ''; followed = false;
-    if (authPage||settingsTab||viewingRoute||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
+    if (authPage||settingsTab||viewingRoute||!!resourceSection||dashboardPage||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
     if (!user && !publicPage) { loading = false; return; }
     try {
       let candidate:any={};let candidateJobs:any[]|undefined;
@@ -152,7 +159,7 @@
 {:else}
 {#snippet cloudContent()}
   <div class="cloud-body min-h-0 min-w-0 flex-1 overflow-hidden">
-    {#if !canvasPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
+    {#if !canvasPage&&!resourceSection&&!dashboardPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
     <main class="cloud-main" class:cloud-canvas-main={canvasPage} class:viewer-main={viewerPage}>
       {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><button onclick={() => load(path)}>Try again</button></div>{/if}
       {#if notice}<div class="cloud-notice" role="status"><Check size={17}/>{notice}</div>{/if}
@@ -168,6 +175,10 @@
         {#key page.url.search}<PublishComposer/>{/key}
       {:else if settingsTab}
         <SettingsPage {user} section={settingsTab} invoiceId={page.url.searchParams.get('invoice')||''} onUpdated={(updated)=>{if(updated)user=updated;}}/>
+      {:else if dashboardPage}
+        <Dashboard {user}/>
+      {:else if resourceSection}
+        {#key path+page.url.search}<Studio initialSection={resourceSection}/>{/key}
       {:else if canvasPage}
         <OriginalStudio/>
       {:else if ['/','/discover','/following','/search','/library','/history'].includes(path)}
@@ -205,14 +216,47 @@
   </div>
 {/snippet}
 {#if viewerPage}<ViewerShell {user} {path} {signInHref} onSignOut={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/');})}>{@render cloudContent()}</ViewerShell>{:else if creatorUtilityPage}<CreatorShell {path}>{@render cloudContent()}</CreatorShell>{:else}<div class="cloud-app flex h-screen min-w-0 flex-col bg-background text-foreground md:flex-row">
-  <nav aria-label="Primary" class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-2 py-1.5 md:hidden">{#each mobileNav as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="shrink-0 rounded-md px-2 py-1.5 text-xs hover:bg-accent">{item.label}</a>{/each}</nav>
-  <aside class="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-border p-3 md:flex">
-    <a href="/" class="px-2 pt-3 pb-1 text-sm font-semibold tracking-wide"><BrandLogo/></a>
-    <a href="/studio/projects" class="mb-1 flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-accent {active('/projects')?'bg-accent font-medium':'text-muted-foreground'}"><FolderOpen class="size-3.5 shrink-0"/><span class="truncate">Projects</span></a>
-    {#each [{title:'Create',items:createNav},{title:'Output',items:outputNav},{title:'Advanced',items:advancedNav},{title:'Browse',items:browseNav},{title:'System',items:systemNav}] as group}<div class="px-2 pt-4 pb-1 text-[10px] tracking-wider text-muted-foreground/70 uppercase">{group.title}</div>{#each group.items as item}<a href={item.url} aria-current={active(item.url)?'page':undefined} class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent {active(item.url)?'bg-accent font-medium':'text-muted-foreground'}"><item.icon class="size-4"/>{item.label}</a>{/each}{/each}
-    <div class="mt-auto border-t border-border pt-3">{#if user}<div class="flex items-center justify-between gap-2 px-2 text-xs"><span class="truncate text-muted-foreground" title={user.email}>{user.name || user.email}</span><button aria-label="Sign out" class="rounded p-1 hover:bg-accent" onclick={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/login');})}><LogOut class="size-3.5"/></button></div>{:else}<Button href={signInHref} size="sm" variant="outline" class="w-full">Sign in</Button>{/if}</div>
+  <nav aria-label="Primary" class="studio-mobile-header md:hidden"><a href="/studio/dashboard"><BrandLogo compact/></a><Dropdown.Root><Dropdown.Trigger class="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">{titles[path]||'Studio'}<SlidersHorizontal class="size-4"/></Dropdown.Trigger><Dropdown.Content align="end">{#each mobileNav as item}<Dropdown.Item onSelect={()=>void goto(item.url)}><item.icon class="size-4"/>{item.label}</Dropdown.Item>{/each}<Dropdown.Separator/><Dropdown.Item onSelect={()=>void goto('/settings/account')}>Account settings</Dropdown.Item><Dropdown.Item onSelect={()=>void goto('/credits')}>Credits</Dropdown.Item></Dropdown.Content></Dropdown.Root></nav>
+  <aside class="studio-sidebar" class:collapsed={sidebarCollapsed} aria-label="Studio navigation">
+    <div class="sidebar-heading">
+      <button class="sidebar-toggle" onclick={toggleSidebar} aria-label={sidebarCollapsed?'Expand navigation':'Collapse navigation'} aria-expanded={!sidebarCollapsed} aria-controls="studio-navigation" title={sidebarCollapsed?'Expand navigation':'Collapse navigation'}><Menu size={22}/></button>
+      {#if !sidebarCollapsed}<a href="/studio/dashboard" aria-label="VideoFlow Studio"><BrandLogo/></a>{/if}
+    </div>
+    <nav id="studio-navigation" aria-label="Studio" class="sidebar-links">
+      {#each [
+        [{url:'/studio/dashboard',label:'Overview',icon:LayoutTemplate},{url:'/projects',label:'Projects',icon:FolderOpen},...advancedNav],
+        [...createNav,...outputNav,...systemNav],
+        browseNav
+      ] as group, index}
+        {#if index>0}<div class="sidebar-divider" role="separator"></div>{/if}
+        {#each group as item}
+          <a href={item.url} aria-label={item.label} title={sidebarCollapsed?item.label:undefined} aria-current={active(item.url)?'page':undefined} class="sidebar-link" class:selected={active(item.url)}><item.icon size={21} strokeWidth={1.7}/>{#if !sidebarCollapsed}<span>{item.label}</span>{/if}</a>
+        {/each}
+      {/each}
+    </nav>
+    <div class="sidebar-account">{#if user}<Dropdown.Root><Dropdown.Trigger class="sidebar-link account-trigger" aria-label="Your account" title={sidebarCollapsed?'Your account':undefined}><UserRound size={21} strokeWidth={1.7}/>{#if !sidebarCollapsed}<span>{user.name||'Your account'}</span>{/if}</Dropdown.Trigger><Dropdown.Content side="top" align="start"><Dropdown.Label>Your account</Dropdown.Label>{#each [{url:'/credits',label:'Generation credits'},{url:'/premium',label:'Premium viewing'},{url:'/payments',label:'Payments'},{url:'/earnings',label:'Creator earnings'},{url:'/settings/account',label:'Settings'}] as item}<Dropdown.Item onSelect={()=>void goto(item.url)}>{item.label}</Dropdown.Item>{/each}<Dropdown.Separator/><Dropdown.Item onSelect={()=>action(async()=>{await request('/auth/logout',{});user=null;await goto('/login');})}>Sign out</Dropdown.Item></Dropdown.Content></Dropdown.Root>{:else}<a class="sidebar-link" href={signInHref} aria-label="Sign in" title="Sign in"><UserRound size={21}/>{#if !sidebarCollapsed}<span>Sign in</span>{/if}</a>{/if}</div>
   </aside>
 {@render cloudContent()}
 </div>{/if}
 
 {/if}
+
+<style>
+.studio-sidebar{display:none;width:232px;flex-shrink:0;flex-direction:column;padding:12px;background:var(--background);overflow-y:auto}
+.sidebar-heading{display:flex;align-items:center;gap:12px;min-height:44px;margin-bottom:20px;padding:0 4px}
+.sidebar-toggle{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:50%;color:var(--foreground)}
+.sidebar-toggle:hover{background:var(--accent)}
+.sidebar-links{display:flex;flex-direction:column;gap:2px}
+.sidebar-link,.sidebar-account :global(.account-trigger){display:flex;align-items:center;gap:22px;width:100%;min-height:44px;padding:10px 14px;border-radius:10px;color:var(--foreground);font-size:14px;text-decoration:none;text-align:left}
+.sidebar-link :global(svg){flex-shrink:0}
+.sidebar-link span,.sidebar-account :global(.account-trigger span){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-link:hover,.sidebar-account :global(.account-trigger:hover){background:var(--accent)}
+.sidebar-link.selected{background:var(--muted);font-weight:600}
+.sidebar-divider{height:1px;background:var(--border);margin:12px 2px}
+.sidebar-account{margin-top:auto;padding-top:20px}
+.studio-sidebar.collapsed{width:76px;padding-inline:10px}
+.collapsed .sidebar-heading{padding:0;justify-content:center}
+.collapsed .sidebar-link,.collapsed .sidebar-account :global(.account-trigger){justify-content:center;padding:12px 0;min-height:48px}
+.sidebar-toggle:focus-visible,.sidebar-link:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+@media(min-width:768px){.studio-sidebar{display:flex}}
+.studio-mobile-header{display:none;align-items:center;justify-content:space-between;gap:14px;padding:10px 16px;flex-shrink:0;border-bottom:1px solid var(--border)}@media(max-width:767px){.studio-mobile-header{display:flex}}</style>

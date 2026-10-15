@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';import ts from 'typescript';
+const code=ts.transpileModule(readFileSync(new URL('../src/lib/cloud/navigation.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const {studioSection,selectStudioProject,studioHref}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+for(const kind of ['characters','scenes','assets'])assert.equal(studioSection('/'+kind,''),kind);
+assert.equal(studioSection('/studio',''),null);assert.equal(studioSection('/studio','storyboard'),'storyboard');assert.equal(studioSection('/workspace',''),'scripts');assert.equal(studioSection('/studio','invalid'),null);
+const projects=[{id:'first'},{id:'saved'},{id:'linked'}];
+assert.equal(selectStudioProject(projects,'linked','saved'),'linked');assert.equal(selectStudioProject(projects,'foreign','saved'),'saved');assert.equal(selectStudioProject(projects,'foreign','foreign'),'first');assert.equal(selectStudioProject([],'foreign','foreign'),'');
+assert.equal(studioHref('characters','project with spaces'),'/characters?project=project+with+spaces');assert.equal(studioHref('captions','p'),'/workspace?tab=captions&project=p');
+console.log('Studio destination, deep-link and project-continuity assertions passed');

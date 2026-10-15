@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-15T14:08:39.058661+00:00",
+  "generatedAt": "2026-10-15T14:38:47.149018+00:00",
   "title": "Design System: VideoFlow",
   "extensions": {
     "colorMeta": {
@@ -231,6 +231,18 @@
       {
         "name": "lg",
         "value": "1024px"
+      },
+      {
+        "name": "studio-edit-stack",
+        "value": "1000px"
+      },
+      {
+        "name": "studio-header-stack",
+        "value": "650px"
+      },
+      {
+        "name": "studio-list-single",
+        "value": "600px"
       }
     ]
   },
@@ -276,21 +288,28 @@
       "css": ".ds-badge{font-family:var(--font-sans, sans-serif);font-size:14px;display:inline-flex;align-items:center;height:20px;padding:2px 8px;font-size:12px;font-weight:500;border:1px solid transparent;border-radius:calc(var(--radius)*2.6);background:var(--secondary);color:var(--secondary-foreground)}"
     },
     {
-      "name": "Navigation item",
+      "name": "Studio rail item",
       "kind": "nav",
       "refersTo": "",
-      "description": "Navigation item from the existing shadcn interface.",
-      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\">Discover</a>",
-      "css": ".ds-nav{font-family:var(--font-sans, sans-serif);font-size:14px;display:inline-flex;padding:8px 12px;border:1px solid transparent;border-radius:calc(var(--radius)*.8);color:var(--muted-foreground);text-decoration:none}.ds-nav:hover,.ds-nav[aria-current=page]{background:var(--accent);color:var(--accent-foreground)}.ds-nav:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
+      "description": "Expanded Studio rail destination: 44px minimum row, 21px icon, neutral current-page surface. Rail is 232px expanded or 76px collapsed; collapsed rows are at least 48px. Preference persists locally; below 768px use a compact menu.",
+      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z\"/><path d=\"M9 21v-9h6v9\"/></svg><span>Overview</span></a>",
+      "css": ".ds-nav{font-family:var(--font-sans,sans-serif);font-size:14px;display:flex;align-items:center;gap:22px;min-height:44px;padding:10px 14px;border-radius:10px;color:var(--foreground);text-decoration:none}.ds-nav svg{flex-shrink:0}.ds-nav:hover{background:var(--accent)}.ds-nav[aria-current=page]{background:var(--muted);font-weight:600}.ds-nav:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Project resource tabs",
+      "kind": "nav",
+      "description": "One scrollable line-style strip per selected-project workspace; canvas is a separate destination. Editors appear after selection or creation. Transfer controls belong in Project actions.",
+      "html": "<nav class=\"ds-resource-tabs\" aria-label=\"Project resources\"><a href=\"#\" aria-current=\"page\">Characters</a><a href=\"#\">Scenes</a><a href=\"#\">Assets</a></nav>",
+      "css": ".ds-resource-tabs{display:flex;gap:15px;overflow:auto;padding:16px 0 7px;border-bottom:1px solid var(--border);font-family:var(--font-sans,sans-serif)}.ds-resource-tabs a{flex-shrink:0;font-size:12px;padding:9px 10px;color:var(--muted-foreground);text-decoration:none;position:relative;border:1px solid transparent;border-radius:8px}.ds-resource-tabs a[aria-current=page]{color:var(--accent-foreground)}.ds-resource-tabs a[aria-current=page]::after{content:\"\";position:absolute;left:0;right:0;bottom:-5px;height:2px;background:var(--foreground)}.ds-resource-tabs a:hover{color:var(--foreground)}.ds-resource-tabs a:focus-visible{outline:1px solid var(--ring);border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}"
     }
   ],
   "narrative": {
-    "northStar": "VideoFlow\u2019s existing workspace, aligned with its landing-page brand",
+    "northStar": "VideoFlow’s existing workspace, aligned with its landing-page brand",
     "overview": "VideoFlow uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.\n\nInter, compact controls, fine borders and muted supporting copy remain the incumbent visual language. Media and the original Studio canvas lead; brand appears in the logo, primary actions and selected states.",
     "keyCharacteristics": [
       "Warm ink and bone surfaces with signal-orange actions.",
       "Compact shadcn controls and readable Inter typography.",
-      "Original Studio canvas and existing responsive layouts preserved."
+      "Original Studio canvas with a quiet overview and focused project resource workspace."
     ],
     "rules": [
       {
@@ -303,7 +322,8 @@
       "Do use semantic CSS tokens from frontend/src/app.css in both themes.",
       "Do use the supplied theme-appropriate logo through BrandLogo.svelte.",
       "Do preserve CJK font fallbacks, visible keyboard focus and distinct error states.",
-      "Do retain existing layouts, media proportions and Studio canvas behavior."
+      "Do preserve media proportions and Studio canvas behavior while using one resource tab strip per project workspace.",
+      "Do keep overview continuation prominent, editors conditional on selection or creation, and project transfer actions inside Project actions."
     ],
     "donts": [
       "Don't redraw, recolor or stretch the supplied logo.",

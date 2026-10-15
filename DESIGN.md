@@ -81,13 +81,13 @@ Inter, compact controls, fine borders and muted supporting copy remain the incum
 
 - Warm ink and bone surfaces with signal-orange actions.
 - Compact shadcn controls and readable Inter typography.
-- Original Studio canvas and existing responsive layouts preserved.
+- Original Studio canvas with a quiet overview and focused project resource workspace.
 
 ## Colors
 
 ### Primary
 
-Signal orange identifies primary actions, selected navigation and focus in dark mode. Primary controls use ink text. Light-mode selected text and focus use the darker light-active token rather than bright signal orange.
+Signal orange identifies primary actions, selected resource states and focus in dark mode. Studio’s desktop rail uses a neutral muted active surface with foreground text; other navigation retains its own semantic treatment. Primary controls use ink text. Light-mode selected text and focus use the darker light-active token rather than bright signal orange.
 
 ### Neutral
 
@@ -106,6 +106,12 @@ Use Inter Variable for Latin and the system CJK fallback stack in the frontmatte
 ## Layout
 
 Preserve the existing responsive shells: watching has its own header, settings separates navigation from forms, and Studio retains its original canvas. Authentication keeps the shadcn two-column composition on large screens and a centered form on small screens. Existing spacing commonly uses 8, 12, 16 and 24px increments; authentication outer padding increases from 24px to 40px at the medium breakpoint. Do not impose a new global container width or marketing-page grid.
+
+Studio uses a familiar desktop rail from 768px: 232px expanded or 76px collapsed. Expanded rows have a 44px minimum height, 21px icons and 10px corners; collapsed icon rows have a 48px minimum height. Quiet one-pixel section dividers separate groups. The menu toggle persists the preference locally under `videoflow.studio.sidebar`. Below 768px, a compact header dropdown replaces the rail.
+
+The overview has a 1120px maximum width, a selected-project continuation area with one primary Open canvas action, recent-project rows and secondary publishing/credit links. Fine dividers and muted copy keep this surface quiet. Its two-column sections stack below 650px.
+
+The resource workspace has a 1280px maximum width, one heading/project-selector row and one horizontally scrollable resource tab strip. Canvas remains a separate destination. Resource lists fill the content area until an item is selected or created; only then does the editor appear. Editing uses a two-column list/editor grid above 1000px, stacks below it and returns the list to one column below 600px. Header controls stack below 650px.
 
 ## Elevation & Depth
 
@@ -135,7 +141,9 @@ Badges are compact 20px-high labels with 12px medium text. Primary, secondary, o
 
 ### Navigation
 
-Existing watching, account and Studio navigation remain distinct. Current navigation uses the theme-specific accent foreground and a subtle orange accent surface; inactive items use muted or foreground text and existing hover treatments. Preserve accessible current-page indication and the incumbent mobile navigation behavior.
+Watching, account and Studio navigation remain distinct. Studio’s desktop rail follows familiar YouTube navigation proportions, using foreground text and icons, a neutral `--muted` active surface with semibold text, `--accent` hover and `aria-current="page"`. Collapsed destinations retain accessible names and title hints. Quiet dividers replace visible group headings. The footer account dropdown contains generation credits, Premium viewing, payments, creator earnings, settings and sign out. The compact mobile dropdown exposes Studio destinations plus account settings and credits.
+
+Project resources use one line-style tab strip: scripts, characters, scenes, shots, storyboard, captions and assets. Active tabs use `--accent-foreground`; selected resource cards retain the primary border and accent surface. Import/export lives inside Project actions rather than the main content. Project selection and links preserve the owned project context; unsaved edits require a keep-editing/discard choice before switching resources or projects. Captions and storyboard retain their task-specific editors. Other watching/account navigation keeps its existing semantic accent states.
 
 ### Logo
 
@@ -148,7 +156,8 @@ Existing watching, account and Studio navigation remain distinct. Current naviga
 - Do use semantic CSS tokens from frontend/src/app.css in both themes.
 - Do use the supplied theme-appropriate logo through BrandLogo.svelte.
 - Do preserve CJK font fallbacks, visible keyboard focus and distinct error states.
-- Do retain existing layouts, media proportions and Studio canvas behavior.
+- Do preserve media proportions and Studio canvas behavior while using one resource tab strip per project workspace.
+- Do keep overview continuation prominent, editors conditional on selection or creation, and project transfer actions inside Project actions.
 
 ### Don't:
 

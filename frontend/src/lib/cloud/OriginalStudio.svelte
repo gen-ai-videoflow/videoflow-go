@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { page } from '$app/state';
+ import {selectStudioProject} from './navigation';
+ import { onMount } from 'svelte';
   import EntityCanvas from '$lib/canvas/EntityCanvas.svelte';
   import { PaneGroup, Pane, Handle } from '$lib/components/ui/resizable';
   import { Button } from '$lib/components/ui/button';
@@ -23,7 +25,7 @@
   async function generate(){if(!quote)return;busy=true;error='';try{await request('/generation/jobs',{quote_id:quote.id},'POST',{'Idempotency-Key':key});quote=null;message='Your video is processing. The screenplay, scenes and shots will appear on the canvas.';await refresh();}catch(e){error=(e as Error).message;}finally{busy=false;}}
   onMount(()=>{
     let mounted=true;const media=window.matchMedia('(max-width: 767px)');const resize=()=>mobile=media.matches;resize();media.addEventListener('change',resize);
-    void Promise.all([request('/me'),request('/projects')]).then(([user,p])=>{if(!mounted)return;projects=p;storageKey=`videoflow.cloud.project.${user.id}`;const saved=localStorage.getItem(storageKey);select(projects.find(item=>item.id===saved)?.id || projects[0]?.id || '');}).catch(e=>error=e.message).finally(()=>loaded=true);
+    void Promise.all([request('/me'),request('/projects')]).then(([user,p])=>{if(!mounted)return;projects=p;storageKey=`videoflow.cloud.project.${user.id}`;const saved=localStorage.getItem(storageKey);select(selectStudioProject(projects,page.url.searchParams.get('project'),saved));}).catch(e=>error=e.message).finally(()=>loaded=true);
     return()=>{mounted=false;media.removeEventListener('change',resize);setCanvasProject('');};
   });
 </script>
@@ -32,7 +34,7 @@
     <label for="canvas-project" class="text-sm font-medium">Project</label>
     <select id="canvas-project" class="h-8 max-w-64 rounded-md border border-input bg-background px-2 text-sm" value={project} onchange={e=>select(e.currentTarget.value)} disabled={!projects.length}><option value="" disabled>Select a project</option>{#each projects as p}<option value={p.id}>{p.name}</option>{/each}</select>
     <Button size="sm" variant="ghost" onclick={()=>refresh().catch(e=>error=e.message)} disabled={!project}><RefreshCw class="size-4"/><span class="sr-only">Refresh canvas</span></Button>
-    <a href="/projects" class="ml-auto text-sm text-muted-foreground underline underline-offset-4">Manage projects</a>
+    <a href="/studio/dashboard" class="ml-auto text-sm text-muted-foreground underline underline-offset-4">Studio overview</a>
   </header>
   {#if error}<div role="alert" class="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>{/if}
   {#if !loaded}<div class="grid flex-1 place-items-center"><LoaderCircle class="size-5 animate-spin"/></div>
