@@ -238,7 +238,7 @@
         throw new Error(
           "The project was created but its identifier was not returned. Check your Projects page before trying again.",
         );
-      localStorage.setItem(`videoflow.cloud.project.${userId}`, result.id);
+      localStorage.setItem(`6eek.cloud.project.${userId}`, result.id);
       await goto(`/studio?project=${encodeURIComponent(result.id)}`);
     } catch (e) {
       error = (e as Error).message;
@@ -253,7 +253,7 @@
   <p>
     {language === "zh"
       ? "从可编辑的结构开始，在画布中完善你的故事。"
-      : "Start with an editable structure, then make it your own on the original VideoFlow canvas."}
+      : "Start with an editable structure, then make it your own on the original 6eek canvas."}
   </p>
 </div>
 <div class="starter-language">

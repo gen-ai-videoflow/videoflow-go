@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/db"
+	"6eek-go/internal/models"
 )
 
 func TestDatabaseOperations(t *testing.T) {

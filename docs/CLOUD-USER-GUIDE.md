@@ -3,8 +3,8 @@
 The cloud guide is separate from the desktop handbook.
 
 - **In the application:** open `/help`. Contextual Help is also available in the shared project toolbar. The guide is public and searchable.
-- **Complete standalone document:** [VideoFlow cloud user guide](../frontend/static/help/user-guide.md).
-- **Content source:** `frontend/src/lib/cloud/help/guide.json` drives both the in-app guide and downloadable document.
+- **Complete standalone document:** [6eek cloud user guide](https://github.com/gen-ai-videoflow/videoflow-web/blob/main/static/help/user-guide.md).
+- **Content source:** `src/lib/cloud/help/guide.json` in the companion frontend repository drives both the in-app guide and downloadable document.
 
 The guide covers getting started, watching, projects, Story, Canvas and prompt templates, OpenCut editing, captions, downloading, publishing uploads and generated outputs, Premium and credits, payment methods, profile and security, creator analytics and troubleshooting.
 

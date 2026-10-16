@@ -66,7 +66,7 @@ func (s *Server) Close() {
 		s.Redis.Close()
 	}
 }
-func (s *Server) Router() http.Handler {
+func (s *Server) routes() chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID, middleware.Recoverer, s.security, s.admission)
 	r.Get("/live", func(w http.ResponseWriter, r *http.Request) { s.json(w, 200, map[string]string{"status": "alive"}) })
@@ -108,11 +108,17 @@ func (s *Server) Router() http.Handler {
 		r.Post("/videos/{id}/playback-grant", s.issuePlayback)
 		r.Get("/channels/{handle}", s.publicChannel)
 		r.Get("/billing/packs", func(w http.ResponseWriter, r *http.Request) {
-			s.json(w, 200, map[string]any{"packs": Packs, "checkout_enabled": s.cryptoEnabled() || s.stripeEnabled()})
+			packs, err := s.Store.CreditPacks(r.Context())
+			if err != nil {
+				s.fail(w, err)
+				return
+			}
+			s.json(w, 200, map[string]any{"packs": packs, "checkout_enabled": s.cryptoEnabled() || s.stripeEnabled()})
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
 			s.profileRoutes(r)
+			s.campaignCreatorRoutes(r)
 			r.Get("/viewer/{kind:saved|history}", s.viewerLibrary)
 			r.Put("/videos/{id}/{action:save|like}", s.changeVideoAction)
 			r.Delete("/videos/{id}/{action:save|like}", s.changeVideoAction)
@@ -202,6 +208,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/creator/rewards/videos/{id}", s.rewardVideoDetail)
 			r.Get("/creator/rewards/payouts", s.rewardPayoutHistory)
 			r.Get("/creator/rewards/summary", s.rewardSummary)
+			r.Route("/creator", s.rewardSupportCreatorRoutes)
 			r.Post("/memberships/checkout", s.membershipCheckout)
 			r.Get("/memberships", s.memberships)
 			r.Get("/creator/membership-plan", s.membershipPlan)
@@ -211,6 +218,10 @@ func (s *Server) Router() http.Handler {
 			r.Post("/assets/upload-grant", s.createUploadGrant)
 		})
 	})
+	return r
+}
+func (s *Server) Router() http.Handler {
+	r := s.routes()
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if strings.HasPrefix(req.URL.Path, "/api/v1/") || req.URL.Path == "/api/v1" {
 			clone := req.Clone(req.Context())
@@ -229,13 +240,13 @@ func (s *Server) security(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		w.Header().Set("Cache-Control", "no-store")
-		if origin := r.Header.Get("Origin"); origin != "" && origin == s.Config.PublicOrigin {
+		if origin := r.Header.Get("Origin"); origin != "" && s.allowedBrowserOrigin(origin) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Vary", "Origin")
 		}
 		if r.Method == "OPTIONS" {
-			if r.Header.Get("Origin") != s.Config.PublicOrigin {
+			if !s.allowedBrowserOrigin(r.Header.Get("Origin")) {
 				s.fail(w, ErrUnauthorized)
 				return
 			}
@@ -246,7 +257,7 @@ func (s *Server) security(next http.Handler) http.Handler {
 		}
 		appleCallback := r.Method == "POST" && r.URL.Path == "/v1/auth/oauth/apple/callback" && r.Header.Get("Origin") == "https://appleid.apple.com" && strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 		if r.Method != "GET" && r.Method != "HEAD" && !strings.HasPrefix(r.URL.Path, "/v1/webhooks/") && !appleCallback {
-			if r.Header.Get("Origin") != s.Config.PublicOrigin {
+			if !s.allowedBrowserOrigin(r.Header.Get("Origin")) {
 				s.fail(w, ErrUnauthorized)
 				return
 			}
@@ -306,7 +317,7 @@ func (s *Server) decode(w http.ResponseWriter, r *http.Request, v any) bool {
 }
 func currentUser(r *http.Request) User { u, _ := r.Context().Value(userContext{}).(User); return u }
 func (s *Server) optionalUser(r *http.Request) User {
-	cookie, e := r.Cookie("videoflow_session")
+	cookie, e := sessionCookie(r)
 	if e != nil {
 		return User{}
 	}
@@ -325,7 +336,11 @@ func (s *Server) requireUser(next http.Handler) http.Handler {
 }
 func (s *Server) auth(next http.HandlerFunc) http.HandlerFunc { return s.requireUser(next).ServeHTTP }
 func (s *Server) cookie(w http.ResponseWriter, token string, age int) {
-	http.SetCookie(w, &http.Cookie{Name: "videoflow_session", Value: token, Path: "/", MaxAge: age, HttpOnly: true, Secure: !s.Config.DevMode, SameSite: http.SameSiteLaxMode})
+	if age < 0 {
+		s.clearSessionCookies(w)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{Name: sessionCookieName, Value: token, Path: "/", Domain: s.sessionDomain(), MaxAge: age, HttpOnly: true, Secure: !s.Config.DevMode, SameSite: http.SameSiteLaxMode})
 }
 func (s *Server) rate(w http.ResponseWriter, r *http.Request, key string, max int, window time.Duration, strict bool) bool {
 	hash := sha256.Sum256([]byte(key))
@@ -478,11 +493,14 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	s.json(w, 200, u)
 }
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie("videoflow_session")
-	if c != nil {
-		if e := s.Store.Logout(r.Context(), c.Value); e != nil {
-			s.fail(w, e)
-			return
+	for _, name := range []string{sessionCookieName, legacySessionCookieName} {
+		for _, c := range r.Cookies() {
+			if c.Name == name && c.Value != "" {
+				if e := s.Store.Logout(r.Context(), c.Value); e != nil {
+					s.fail(w, e)
+					return
+				}
+			}
 		}
 	}
 	s.cookie(w, "", -1)
@@ -614,8 +632,28 @@ func (s *Server) feed(w http.ResponseWriter, r *http.Request) {
 		s.viewingFeed(w, r)
 		return
 	}
-	v, e := s.Store.DiscoveryFeed(r.Context(), s.optionalUser(r), r.URL.Query().Get("q"), r.URL.Query().Get("category"), r.URL.Query().Get("filter"))
-	s.result(w, v, e)
+	q := r.URL.Query()
+	if filter := q.Get("filter"); filter != "" && filter != "all" && filter != "following" {
+		s.fail(w, ErrValidation)
+		return
+	}
+	if q.Get("filter") == "all" {
+		q.Del("filter")
+	}
+	q.Set("format", "all")
+	switch q.Get("category") {
+	case "following":
+		q.Set("rank", "following")
+	case "trending":
+		q.Set("rank", "popular")
+	default:
+		q.Set("rank", "recent")
+	}
+	clone := r.Clone(context.WithValue(r.Context(), legacyDiscoveryContext{}, true))
+	urlCopy := *r.URL
+	urlCopy.RawQuery = q.Encode()
+	clone.URL = &urlCopy
+	s.viewingFeed(w, clone)
 }
 func (s *Server) video(w http.ResponseWriter, r *http.Request) {
 	v, e := s.Store.Video(r.Context(), chi.URLParam(r, "id"), s.optionalUser(r).ID)

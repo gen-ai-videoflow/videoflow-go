@@ -39,7 +39,7 @@ function passkeyError(error:unknown):Error {
   if(error instanceof DOMException){
     if(error.name==='NotAllowedError'||error.name==='AbortError')return new Error('Passkey sign-in was cancelled or timed out. Try again, or use your password.');
     if(error.name==='InvalidStateError')return new Error('This authenticator already has a passkey for this account. Try another authenticator or sign in with your existing passkey.');
-    if(error.name==='SecurityError')return new Error('This address cannot use the configured passkeys. Open VideoFlow at its approved secure address.');
+    if(error.name==='SecurityError')return new Error('This address cannot use the configured passkeys. Open 6eek at its approved secure address.');
   }
   return error instanceof Error?error:new Error('The passkey could not be used. Try again in a supported browser.');
 }

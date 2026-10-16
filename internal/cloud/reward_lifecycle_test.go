@@ -164,6 +164,7 @@ func TestRewardAvailabilityDeductsPendingRefunds(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	backLegacyTestEarnings(t, s, u.ID)
 	balance, err := s.RewardBalance(context.Background(), u.ID, time.Now())
 	if err != nil || balance.AvailableCents != 2000 || balance.PendingLegacyCents != 5000 {
 		t.Fatalf("balance %+v err %v", balance, err)

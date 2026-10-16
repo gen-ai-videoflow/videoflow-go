@@ -111,10 +111,8 @@ func (s *Server) checkout(ctx context.Context, u User, packID, key string) (stri
 	if len(key) < 8 || len(key) > 128 {
 		return "", ErrValidation
 	}
-	p, err := findPack(packID)
-	if err != nil {
-		return "", err
-	}
+	p := CreditPack{ID: packID, Name: packID}
+	var commercialRevision int64
 	id := uuid.NewString()
 	tx, err := s.Store.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -134,7 +132,16 @@ func (s *Server) checkout(ctx context.Context, u User, packID, key string) (stri
 			return existingURL, tx.Commit()
 		}
 	} else if errors.Is(err, sql.ErrNoRows) {
-		_, err = tx.ExecContext(ctx, `INSERT INTO cloud_purchases(id,workspace_id,pack_id,credits,price_cents,currency,idempotency_key)VALUES($1,$2,$3,$4,$5,$6,$7)`, id, u.WorkspaceID, p.ID, p.Credits, p.PriceCents, p.Currency, key)
+		commercial, e := commercialPolicyRead(ctx, tx)
+		if e != nil {
+			return "", e
+		}
+		p, e = findCommercialPack(commercial.Policy, packID)
+		if e != nil {
+			return "", e
+		}
+		commercialRevision = commercial.Revision
+		_, err = tx.ExecContext(ctx, `INSERT INTO cloud_purchases(id,workspace_id,pack_id,credits,price_cents,currency,idempotency_key,commercial_revision)VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, id, u.WorkspaceID, p.ID, p.Credits, p.PriceCents, p.Currency, key, commercialRevision)
 		if err != nil {
 			return "", err
 		}
@@ -144,7 +151,7 @@ func (s *Server) checkout(ctx context.Context, u User, packID, key string) (stri
 	if err = tx.Commit(); err != nil {
 		return "", err
 	}
-	data := url.Values{"mode": {"payment"}, "client_reference_id": {id}, "customer_email": {u.Email}, "success_url": {s.Config.PublicOrigin + "/credits?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/credits?checkout=cancelled"}, "line_items[0][price_data][currency]": {p.Currency}, "line_items[0][price_data][unit_amount]": {strconv.FormatInt(p.PriceCents, 10)}, "line_items[0][price_data][product_data][name]": {fmt.Sprintf("VideoFlow %s — %d credits", p.Name, p.Credits)}, "line_items[0][quantity]": {"1"}, "metadata[purchase_id]": {id}}
+	data := url.Values{"mode": {"payment"}, "client_reference_id": {id}, "customer_email": {u.Email}, "success_url": {s.Config.PublicOrigin + "/credits?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/credits?checkout=cancelled"}, "line_items[0][price_data][currency]": {p.Currency}, "line_items[0][price_data][unit_amount]": {strconv.FormatInt(p.PriceCents, 10)}, "line_items[0][price_data][product_data][name]": {fmt.Sprintf("6eek %s — %d credits", p.Name, p.Credits)}, "line_items[0][quantity]": {"1"}, "metadata[purchase_id]": {id}}
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.stripe.com/v1/checkout/sessions", strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err

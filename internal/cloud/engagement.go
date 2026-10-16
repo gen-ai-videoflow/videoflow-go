@@ -29,7 +29,7 @@ func (s *Store) BeginWatch(ctx context.Context, u User, videoID, viewer string) 
 		return "", e
 	}
 	id := uuid.NewString()
-	_, e = s.DB.ExecContext(ctx, `INSERT INTO cloud_watch_sessions(id,video_id,user_id,viewer_hash)VALUES($1,$2,$3,$4)`, id, videoID, u.ID, tokenHash(viewer))
+	_, e = s.DB.ExecContext(ctx, `INSERT INTO cloud_watch_sessions(id,video_id,user_id,viewer_hash,traffic_source)VALUES($1,$2,$3,$4,'organic')`, id, videoID, u.ID, tokenHash(viewer))
 	return id, e
 }
 func (s *Store) RecordWatch(ctx context.Context, u User, session, eventID string, seconds int) (int, error) {
@@ -113,6 +113,9 @@ func (s *Store) RecordWatch(ctx context.Context, u User, session, eventID string
 		}
 		added, _ := res.RowsAffected()
 		if added > 0 {
+			if _, e = tx.ExecContext(ctx, `INSERT INTO cloud_view_qualifications(video_id,viewer_hash,day,session_id,threshold_seconds)VALUES($1,$2,(now() AT TIME ZONE 'UTC')::date,$3,$4)`, video, viewer, session, qualifyingViewSeconds(format, duration, measured)); e != nil {
+				return 0, e
+			}
 			if _, e = tx.ExecContext(ctx, `UPDATE cloud_videos SET views=views+1 WHERE id=$1`, video); e != nil {
 				return 0, e
 			}
@@ -174,7 +177,7 @@ func (s *Store) Discovery(ctx context.Context, u User, query, category string) (
 	}
 	rows, e := s.DB.QueryContext(ctx, `SELECT `+videoCols+` FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE v.status='published' AND v.visibility='public'
  AND ($2='' OR to_tsvector('simple',v.title||' '||v.description)@@plainto_tsquery('simple',$2))
- AND NOT EXISTS(SELECT 1 FROM cloud_viewer_preferences p WHERE p.user_id=$1 AND p.channel_id=v.channel_id AND p.hidden)
+ AND NOT EXISTS(SELECT 1 FROM cloud_user_restrictions ur WHERE ur.user_id=c.user_id AND ur.suspended) AND NOT EXISTS(SELECT 1 FROM cloud_viewer_preferences p WHERE p.user_id=$1 AND p.channel_id=v.channel_id AND p.hidden)
  AND ($3<>'following' OR EXISTS(SELECT 1 FROM cloud_follows f WHERE f.user_id=$1 AND f.channel_id=v.channel_id))
  ORDER BY CASE WHEN $3='trending' THEN v.watch_seconds ELSE 0 END DESC,
  CASE WHEN EXISTS(SELECT 1 FROM cloud_follows f WHERE f.user_id=$1 AND f.channel_id=v.channel_id)THEN 1 ELSE 0 END DESC,v.published_at DESC LIMIT 60`, u.ID, query, category)
@@ -188,7 +191,9 @@ func (s *Store) Discovery(ctx context.Context, u User, query, category string) (
 		if e != nil {
 			return nil, e
 		}
-		out = append(out, v)
+		if s.CanWatch(ctx, u, v) {
+			out = append(out, v)
+		}
 	}
 	return out, rows.Err()
 }

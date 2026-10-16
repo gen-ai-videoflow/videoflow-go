@@ -24,11 +24,14 @@ func (u passkeyUser) WebAuthnName() string                       { return u.Emai
 func (u passkeyUser) WebAuthnDisplayName() string                { return u.Name }
 func (u passkeyUser) WebAuthnCredentials() []webauthn.Credential { return u.Credentials }
 func (s *Server) webAuthn() (*webauthn.WebAuthn, error) {
+	if validateSessionConfig(s.Config) != nil {
+		return nil, ErrUnavailable
+	}
 	u, e := url.Parse(s.Config.PublicOrigin)
 	if e != nil || u.Hostname() == "" || u.Scheme != "https" && !(s.Config.DevMode && u.Hostname() == "localhost") {
 		return nil, ErrUnavailable
 	}
-	return webauthn.New(&webauthn.Config{RPID: u.Hostname(), RPDisplayName: "VideoFlow", RPOrigins: []string{s.Config.PublicOrigin}, AuthenticatorSelection: protocol.AuthenticatorSelection{UserVerification: protocol.VerificationRequired, ResidentKey: protocol.ResidentKeyRequirementRequired}})
+	return webauthn.New(&webauthn.Config{RPID: u.Hostname(), RPDisplayName: "6eek", RPOrigins: append([]string{s.Config.PublicOrigin}, s.Config.BrowserOrigins...), AuthenticatorSelection: protocol.AuthenticatorSelection{UserVerification: protocol.VerificationRequired, ResidentKey: protocol.ResidentKeyRequirementRequired}})
 }
 func (s *Server) loadPasskeyUser(ctx context.Context, user User) (passkeyUser, error) {
 	u := passkeyUser{User: user, Credentials: []webauthn.Credential{}}

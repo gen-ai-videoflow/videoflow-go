@@ -1,5 +1,5 @@
 import type {TranscriptionLanguage,TranscriptionResult,TranscriptionProgress,TranscriptionModelId} from '@/transcription/types';
-/** VideoFlow policy: inference is server-managed through OpenRouter only.
+/** 6eek policy: inference is server-managed through OpenRouter only.
  * Keep caption-file import and timeline editing available while a paid, metered
  * OpenRouter transcription adapter is not configured. Never download local AI models.
  */

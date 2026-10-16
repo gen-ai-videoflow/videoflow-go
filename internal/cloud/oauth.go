@@ -116,7 +116,7 @@ func (s *Server) startOAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		linkUser = u.ID
-		cookie, _ := r.Cookie("videoflow_session")
+		cookie, _ := sessionCookie(r)
 		linkSession = tokenHash(cookie.Value)
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -152,7 +152,7 @@ func (s *Server) startOAuth(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, err)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{Name: "videoflow_oauth", Value: browser, Path: "/api/v1/auth/oauth/", HttpOnly: true, Secure: true, SameSite: http.SameSiteNoneMode, MaxAge: 300})
+	http.SetCookie(w, &http.Cookie{Name: "6eek_oauth", Value: browser, Path: "/api/v1/auth/oauth/", HttpOnly: true, Secure: true, SameSite: http.SameSiteNoneMode, MaxAge: 300})
 	options := []oauth2.AuthCodeOption{oidc.Nonce(nonce)}
 	if name == "google" {
 		options = append(options, oauth2.S256ChallengeOption(verifier))
@@ -162,7 +162,7 @@ func (s *Server) startOAuth(w http.ResponseWriter, r *http.Request) {
 	s.json(w, 200, map[string]string{"url": cfg.AuthCodeURL(state, options...)})
 }
 func (s *Server) oauthCurrentUser(r *http.Request) (User, error) {
-	cookie, err := r.Cookie("videoflow_session")
+	cookie, err := sessionCookie(r)
 	if err != nil {
 		return User{}, ErrUnauthorized
 	}
@@ -230,7 +230,7 @@ func (s *Server) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		fail("invalid")
 		return
 	}
-	cookie, err := r.Cookie("videoflow_oauth")
+	cookie, err := oauthBrowserCookie(r)
 	if err != nil {
 		fail("expired")
 		return
@@ -240,6 +240,7 @@ func (s *Server) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		fail("expired")
 		return
 	}
+	http.SetCookie(w, &http.Cookie{Name: "6eek_oauth", Path: "/api/v1/auth/oauth/", HttpOnly: true, Secure: true, SameSite: http.SameSiteNoneMode, MaxAge: -1})
 	http.SetCookie(w, &http.Cookie{Name: "videoflow_oauth", Path: "/api/v1/auth/oauth/", HttpOnly: true, Secure: true, SameSite: http.SameSiteNoneMode, MaxAge: -1})
 	if r.Form.Get("error") != "" || r.Form.Get("code") == "" {
 		fail("cancelled")
@@ -340,7 +341,7 @@ func (s *Store) oauthIdentity(ctx context.Context, provider, subject string, cla
 	handle := "user_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:20]
 	name := strings.TrimSpace(claims.Name)
 	if name == "" || len(name) > 100 {
-		name = "VideoFlow member"
+		name = "6eek member"
 	}
 	hash, err := hashPassword(password)
 	if err != nil {

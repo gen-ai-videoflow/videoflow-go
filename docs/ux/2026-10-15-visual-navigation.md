@@ -1,6 +1,6 @@
 # Visual browsing refinement
 
-Direction: extend the existing VideoFlow identity with familiar YouTube navigation and meaningful imagery. Watching retains a separate workspace from creating. A desktop rail exposes Discover, Shorts, Following, saved videos and history; search belongs in the header (the mobile search destination retains its form). The rail expands/collapses with a persisted preference; narrow desktops default to icons. Mobile keeps its existing four-destination bottom bar.
+Direction: extend the existing 6eek identity with familiar YouTube navigation and meaningful imagery. Watching retains a separate workspace from creating. A desktop rail exposes Discover, Shorts, Following, saved videos and history; search belongs in the header (the mobile search destination retains its form). The rail expands/collapses with a persisted preference; narrow desktops default to icons. Mobile keeps its existing four-destination bottom bar.
 
 The first empty Discover feed offers three clearly labelled editable starter templates. AI concept covers identify Explainer, Product story and Short story; they are never presented as actual published content, playable previews, creator thumbnails or generation results. Each image links to the matching selected template. Templates retain their existing script/scene import behavior and credit-free creation. Actual published-video thumbnails remain authoritative.
 

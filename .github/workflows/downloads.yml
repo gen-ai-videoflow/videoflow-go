@@ -46,10 +46,10 @@ jobs:
         working-directory: frontend
       - run: python3 scripts/test_package.py
       - run: python3 scripts/package.py --target '${{ matrix.target }}'
-      - run: python3 scripts/smoke_package.py --archive 'dist/VideoFlow-${{ matrix.target }}.zip'
+      - run: python3 scripts/smoke_package.py --archive 'dist/6eek-${{ matrix.target }}.zip'
       - uses: actions/upload-artifact@v4
         with:
-          name: VideoFlow-${{ matrix.target }}
+          name: 6eek-${{ matrix.target }}
           path: dist/*.zip
   downloads:
     needs: package
@@ -60,13 +60,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: VideoFlow-*
+          pattern: 6eek-*
           merge-multiple: true
           path: dist
       - run: cd dist && sha256sum *.zip > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: VideoFlow-downloads
+          name: 6eek-downloads
           path: dist/*
       - name: Publish tagged downloads after all native checks pass
         if: startsWith(github.ref, 'refs/tags/')
@@ -74,5 +74,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" dist/* --title "VideoFlow $GITHUB_REF_NAME — fully bundled" --notes-file docs/release-notes.md --prerelease
+            gh release create "$GITHUB_REF_NAME" dist/* --title "6eek $GITHUB_REF_NAME — fully bundled" --notes-file docs/release-notes.md --prerelease
           fi

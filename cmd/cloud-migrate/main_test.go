@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {

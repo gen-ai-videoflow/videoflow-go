@@ -1,7 +1,7 @@
 # Creator rewards: product requirements and user journeys
 
 Status: proposed design and implementation checklist, not shipped behavior.
-Date: 2026-10-16. Product remains VideoFlow; the pasted “6eek” discussion supplies reward requirements, not a rebrand instruction.
+Date: 2026-10-16. Product remains 6eek; the pasted “6eek” discussion supplies reward requirements, not a rebrand instruction.
 Related: [implementation plan](../plans/2026-10-16-creator-rewards.md).
 
 ## 1. Outcome and boundaries

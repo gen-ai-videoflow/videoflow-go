@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func main() {

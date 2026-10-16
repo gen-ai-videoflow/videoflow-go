@@ -30,7 +30,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import "@/globals.css";
-import "./videoflow.css";
+import "./6eek.css";
 const query = new URLSearchParams(location.search);
 const project = query.get("project") || "";
 const owner = query.get("owner") || "";
@@ -68,7 +68,7 @@ async function backup() {
   );
   const a = document.createElement("a");
   a.href = url;
-  a.download = "videoflow-timeline.json";
+  a.download = "6eek-timeline.json";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -89,7 +89,7 @@ function App() {
     let active = true;
     (async () => {
       if (!project || !owner)
-        throw Error("Open the editor from your VideoFlow project.");
+        throw Error("Open the editor from your 6eek project.");
       const [me, projects, saved] = await Promise.all([
         api("/me"),
         api("/projects"),
@@ -102,7 +102,7 @@ function App() {
       setName(p.name);
       revision = saved.revision;
       restoreSourceManifest(saved.document?.sourceManifest);
-      const cacheKey = `videoflow.editor.${owner}.${project}`;
+      const cacheKey = `6eek.editor.${owner}.${project}`;
       const editor = EditorCore.getInstance();
       const cached = localStorage.getItem(cacheKey);
       const cachedProject = cached
@@ -194,14 +194,14 @@ function App() {
         typeof e.data?.type !== "string"
       )
         return;
-      if (e.data.type === "videoflow:editor:resume") {
+      if (e.data.type === "6eek:editor:resume") {
         if (e.data.requestId === flushRequest) {
           document.getElementById("root")!.inert = false;
           flushRequest = "";
         }
         return;
       }
-      if (e.data.type === "videoflow:editor:flush") {
+      if (e.data.type === "6eek:editor:flush") {
         const requestId = e.data.requestId;
         if (
           typeof requestId !== "string" ||
@@ -227,11 +227,11 @@ function App() {
             throw Error(
               "Cloud save is paused. Your local edits remain here; download a backup before leaving.",
             );
-          parent("videoflow:editor:flushed", { requestId, ok: true });
+          parent("6eek:editor:flushed", { requestId, ok: true });
         } catch (e) {
           document.getElementById("root")!.inert = false;
           flushRequest = "";
-          parent("videoflow:editor:flushed", {
+          parent("6eek:editor:flushed", {
             requestId,
             ok: false,
             error: (e as Error).message,
@@ -239,7 +239,7 @@ function App() {
         }
         return;
       }
-      if (e.data.type !== "videoflow:editor:import") return;
+      if (e.data.type !== "6eek:editor:import") return;
       try {
         const item = e.data.asset;
         if (!item || typeof item.id !== "string") return;
@@ -262,14 +262,14 @@ function App() {
             projectId: localId,
             asset,
           });
-        parent("videoflow:editor:imported", { id: item.id });
+        parent("6eek:editor:imported", { id: item.id });
       } catch (e) {
         setStatus((e as Error).message);
       }
     };
     const parentWindow = window.parent;
     window.addEventListener("message", listener);
-    parent("videoflow:editor:ready");
+    parent("6eek:editor:ready");
     return () => window.removeEventListener("message", listener);
   }, [ready]);
   if (error)
@@ -292,7 +292,7 @@ function App() {
         <header className="vf-header">
           <button
             aria-label="Back to projects"
-            onClick={() => parent("videoflow:editor:exit")}
+            onClick={() => parent("6eek:editor:exit")}
           >
             <ArrowLeft size={18} />
           </button>
@@ -313,13 +313,13 @@ function App() {
                 Project <ChevronDown size={12} />
               </summary>
               <div>
-                <button onClick={() => parent("videoflow:editor:storyboard")}>
+                <button onClick={() => parent("6eek:editor:storyboard")}>
                   Open Storyboard
                 </button>
                 <button onClick={() => void backup()}>
                   Download timeline backup
                 </button>
-                <button onClick={() => parent("videoflow:editor:sources")}>
+                <button onClick={() => parent("6eek:editor:sources")}>
                   Import generated sources
                 </button>
                 <p>
@@ -329,14 +329,14 @@ function App() {
             </details>
             <button
               className="vf-source-button"
-              onClick={() => parent("videoflow:editor:sources")}
+              onClick={() => parent("6eek:editor:sources")}
             >
               <FolderOpen size={14} />
               Project sources
             </button>
             <button
               className="vf-generate-button"
-              onClick={() => parent("videoflow:editor:generate")}
+              onClick={() => parent("6eek:editor:generate")}
             >
               <Sparkles size={14} />
               Generate clip
@@ -401,7 +401,7 @@ function App() {
           <a href="/editor-app/notices.txt" target="_blank">
             Open-source notices
           </a>
-          <button disabled={query.get("publish")!=="1"} title={query.get("publish")==="1"?"Upload a finished export":"Video uploads are not configured yet"} onClick={() => parent("videoflow:editor:publish")}>
+          <button disabled={query.get("publish")!=="1"} title={query.get("publish")==="1"?"Upload a finished export":"Video uploads are not configured yet"} onClick={() => parent("6eek:editor:publish")}>
             Publish an exported video
           </button>
         </footer>

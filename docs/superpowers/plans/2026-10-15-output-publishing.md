@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Publish finished videos on VideoFlow or download them from one owner output workflow.
+**Goal:** Publish finished videos on 6eek or download them from one owner output workflow.
 
 **Architecture:** Resolve generated/uploaded sources through an owned media-asset module; publication references immutable validated source versions. Keep legacy job-backed API requests compatible while moving encoding away from mandatory job/quote joins.
 
@@ -29,7 +29,7 @@
 **Interface:** GET /jobs/:id/output → owned source summary, state, safe preview availability, formats and existing_publication_id. GET /media-assets/:id/download supports both ready generated/uploaded owned sources. Existing GET /jobs/:id/download remains a compatible adapter resolving its source, returning short-lived URL plus expiry/filename; file response has safe attachment Content-Disposition. Owner checks precede grant creation. Extra exports require distinct jobs, not invented options.
 
 - [ ] Write failing tests for foreign job, processing/failed output, expired grant retry and safe filenames; no public original key in API metadata.
-- [ ] Build /studio/outputs/:jobId with real preview/loading/failed states and Publish on VideoFlow / Download MP4 actions. Job lists link to this page.
+- [ ] Build /studio/outputs/:jobId with real preview/loading/failed states and Publish on 6eek / Download MP4 actions. Job lists link to this page.
 - [ ] Replace post-await popup with visible download link/direct-navigation fallback. A transfer start is not shown as download completion. Maintain error/retry on the detail page.
 - [ ] Link already-published output to its existing publication. Publishing and downloading do not consume another generation quote or charge credits again.
 - [ ] Verify browser download navigation and signed grant renewal with local adapter/fixture; sensitive owner/download tests and Svelte checks before commit.

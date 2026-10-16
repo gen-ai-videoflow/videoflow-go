@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 )
 
 type MediaEngine struct {

@@ -37,7 +37,7 @@ func securityRequest(s *Server, method, path, token string, body any) *httptest.
 }
 func securityCookie(w *httptest.ResponseRecorder) string {
 	for _, c := range w.Result().Cookies() {
-		if c.Name == "videoflow_session" {
+		if c.Name == sessionCookieName || c.Name == legacySessionCookieName {
 			return c.Value
 		}
 	}

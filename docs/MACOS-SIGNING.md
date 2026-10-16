@@ -21,7 +21,7 @@ In the GitHub repository, open **Settings → Secrets and variables → Actions 
 Keep these values in GitHub Secrets; do not put them in chat, commits, `.env` files in release artifacts, or logs. For maintainers using the GitHub CLI, certificate bytes can be streamed without printing them:
 
 ```sh
-base64 < /path/to/DeveloperID.p12 | gh secret set CSC_LINK --repo JienWeng/videoflow-go
+base64 < /path/to/DeveloperID.p12 | gh secret set CSC_LINK --repo JienWeng/6eek-go
 ```
 
 Set the remaining values through the GitHub UI or the CLI's interactive secret prompts.

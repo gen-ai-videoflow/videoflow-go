@@ -1,8 +1,8 @@
-# 1. How VideoFlow works
+# 1. How 6eek works
 
 [Handbook](README.md) · Next: [Install](02-installation.md)
 
-VideoFlow is a local video production workspace. Your database and media files live on your computer. AI generation sends prompts and selected references to configured external providers; local storage does not mean offline AI.
+6eek is a local video production workspace. Your database and media files live on your computer. AI generation sends prompts and selected references to configured external providers; local storage does not mean offline AI.
 
 ## The working model
 

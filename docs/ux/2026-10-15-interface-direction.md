@@ -6,7 +6,7 @@ Mode: Operate for settings and publishing; Experience for watching. This extends
 
 **THESIS:** Watching leads; creation stays in Studio. Each screen has one clear task, with secondary choices grouped beneath it.
 
-**OWN-WORLD:** Preserve VideoFlow’s landing-page warm ink (#0b0c0b/#121312/#1b1c1a), bone (#ebe9e2), signal orange (#ff5b1f), supplied VideoFlow logo, and incumbent Inter typography, fine borders, muted supporting copy, Lucide icons and compact shadcn controls. No new decorative image system.
+**OWN-WORLD:** Preserve 6eek’s landing-page warm ink (#0b0c0b/#121312/#1b1c1a), bone (#ebe9e2), signal orange (#ff5b1f), supplied 6eek logo, and incumbent Inter typography, fine borders, muted supporting copy, Lucide icons and compact shadcn controls. No new decorative image system.
 
 **STORY:** Viewers discover, watch, save and follow. Creators finish or upload a source, choose its audience, review and publish. Account settings remain accessible to both.
 

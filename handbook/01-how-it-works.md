@@ -1,8 +1,8 @@
-# 1. How VideoFlow works
+# 1. How 6eek works
 
 [Handbook](README.md) · Next: [Install](02-installation.md)
 
-VideoFlow is a local video production workspace. Your database and media files live on your computer. AI generation sends prompts and selected references to configured external providers; local storage does not mean offline AI.
+6eek is a local video production workspace. Your database and media files live on your computer. AI generation sends prompts and selected references to configured external providers; local storage does not mean offline AI.
 
 ## The working model
 
@@ -36,4 +36,4 @@ The diagram shows application relationships. The default AtlasCloud H3 Developer
 
 Schema validation checks that AI replies have the expected structure. It cannot guarantee that the story makes sense, the provider follows every visual instruction, or the resulting speech matches the script. Human review remains part of the workflow.
 
-These principles serve as implementation rules and workflow guidelines for VideoFlow.
+These principles serve as implementation rules and workflow guidelines for 6eek.

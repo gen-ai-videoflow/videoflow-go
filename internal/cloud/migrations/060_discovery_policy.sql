@@ -1,0 +1,6 @@
+CREATE TABLE cloud_discovery_policies(revision bigint PRIMARY KEY, policy jsonb NOT NULL, actor text NOT NULL, reason text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE cloud_discovery_overrides(id text PRIMARY KEY, video_id text REFERENCES cloud_videos(id), channel_id text REFERENCES cloud_channels(id), weight bigint NOT NULL CHECK(weight BETWEEN -10000000 AND 10000000), expires_at timestamptz NOT NULL, reason text NOT NULL, actor text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), CHECK((video_id IS NULL)<>(channel_id IS NULL)));
+CREATE INDEX ON cloud_discovery_overrides(video_id,expires_at);
+CREATE INDEX ON cloud_discovery_overrides(channel_id,expires_at);
+CREATE TABLE cloud_watch_exclusions(event_id text PRIMARY KEY REFERENCES cloud_watch_events(id), actor text NOT NULL, reason text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE cloud_audience_rebuilds(id bigserial PRIMARY KEY,video_id text NOT NULL REFERENCES cloud_videos(id),actor text NOT NULL,reason text NOT NULL,before_views bigint NOT NULL,before_seconds bigint NOT NULL,after_views bigint NOT NULL,after_seconds bigint NOT NULL,metric_version integer NOT NULL DEFAULT 2,created_at timestamptz NOT NULL DEFAULT now());

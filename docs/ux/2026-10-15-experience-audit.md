@@ -1,4 +1,4 @@
-# VideoFlow experience audit
+# 6eek experience audit
 
 Review date: 2026-10-15. Scope: current local web UI and code supporting settings, viewing, creation, publishing and downloads. This is a planning audit, not approval that all screens are complete or that production streaming works.
 
@@ -17,7 +17,7 @@ Review date: 2026-10-15. Scope: current local web UI and code supporting setting
 | --- | --- | --- | --- |
 | P1 | No dedicated Shorts journey or discovery contract | No Shorts route/nav/player lifecycle or measured format metadata in current video response | Vertical browsing with one active player, public/format filtering, accessible navigation and bounded preloading |
 | P1 | Uploading an existing video is not a complete publication flow | Generic upload grant exists; CreateVideo requires a successful generation job | First-class owned media assets and validated upload completion; no fake generation jobs for uploaded files |
-| P1 | Publish and download are separate journeys | GenerationJobs exposes Download; channel form requires choosing a completed job separately | Finished output offers Preview, Publish on VideoFlow and Download with its source preselected |
+| P1 | Publish and download are separate journeys | GenerationJobs exposes Download; channel form requires choosing a completed job separately | Finished output offers Preview, Publish on 6eek and Download with its source preselected |
 | P1 | Watch is a basic player shell rather than a complete viewing page | CloudApp inline watch branch; no related-video region, saved progress or explicit Premium gate component | Player-led layout, creator/actions, description, related releases, clear unavailable/access states |
 | P1 | Fixed 10-second view threshold does not suit short clips | RecordWatch in internal/cloud/engagement.go | Duration-aware public view policy, loop/seek/background protection; no automatic change to financial rewards |
 | P2 | Settings actions visually collide and wrap into broken text | Verification button/link/Edit profile share inline flow; mobile “Enter verification token” wraps around neighbours | Separate verification block and wrapped action group with defined spacing; editing profile lives in its own settings section |

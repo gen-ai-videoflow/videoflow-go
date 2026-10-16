@@ -9,7 +9,7 @@ spec.loader.exec_module(audit)
 class ReleasePolicyTests(unittest.TestCase):
     def report(self):
         result = {name: {'returncode': 0, 'detail': ''} for name in audit.REQUIRED_CHECKS}
-        result['signature_identity']['detail'] = 'Authority=Developer ID Application: VideoFlow (TEAM123)\nTeamIdentifier=TEAM123'
+        result['signature_identity']['detail'] = 'Authority=Developer ID Application: 6eek (TEAM123)\nTeamIdentifier=TEAM123'
         return result
 
     def test_rejects_broken_signature_even_when_process_launches(self):

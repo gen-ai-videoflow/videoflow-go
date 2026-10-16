@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func main() {

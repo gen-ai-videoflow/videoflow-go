@@ -69,7 +69,7 @@ func (s *Server) streamJob(w http.ResponseWriter, r *http.Request) {
 		case <-ticker.C:
 		case <-hints:
 		}
-		if token, e := r.Cookie("videoflow_session"); e != nil {
+		if token, e := sessionCookie(r); e != nil {
 			return
 		} else if _, e = s.Store.Authenticate(r.Context(), token.Value); e != nil {
 			return

@@ -182,7 +182,7 @@ func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (
 	if time.Since(created) > time.Minute {
 		return "", ErrConflict
 	}
-	form := url.Values{"mode": {"subscription"}, "customer_email": {u.Email}, "client_reference_id": {id}, "expires_at": {intString(created.Add(31 * time.Minute).Unix())}, "success_url": {s.Config.PublicOrigin + "/premium?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/premium?checkout=cancelled"}, "line_items[0][price_data][currency]": {"usd"}, "line_items[0][price_data][unit_amount]": {intString(price)}, "line_items[0][price_data][recurring][interval]": {"month"}, "line_items[0][price_data][product_data][name]": {"VideoFlow Premium — all creators"}, "line_items[0][quantity]": {"1"}, "metadata[premium_checkout_id]": {id}, "subscription_data[metadata][premium_checkout_id]": {id}}
+	form := url.Values{"mode": {"subscription"}, "customer_email": {u.Email}, "client_reference_id": {id}, "expires_at": {intString(created.Add(31 * time.Minute).Unix())}, "success_url": {s.Config.PublicOrigin + "/premium?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/premium?checkout=cancelled"}, "line_items[0][price_data][currency]": {"usd"}, "line_items[0][price_data][unit_amount]": {intString(price)}, "line_items[0][price_data][recurring][interval]": {"month"}, "line_items[0][price_data][product_data][name]": {"6eek Premium — all creators"}, "line_items[0][quantity]": {"1"}, "metadata[premium_checkout_id]": {id}, "subscription_data[metadata][premium_checkout_id]": {id}}
 	var out struct {
 		ID  string `json:"id"`
 		URL string `json:"url"`

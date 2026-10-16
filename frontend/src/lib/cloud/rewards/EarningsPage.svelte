@@ -1,6 +1,8 @@
 <script lang="ts">
  import {onMount} from 'svelte';
  import CreatorAnalytics from '../CreatorAnalytics.svelte';
+ import SupportDetails from './SupportDetails.svelte';
+ import SponsorDetails from './SponsorDetails.svelte';
  import * as Tabs from '$lib/components/ui/tabs';
  import {Button} from '$lib/components/ui/button';
  import {Input} from '$lib/components/ui/input';
@@ -47,12 +49,14 @@
     <h2>{t('Available to receive','可收取收益')}</h2>
     <strong>{summary.held?'—':money(summary.available_cents)}</strong>
     <p>{summary.held?t('Payments are paused for account review. Your earnings are preserved.','付款因账户审核暂缓，已有收益仍被保留。'):t('Payments follow account verification and the payout schedule.','付款须完成账户验证，并按排期处理。')}</p>
-    {#if summary.confirmed_unvested_cents>0}<p class="unlocking"><b>{money(summary.confirmed_unvested_cents)}</b> {t('is unlocking gradually over 30 days.','正在 30 天内逐步解锁。')}</p>{/if}
+    {#if summary.confirmed_unvested_cents>0}<p class="unlocking"><b>{money(summary.confirmed_unvested_cents)}</b> {t('is unlocking gradually. See video details for each schedule.','正在逐步解锁，具体时间请查看视频详情。')}</p>{/if}
     {#if summary.paid_cents>0}<p class="quiet">{t('Transferred so far','累计已转款')}: {money(summary.paid_cents)}</p>{/if}
    </section>
-   <div class="payout-status"><Clock3 size={21}/><div><h2>{t('Your next payment','下一次付款')}</h2><p>{!payouts?.cash_payouts_enabled?t('Payouts are not available yet.','付款功能暂未开放。'):t('Approved monthly payout runs. No transfer is scheduled until verified and approved.','按月审核付款，完成验证与审批后才会安排转账。')}</p><Button variant="outline" onclick={()=>{payoutOpen=true;requestAnimationFrame(()=>document.getElementById('payout-settings')?.scrollIntoView({block:'start'}))}}>{t('Manage payouts','管理收款')}</Button></div></div>
+   <div class="payout-status"><Clock3 size={21}/><div><h2>{t('Your next payment','下一次付款')}</h2><p>{!payouts?.cash_payouts_enabled?t('Payouts are not available yet.','付款功能暂未开放。'):t('Payments are reviewed after earnings unlock and payout verification is complete.','收益解锁并完成收款验证后，付款将进入审核。')}</p><Button variant="outline" onclick={()=>{payoutOpen=true;requestAnimationFrame(()=>document.getElementById('payout-settings')?.scrollIntoView({block:'start'}))}}>{t('Manage payouts','管理收款')}</Button></div></div>
    {#if program?.enabled&&!program.enrolled}<Button variant="outline" onclick={()=>rulesOpen=true}>{t('Learn about creator rewards','了解创作者奖励')}</Button>{/if}
    <p class="quiet">{t('Updated','更新时间')} {date(summary.calculated_at)} · {t('Generation credits are separate from cash earnings.','生成点数与现金收益分开计算。')}</p>
+   <SupportDetails {zh}/>
+ <SponsorDetails {zh}/>
    <details class="secondary-detail" ontoggle={(e)=>analyticsOpen=e.currentTarget.open}><summary>{t('Audience analytics','受众分析')}</summary>{#if analyticsOpen}<CreatorAnalytics/>{/if}</details>
    {#if summary.legacy_pending_cents!==0}<p class="quiet">{t('Legacy pending earnings','旧版待处理收益')}: {money(summary.legacy_pending_cents)}. {t('Existing settlement rules continue to apply.','继续适用原有结算规则。')}</p>{/if}
    {#if summary.estimated_additional_cents!==null}<details class="secondary-detail"><summary>{t('Estimated rewards','预估奖励')}</summary><p>{money(summary.estimated_additional_cents)} · {t('An estimate only. It can change before confirmation.','仅为预估，确认前可能变动。')}</p></details>{/if}
@@ -69,7 +73,7 @@
    {#each entries as entry}<div class="activity"><span><strong>{entry.description}</strong><small>{date(entry.created_at)} · {entry.status}</small></span><span>{money(entry.amount_cents)}</span></div>{:else}<p class="empty">{t('Confirmed earnings and adjustments will appear here.','已确认收益及调整记录会显示在这里。')}</p>{/each}{:else}<p role="status">{t('Loading payment history…','正在加载付款记录…')}</p>{/if}
 </details>
 <details class="secondary-detail" bind:open={rulesOpen}><summary>{t('How rewards work','奖励如何运作')}</summary>
-   <section class="program"><h2>{t('Create, publish, then track your rewards','创作、发布，再追踪奖励')}</h2><ol><li>{t('Eligible original videos have a 30-day earning window after first publication.','符合条件的原创视频从首次发布起有 30 天收益窗口。')}</li><li>{t('Rewards depend on qualified performance and available funded budgets. Exact scoring weights are private.','奖励取决于合资格表现与已获得资金支持的预算，具体评分权重不公开。')}</li><li>{t('Daily confirmed batches vest gradually over 30 days. Estimates can change and are not money owed.','每日确认批次在 30 天内逐步解锁。预估金额可能变化，并非已承诺付款。')}</li><li>{t('Rewards may exceed your spending, but no earnings or recovery of costs are guaranteed.','奖励可能超过你的支出，但不保证收益或收回成本。')}</li></ol><p>{t('Eligible platform revenue may fund rewards. Generation credits, promotional credits and cash earnings remain separate. Support-credit milestones are not available yet.','符合条件的平台收入可用于奖励。生成点数、赠送点数和现金收益分开计算，创作里程碑点数奖励尚未开放。')}</p>
+   <section class="program"><h2>{t('Create, publish, then track your rewards','创作、发布，再追踪奖励')}</h2><ol><li>{t(`Eligible original videos have a ${program?.earning_window_days||30}-day earning window after first publication. Existing videos keep their recorded window.`,`符合条件的原创视频从首次发布起有 ${program?.earning_window_days||30} 天收益窗口。已有视频保留其已记录的窗口。`)}</li><li>{t('Rewards depend on qualified performance and available funded budgets. Exact scoring weights are private.','奖励取决于合资格表现与已获得资金支持的预算，具体评分权重不公开。')}</li><li>{t(`New confirmed batches unlock gradually over ${program?.vesting_days||30} days. Existing batches keep their recorded schedule. Estimates can change and are not money owed.`,`新确认批次在 ${program?.vesting_days||30} 天内逐步解锁，已有批次保留其已记录的时间表。预估金额可能变化，并非已承诺付款。`)}</li><li>{t('Rewards may exceed your spending, but no earnings or recovery of costs are guaranteed.','奖励可能超过你的支出，但不保证收益或收回成本。')}</li></ol><p>{t('Eligible platform revenue may fund rewards. Generation credits, promotional credits and cash earnings remain separate. Support credits, when offered, cannot be withdrawn.','符合条件的平台收入可用于奖励。生成点数、赠送点数和现金收益分开计算，提供的创作支持点数不可提现。')}</p>
     {#if program?.enrolled}<p>{t('You have joined this program version.','你已加入当前版本的奖励计划。')}</p>{:else if program?.enabled}<label class="accept"><input type="checkbox" bind:checked={accepted}/>{t('I understand the variable rewards, earning window and vesting rules.','我已了解浮动奖励、收益窗口及逐步解锁规则。')}</label><Button disabled={!accepted||busy||!user?.verified} onclick={enroll}>{t('Join creator rewards','加入创作者奖励')}</Button>{:else}<p class="quiet">{t('Enrollment opens when the published program policy and funding are approved.','计划规则与资金获得批准后，才会开放加入。')}</p>{/if}
    </section>
 </details>

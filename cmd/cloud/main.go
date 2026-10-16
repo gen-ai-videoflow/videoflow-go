@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 		defer cancel()
 		srv.Shutdown(shutdown)
 	}()
-	slog.Info("VideoFlow cloud API ready", "port", cfg.Port, "development", cfg.DevMode)
+	slog.Info("6eek cloud API ready", "port", cfg.Port, "development", cfg.DevMode)
 	if err = srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("cloud server stopped", "error", err)
 		os.Exit(1)

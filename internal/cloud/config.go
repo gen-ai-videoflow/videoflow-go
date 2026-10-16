@@ -10,6 +10,8 @@ import (
 )
 
 type Config struct {
+	SessionCookieDomain                                                                                                                                                                                   string
+	BrowserOrigins                                                                                                                                                                                        []string
 	GoogleClientID, GoogleClientSecret, AppleClientID, AppleClientSecret                                                                                                                                  string
 	MaxConcurrentRequests                                                                                                                                                                                 int
 	VideoUploadsEnabled                                                                                                                                                                                   bool
@@ -139,6 +141,12 @@ func EnvConfig() (Config, error) {
 	if c.Region == "" {
 		c.Region = "ap-southeast-1"
 	}
+	c.SessionCookieDomain = strings.TrimSpace(os.Getenv("SESSION_COOKIE_DOMAIN"))
+	for _, origin := range strings.Split(os.Getenv("BROWSER_ORIGINS"), ",") {
+		if origin = strings.TrimSpace(origin); origin != "" {
+			c.BrowserOrigins = append(c.BrowserOrigins, origin)
+		}
+	}
 	if c.PublicOrigin == "" && c.DevMode {
 		c.PublicOrigin = "http://localhost:5173"
 	}
@@ -170,5 +178,8 @@ func EnvConfig() (Config, error) {
 		return c, fmt.Errorf("video uploads require private upload/original storage and a validation queue")
 	}
 	c.PublicOrigin = strings.TrimSuffix(c.PublicOrigin, "/")
+	if e := validateSessionConfig(c); e != nil {
+		return c, e
+	}
 	return c, nil
 }

@@ -1,4 +1,4 @@
-VideoFlow now has a desktop app window powered by Electron, sharing the Svelte interface and Go backend with the web version.
+6eek now has a desktop app window powered by Electron, sharing the Svelte interface and Go backend with the web version.
 
 Download the package matching your computer:
 
@@ -8,7 +8,7 @@ Download the package matching your computer:
 
 The app includes its Go backend, frontend, FFmpeg, FFprobe and caption fonts. You do not need to install Node, Go, Python or FFmpeg. Open Settings and add an OpenRouter API key with credits to use AI generation; AI requests require internet access.
 
-Projects and settings stay on your computer in the existing VideoFlow user configuration directory. Closing the app shuts down its engine. Avoid running the older browser launcher and Electron against the same data directory simultaneously.
+Projects and settings stay on your computer in the existing 6eek user configuration directory. Closing the app shuts down its engine. Avoid running the older browser launcher and Electron against the same data directory simultaneously.
 
 macOS packages are unsigned unless signing credentials are configured, so macOS may request explicit approval before first use. Each OS/CPU package is built on a native runner and tested for app rendering, backend cleanup and bundled media processing. SHA256SUMS.txt contains download checksums.
 

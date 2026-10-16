@@ -44,7 +44,7 @@
   import Templates from './Templates.svelte';
   import GenerationJobs from './GenerationJobs.svelte';
   let sidebarCollapsed = $state(false);
-  function toggleSidebar(){sidebarCollapsed=!sidebarCollapsed;try{localStorage.setItem("videoflow.studio.sidebar",sidebarCollapsed?"collapsed":"expanded");}catch{}}
+  function toggleSidebar(){sidebarCollapsed=!sidebarCollapsed;try{localStorage.setItem("6eek.studio.sidebar",sidebarCollapsed?"collapsed":"expanded");}catch{}}
   let user = $state<any>(null);
   let sessionKnown=$state(false);
   let ready = $state(!!page.data.cloudPublic);
@@ -70,7 +70,7 @@
     if(!user){void goto(authHref('/login','/premium',page.url.origin));return;}
     void action(async()=>{
       if(paymentProvider==='stripe') {
-        const storageKey=`videoflow.stripe.${user.id}.${purpose}.${packId||''}`;
+        const storageKey=`6eek.stripe.${user.id}.${purpose}.${packId||''}`;
         let key=invoiceAttempts.get(storageKey)?.key;
         if(!key){try{key=sessionStorage.getItem(storageKey)||undefined;}catch{}}
         if(!key){key=crypto.randomUUID();}
@@ -80,7 +80,7 @@
         if(!result.url?.startsWith('https://checkout.stripe.com/'))throw new Error('A secure Stripe checkout could not be opened.');
         window.location.assign(result.url);return;
       }
-      const storageKey=`videoflow.payment.${user.id}.${purpose}.${packId || ''}`;
+      const storageKey=`6eek.payment.${user.id}.${purpose}.${packId || ''}`;
       let attempt=invoiceAttempts.get(storageKey);
       if(!attempt){try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');attempt=restoredInvoiceAttempt(saved);}catch{}}
       if(attempt?.id){const existing=await request(`/payments/invoices/${encodeURIComponent(attempt.id)}`);if(existing.status!=='settled'){await goto(`/payments?invoice=${encodeURIComponent(existing.id)}`);return;}attempt=undefined;}
@@ -94,7 +94,7 @@
   }
   $effect(()=>{
     if(user && page.url.searchParams.get('checkout')==='success') {
-      try{for(let index=sessionStorage.length-1;index>=0;index--){const key=sessionStorage.key(index);if(key?.startsWith(`videoflow.stripe.${user.id}.`))sessionStorage.removeItem(key);}}catch{}
+      try{for(let index=sessionStorage.length-1;index>=0;index--){const key=sessionStorage.key(index);if(key?.startsWith(`6eek.stripe.${user.id}.`))sessionStorage.removeItem(key);}}catch{}
     }
   });
   let developmentToken = $state('');
@@ -132,7 +132,7 @@
   const money = (cents:number | undefined, currency = 'USD') => cents == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency}).format(cents/100);
   const date = (value:string) => value ? new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
   onMount(() => {
-    try{sidebarCollapsed=localStorage.getItem("videoflow.studio.sidebar")==="collapsed";}catch{}
+    try{sidebarCollapsed=localStorage.getItem("6eek.studio.sidebar")==="collapsed";}catch{}
     request('/me').then(v => user = v.user || v).catch(e => {
       if (!(e instanceof CloudError && e.status === 401)) error = e.message;
     }).finally(() => {ready=true;sessionKnown=true;});
@@ -176,26 +176,26 @@
 </script>
 <ConfirmHost/>
 
-<svelte:head><title>{(settingsTab?`Settings — ${settingsTab}`:rawPath.startsWith('/studio/outputs/')?'Your video':rawPath==='/studio/publish'?'Publish video':rawPath==='/studio/upload'?'Upload video':path.startsWith('/shorts')?'Shorts':resourceSection==='storyboard'?'Story':titles[path]) || (authPage ? 'Welcome' : data.title || data.channel?.name || data.name || 'Watch')} · VideoFlow</title>{#if publicPage}<link rel="canonical" href={page.url.origin + path}/><meta property="og:title" content={`${data.title || data.channel?.name || data.name || titles[path] || 'VideoFlow'} · VideoFlow`}/><meta property="og:description" content={data.description || data.channel?.description || 'VideoFlow video studio.'}/>{/if}<meta name="description" content="Create your next story with VideoFlow. Your video studio, channel, and creative community." /></svelte:head>
+<svelte:head><title>{(settingsTab?`Settings — ${settingsTab}`:rawPath.startsWith('/studio/outputs/')?'Your video':rawPath==='/studio/publish'?'Publish video':rawPath==='/studio/upload'?'Upload video':path.startsWith('/shorts')?'Shorts':resourceSection==='storyboard'?'Story':titles[path]) || (authPage ? 'Welcome' : data.title || data.channel?.name || data.name || 'Watch')} · 6eek</title>{#if publicPage}<link rel="canonical" href={page.url.origin + path}/><meta property="og:title" content={`${data.title || data.channel?.name || data.name || titles[path] || '6eek'} · 6eek`}/><meta property="og:description" content={data.description || data.channel?.description || '6eek video studio.'}/>{/if}<meta name="description" content="Create your next story with 6eek. Your video studio, channel, and creative community." /></svelte:head>
 {#if path==='/magic-link'}
   <MagicLinkForm returnTo={authReturnTo} onSignedIn={async()=>{user=await request('/me');await goto(authReturnTo);}}/>
 {:else if recoveryPage}
   <RecoveryForm mode={path==='/forgot-password'?'forgot-password':path==='/reset-password'?'reset-password':'verify-email'} returnTo={authReturnTo} onVerified={async()=>{try{user=await request('/me');}catch{user=null;}}}/>
 {:else if canvasPage&&!sessionKnown}
-  <div class="flex h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground" role="status"><LoaderCircle class="size-4 animate-spin"/>Loading VideoFlow…</div>
+  <div class="flex h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground" role="status"><LoaderCircle class="size-4 animate-spin"/>Loading 6eek…</div>
 {:else if displayAuth}
   <AuthForm mode={path==='/register'?'register':'login'} {busy} {error} {notice} returnTo={authReturnTo} onSubmit={authenticate} {mfaChallenge} {mfaMethods} onMFA={completeMFA} onPasskey={signInWithPasskey} onCancelMFA={()=>{mfaChallenge='';mfaMethods=[];error='';}}/>
 {:else}
 {#snippet cloudContent()}
   <div class="cloud-body min-h-0 min-w-0 flex-1 overflow-hidden">
-    {#if !canvasPage&&!editorPage&&!resourceSection&&!dashboardPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || 'VideoFlow'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
+    {#if !canvasPage&&!editorPage&&!resourceSection&&!dashboardPage&&!viewerPage&&!creatorUtilityPage}<header class="cloud-topbar"><span>{titles[path] || '6eek'}</span><div class="flex items-center gap-4"><a href="/premium" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Crown class="size-3.5"/>Premium</a>{#if !user}<Button href={signInHref} variant="outline" size="sm">Sign in</Button>{/if}</div></header>{/if}
     <main class="cloud-main" class:cloud-canvas-main={canvasPage||editorPage} class:viewer-main={viewerPage}>
       {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><button onclick={() => load(path)}>Try again</button></div>{/if}
       {#if notice}<div class="cloud-notice" role="status"><Check size={17}/>{notice}</div>{/if}
       {#if !ready || loading || (viewingRoute&&!sessionKnown)}<div class="cloud-loading" role="status"><LoaderCircle class="animate-spin" size={25}/><span>{settingsTab?'Loading settings…':path.startsWith('/studio')?'Loading Studio…':'Loading videos…'}</span></div>
       {:else if loadFailed}<div class="cloud-empty"><Film size={35}/><h1>Let's try that again.</h1><p>This page couldn't be loaded. Your saved work is still in your account.</p><Button onclick={()=>load(path)}>Reload page</Button></div>
       {:else if !user && !publicPage}
-        <div class="cloud-empty"><ShieldCheck size={38}/><h1>{viewerPage?'Sign in to continue':'Your studio is waiting.'}</h1><p>{viewerPage?'Use your VideoFlow account to follow creators and manage your profile, payments, and preferences.':'Sign in to create videos, manage projects, and grow your channel.'}</p><Button href={signInHref}>Sign in <ArrowRight size={16}/></Button><a href={signUpHref}>Create an account</a></div>
+        <div class="cloud-empty"><ShieldCheck size={38}/><h1>{viewerPage?'Sign in to continue':'Your studio is waiting.'}</h1><p>{viewerPage?'Use your 6eek account to follow creators and manage your profile, payments, and preferences.':'Sign in to create videos, manage projects, and grow your channel.'}</p><Button href={signInHref}>Sign in <ArrowRight size={16}/></Button><a href={signUpHref}>Create an account</a></div>
       {:else if path==='/help'}
         <HelpPage/>
       {:else if rawPath.startsWith('/studio/outputs/')}
@@ -237,7 +237,7 @@
       {:else if path === '/earnings'}
         <EarningsPage {user}/>
       {:else if path === '/premium'||path === '/memberships'}
-        <div class="page-heading"><h1>VideoFlow Premium</h1><p>Prepaid viewing access across VideoFlow. The same account can watch, create, and publish. Generation credits are separate.</p></div>
+        <div class="page-heading"><h1>6eek Premium</h1><p>Prepaid viewing access across 6eek. The same account can watch, create, and publish. Generation credits are separate.</p></div>
         <section class="cloud-panel premium-panel"><Crown class="size-7 text-muted-foreground"/><h2>{data.active?'Your Premium access':'Get Premium'}</h2>{#if data.active}<span class="status">{data.status || 'Active'}</span><p>Premium access is active{data.paid_through ? ` through ${date(data.paid_through)}` : ''}.</p>{:else}<p>Watch Premium videos from creators across the platform with one account.</p>{/if}{#if data.payments?.premium_price_cents>0}<strong class="premium-price">{money(data.payments.premium_price_cents,'USD')}<span>{paymentProvider==='stripe'?'per month':'for 30 days'}</span></strong>{/if}<PaymentProviderChoice options={data.payments} bind:value={paymentProvider}/><p>{paymentProvider==='stripe'?'Stripe Premium renews monthly until canceled. Manage billing and cancellation from this page.':'Crypto Premium is prepaid for 30 days and does not renew automatically. An additional confirmed payment extends your access.'}</p>{#if !data.payments?.enabled||!data.payments?.premium_price_cents}<div class="info-banner"><ShieldCheck class="size-5"/><p>New Premium payments are not available yet. Existing access is shown above; payment availability depends on the configured provider.</p></div>{/if}<Button disabled={busy||!data.payments?.enabled||!data.payments?.premium_price_cents||(paymentProvider==='stripe'&&data.active)||(paymentProvider==='cryptorails'&&data.stripe_active)} onclick={()=>createInvoice('premium')}>{user?(paymentProvider==='stripe'?'Subscribe with Stripe':(data.active?'Add 30 days':'Get 30 days')):'Sign in to get Premium'}<ArrowUpRight class="size-4"/></Button>{#if user&&data.can_manage}<Button variant="outline" disabled={busy} onclick={()=>action(async()=>{const result=await request('/premium/manage',{});window.location.assign(result.url);})}>Manage subscription <ArrowUpRight class="size-4"/></Button>{/if}{#if paymentProvider==='cryptorails'}<p class="field-help">Crypto payments use {data.payments?.token || 'the configured token'} on {data.payments?.network || 'the configured network'}. Your invoice shows the exact token amount, fees/reserve, and deposit address. Access is granted only after server-confirmed settlement.</p>{:else}<p class="field-help">Existing prepaid access or an unresolved payment must be completed before starting a recurring subscription. Access is granted only after verified payment.</p>{/if}<a href="/payments" class="text-sm underline underline-offset-4">View payment invoices</a><p class="field-help">Premium grants viewing access. It does not include studio generation credits or guarantee creator earnings.</p></section>
       {:else if path.startsWith('/watch/')}
         {#key path}<WatchPage {user} id={path.split('/')[2]}/>{/key}
@@ -253,7 +253,7 @@
   <aside class="studio-sidebar" class:collapsed={sidebarCollapsed} aria-label="Studio navigation">
     <div class="sidebar-heading">
       <button class="sidebar-toggle" onclick={toggleSidebar} aria-label={sidebarCollapsed?'Expand navigation':'Collapse navigation'} aria-expanded={!sidebarCollapsed} aria-controls="studio-navigation" title={sidebarCollapsed?'Expand navigation':'Collapse navigation'}><Menu size={22}/></button>
-      {#if !sidebarCollapsed}<a href="/studio/dashboard" aria-label="VideoFlow Studio"><BrandLogo/></a>{/if}
+      {#if !sidebarCollapsed}<a href="/studio/dashboard" aria-label="6eek Studio"><BrandLogo/></a>{/if}
     </div>
     <nav id="studio-navigation" aria-label="Studio" class="sidebar-links">
       {#each [

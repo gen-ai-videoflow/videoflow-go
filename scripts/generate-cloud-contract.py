@@ -141,7 +141,7 @@ routes.extend([
  ('get','/admin/runtime-policy/versions',None,None,False),('get','/admin/runtime-policy',None,'RuntimePolicyRecord',False),('put','/admin/runtime-policy','runtime_policy','RuntimePolicyRecord',False),('post','/admin/runtime-policy/refresh-catalogues','empty',None,False),('get','/admin/me',None,None,False),('get','/admin/settings',None,'AdminSetting[]',False),('put','/admin/settings/{key}','admin_setting','AdminSetting',False),('get','/admin/capacity',None,None,False),('get','/admin/users/{id}/records/{kind}',None,None,False),('post','/admin/reports/{id}/resolve','admin_block',None,False),('post','/admin/videos/{id}/restore','admin_block',None,False),('get','/admin/readiness',None,None,False),('get','/admin/ai-readiness',None,'AIReadiness',False),('get','/admin/records/{kind}',None,None,False),('post','/admin/users/{id}/restriction','admin_restriction',None,False),('post','/admin/videos/{id}/block','admin_block',None,False),
 ])
 # Creator reward lifecycle contracts; operational evidence remains admin-only.
-reward_money_fields=('lifetime_confirmed_cents','confirmed_unvested_cents','vested_cents','available_cents','legacy_pending_cents','payout_reserved_cents','paid_cents')
+reward_money_fields=('lifetime_confirmed_cents','confirmed_unvested_cents','vested_cents','available_cents','legacy_pending_cents','legacy_unbacked_cents','payout_reserved_cents','paid_cents')
 objects['RewardBalance']=obj({**{k:I for k in reward_money_fields},'currency':S,'held':B,'estimated_additional_cents':{'type':['integer','null']},'estimate_status':S,'calculated_at':S},(*reward_money_fields,'currency','held','estimated_additional_cents','estimate_status','calculated_at'))
 objects['RewardProgram']=obj({'enabled':B,'enrolled':B,'policy_version':S,'terms_version':S,'earning_window_days':I,'vesting_days':I,'confirmation':S,'payout_cadence':S,'individual_spending_cap':B,'currency':S,'estimate_is_guaranteed':B},('enabled','enrolled','policy_version','terms_version','earning_window_days','vesting_days','confirmation','payout_cadence'))
 objects['RewardVideo']=obj({'video_id':S,'title':S,'status':S,'reason_code':S,'first_published_at':{'type':['string','null']},'window_ends_at':{'type':['string','null']}},('video_id','title','status','reason_code','first_published_at','window_ends_at'))
@@ -153,6 +153,94 @@ routes.extend([
  ('get','/creator/rewards/program',None,'RewardProgram',False),('get','/creator/rewards/summary',None,'RewardBalance',False),('get','/creator/rewards/videos',None,None,False),('get','/creator/rewards/videos/{id}',None,None,False),('get','/creator/rewards/payouts',None,None,False),('post','/creator/rewards/enroll','reward_enroll',None,False),
  ('get','/admin/openapi.json',None,None,False),('get','/admin/rewards',None,None,False),('post','/admin/rewards/funding','reward_funding',None,False),('post','/admin/rewards/funding/{id}/reconcile','empty',None,False),('post','/admin/rewards/batches','reward_batch',None,False),('get','/admin/rewards/batches/{id}',None,None,False),('post','/admin/rewards/batches/{id}/confirm','empty',None,False),('post','/admin/rewards/users/{id}/hold','reward_hold',None,False),
 ])
+# Discovery, measured audience and sponsored campaigns.
+discovery_fields={'revision':I,'enabled':B,**{k:I for k in ('watch_cap','view_cap','view_weight','follow_weight','like_weight','history_weight','candidate_limit','title_weight','description_weight','page_limit','signal_limit','history_days','freshness_seconds','freshness_weight')},'synonyms':{'type':'object','maxProperties':100,'additionalProperties':{'type':'string','minLength':1,'maxLength':100}}}
+objects['DiscoveryPolicy']=obj(discovery_fields,tuple(k for k in discovery_fields if k!='synonyms'))
+objects['AdminObjectList']=obj({'items':{'type':'array','items':{'type':'object'}}},('items',))
+objects['DiscoveryIndexHealth']=obj({'fts_index_ready':B,'estimated_video_rows':I,'index_version':I,'maintenance':S,'cjk_analysis':S,'cache':S},('fts_index_ready','estimated_video_rows','index_version','maintenance','cjk_analysis','cache'))
+objects['DiscoveryAudience']=obj({'daily':{'type':'array','items':obj({'date':S,'measured_seconds':I,'accepted_seconds':I,'excluded_events':I,'unique_viewers':I,'organic_seconds':{'type':['integer','null']},'paid_seconds':{'type':['integer','null']}},('date','measured_seconds','accepted_seconds','excluded_events','unique_viewers','organic_seconds','paid_seconds'))},'privacy_minimum':I,'metric_version':I,'traffic_provenance':S},('daily','privacy_minimum','metric_version','traffic_provenance'))
+objects['DiscoveryPreview']=obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/Video'}},'next_cursor':S,'ranking':S,'history_used':B,'candidate_limit':I,'policy_revision':I},('items','next_cursor','ranking','history_used','candidate_limit','policy_revision'))
+objects['AudienceCorrection']=obj({'video_id':S,'views':I,'watch_seconds':I,'metric_version':I,'rebuilt_at':S,'view_correction_status':S},('video_id','views','watch_seconds','metric_version','rebuilt_at','view_correction_status'))
+objects['ResourceID']=obj({'id':S},('id',))
+campaign_fields={'id':S,'title':{'type':'string','minLength':1,'maxLength':200},'brief':{'type':'string','minLength':3,'maxLength':10000},'terms_version':S,'video_id':S,'source_id':S,'budget_cents':{'type':'integer','minimum':1,'maximum':100000000},'starts_at':{'type':'string','format':'date-time'},'ends_at':{'type':'string','format':'date-time'}}
+objects['SponsorCampaign']=obj(campaign_fields,tuple(campaign_fields))
+objects['SponsorCampaignList']=obj({'items':{'type':'array','items':obj({'campaign':{'$ref':'#/components/schemas/SponsorCampaign'},'accepted':B},('campaign','accepted'))}},('items',))
+objects['SponsorReport']=obj({'measured_paid_seconds':I,'accepted_paid_seconds':I,'sessions':I,'approved_obligations_cents':I,'settlement':S},('measured_paid_seconds','accepted_paid_seconds','sessions','approved_obligations_cents','settlement'))
+objects['SponsoredWatch']=obj({'id':S,'sponsored':{'type':'boolean','const':True},'disclosure':{'type':'string','const':'Sponsored'},'campaign_id':S},('id','sponsored','disclosure','campaign_id'))
+objects['SponsorAccepted']=obj({'accepted':B},('accepted',));objects['SponsorApproved']=obj({'approved':B},('approved',))
+requests['discovery_policy']=obj({'policy':{'$ref':'#/components/schemas/DiscoveryPolicy'},'reason':{'type':'string','minLength':3,'maxLength':1000}},('policy','reason'))
+requests['discovery_override']=obj({'video_id':S,'channel_id':S,'search_query':{'type':'string','maxLength':200},'weight':{'type':'integer','minimum':-10000000,'maximum':10000000},'expires_at':{'type':'string','format':'date-time'},'reason':{'type':'string','minLength':3,'maxLength':1000}},('weight','expires_at','reason'))
+requests['audience_exclusion']=obj({'event_id':S,'reason':{'type':'string','minLength':3,'maxLength':1000}},('event_id','reason'))
+requests['sponsor_campaign']=obj({'campaign':obj({k:v for k,v in campaign_fields.items() if k!='id'},tuple(k for k in campaign_fields if k!='id')),'reason':{'type':'string','minLength':3,'maxLength':1000}},('campaign','reason'))
+requests['sponsor_award']=obj({'cents':{'type':'integer','minimum':1},'evidence_reference':{'type':'string','minLength':3,'maxLength':1000}},('cents','evidence_reference'))
+requests['sponsor_accept']=obj({'terms_version':S},('terms_version',))
+requests['reward_batch']['properties'].update({'campaign_id':S,'campaign_award_id':S})
+routes.extend([
+ ('get','/admin/discovery/policy',None,'DiscoveryPolicy',False),('put','/admin/discovery/policy','discovery_policy','DiscoveryPolicy',False),
+ ('get','/admin/discovery/history',None,'AdminObjectList',False),('get','/admin/discovery/overrides',None,'AdminObjectList',False),('post','/admin/discovery/overrides','discovery_override','ResourceID',False),
+ ('get','/admin/discovery/preview',None,'DiscoveryPreview',False),('get','/admin/discovery/index',None,'DiscoveryIndexHealth',False),('get','/admin/discovery/audience',None,'DiscoveryAudience',False),('post','/admin/discovery/exclusions','audience_exclusion','AudienceCorrection',False),
+ ('get','/admin/campaigns',None,'SponsorCampaignList',False),('post','/admin/campaigns','sponsor_campaign','SponsorCampaign',False),('get','/admin/campaigns/{id}/report',None,'SponsorReport',False),('get','/admin/campaigns/{id}/awards',None,'AdminObjectList',False),('post','/admin/campaigns/{id}/awards','sponsor_award','ResourceID',False),('post','/admin/campaign-awards/{id}/approve','empty','SponsorApproved',False),
+ ('get','/creator/campaigns',None,'SponsorCampaignList',False),('post','/creator/campaigns/{id}/accept','sponsor_accept','SponsorAccepted',False),('post','/campaigns/{id}/watch','empty','SponsoredWatch',False),
+])
+
+exec((root/'scripts/cloud-reward-engine-contract.py').read_text(),globals())
+routes.extend([('post','/webhooks/stripe',None,None,True),('post','/webhooks/cryptorails',None,None,True),('post','/admin/export/{kind}','admin_block',None,False)])
+# Support, appeals, notifications and immutable late-evidence corrections.
+objects.setdefault('AdminObjectList',obj({'items':{'type':'array','items':{'type':'object'}},'limit':I},('items','limit')))
+objects.setdefault('ResourceID',obj({'id':S},('id',)))
+objects['RewardAction']=obj({k:B for k in ('created','approved','reviewed','resolved','proposed','read')})
+objects['RewardBalance']['properties']['reward_adjustments_cents']=I
+support_fields={'id':{'type':'string','minLength':1,'maxLength':128},'title':{'type':'string','minLength':1,'maxLength':120},'criteria':{'type':'string','minLength':1,'maxLength':2000},'source_id':S,'budget_cents':{'type':'integer','minimum':1,'maximum':100000000},'grant_credits':{'type':'integer','minimum':1,'maximum':1000000},'service_cost_cents':{'type':'integer','minimum':1,'maximum':1000000},'creator_cap':{'type':'integer','minimum':1,'maximum':10},'grant_cap':{'type':'integer','minimum':1,'maximum':10000},'expiry_days':{'type':'integer','minimum':1,'maximum':365},'minimum_publications':{'type':'integer','minimum':1,'maximum':100},'reason':{'type':'string','maxLength':2000}}
+requests['reward_support_program']=obj(support_fields,tuple(k for k in support_fields if k!='reason'))
+requests['reward_support_claim']=obj({'evidence':{'type':'string','minLength':1,'maxLength':2000}},('evidence',))
+requests['reward_support_reason']=obj({'reason':{'type':'string','minLength':1,'maxLength':2000}},('reason',))
+requests['reward_support_review']=obj({'reason':{'type':'string','minLength':1,'maxLength':2000},'approve':B},('reason','approve'))
+requests['reward_appeal']=obj({'subject':{'type':'string','enum':['eligibility','hold','allocation','support','payout']},'allocation_id':S,'evidence':{'type':'string','minLength':1,'maxLength':4000}},('subject','evidence'))
+requests['reward_appeal_resolution']=obj({'resolution':{'type':'string','minLength':1,'maxLength':2000},'upheld':B},('resolution','upheld'))
+correction_fields={'id':{'type':'string','minLength':1,'maxLength':128},'original_batch_id':S,'user_id':S,'cents':{'type':'integer','minimum':-100000000,'maximum':100000000,'not':{'const':0}},'source_id':S,'reason':{'type':'string','minLength':1,'maxLength':1000},'evidence_reference':{'type':'string','minLength':1,'maxLength':2000}}
+requests['reward_correction']=obj(correction_fields,('id','original_batch_id','user_id','cents','reason','evidence_reference'))
+requests['reward_correction_reason']=obj({'reason':{'type':'string','minLength':1,'maxLength':1000}},('reason',))
+objects['RewardAppeal']=obj({'id':S,'subject':S,'allocation_id':{'type':['string','null']},'evidence':S,'status':{'type':'string','enum':['open','upheld','declined']},'resolution':S,'created_at':S,'resolved_at':{'type':['string','null']}},('id','subject','allocation_id','evidence','status','resolution','created_at','resolved_at'))
+objects['RewardNotification']=obj({'id':S,'kind':{'type':'string','enum':['confirmation','hold','release','payout','appeal','support','correction']},'message':S,'read_at':{'type':['string','null']},'created_at':S},('id','kind','message','read_at','created_at'))
+objects['CreatorRewardCorrection']=obj({'id':S,'original_batch_id':S,'cents':I,'reason':S,'approved_at':S,'vesting_seconds':I},('id','original_batch_id','cents','reason','approved_at','vesting_seconds'))
+for name in ('RewardAppeal','RewardNotification','CreatorRewardCorrection'):
+ objects[name+'List']=obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/'+name}},'limit':I},('items','limit'))
+routes.extend([
+ ('get','/creator/rewards/support',None,'AdminObjectList',False),('post','/creator/rewards/support/{id}/claims','reward_support_claim','ResourceID',False),
+ ('get','/creator/rewards/appeals',None,'RewardAppealList',False),('post','/creator/rewards/appeals','reward_appeal','ResourceID',False),
+ ('get','/creator/rewards/notifications',None,'RewardNotificationList',False),('post','/creator/rewards/notifications/{id}/read','empty','RewardAction',False),
+ ('get','/creator/rewards/corrections',None,'CreatorRewardCorrectionList',False),
+ ('get','/admin/rewards/support',None,'AdminObjectList',False),('post','/admin/rewards/support','reward_support_program','RewardAction',False),
+ ('post','/admin/rewards/support/{id}/approve','reward_support_reason','RewardAction',False),('post','/admin/rewards/support/claims/{id}/review','reward_support_review','RewardAction',False),
+ ('get','/admin/rewards/appeals',None,'AdminObjectList',False),('post','/admin/rewards/appeals/{id}/resolve','reward_appeal_resolution','RewardAction',False),
+ ('get','/admin/rewards/corrections',None,'AdminObjectList',False),('post','/admin/rewards/corrections','reward_correction','RewardAction',False),('post','/admin/rewards/corrections/{id}/approve','reward_correction_reason','RewardAction',False),
+])
+
+# Independently approved commercial prices for prospective purchases.
+commercial_pack={'id':{'type':'string','pattern':'^[a-z0-9][a-z0-9_-]{0,63}$'},'name':{'type':'string','minLength':1,'maxLength':100},'credits':{'type':'integer','minimum':1,'maximum':100000000},'price_cents':{'type':'integer','minimum':100,'maximum':10000000},'currency':{'type':'string','const':'usd'}}
+objects['CommercialPack']=obj(commercial_pack,tuple(commercial_pack))
+commercial_fields={'packs':{'type':'array','minItems':1,'maxItems':20,'items':{'$ref':'#/components/schemas/CommercialPack'}},'target_gross_margin_bps':{'type':'integer','minimum':1000,'maximum':9000},'fee_reserve_bps':{'type':'integer','minimum':0,'maximum':5000},'media_reserve_bps':{'type':'integer','minimum':0,'maximum':5000}}
+objects['CommercialPolicy']=obj(commercial_fields,tuple(commercial_fields))
+objects['CommercialPreview']=obj({'minimum_unit_revenue_micros':{'type':'number'},'worst_pack_gross_margin_bps':I,'required_gross_margin_bps':I,'margin_ok':B,'basis':S},('minimum_unit_revenue_micros','worst_pack_gross_margin_bps','required_gross_margin_bps','margin_ok','basis'))
+objects['CommercialPolicyState']=obj({'policy':{'$ref':'#/components/schemas/CommercialPolicy'},'revision':I,'updated_at':{'type':['string','null']},'source':S,'preview':{'anyOf':[{'$ref':'#/components/schemas/CommercialPreview'},{'type':'null'}]},'preview_status':{'type':'string','enum':['ready','generation_policy_required']}},('policy','revision','updated_at','source','preview','preview_status'))
+requests['commercial_policy']=obj({'policy':{'$ref':'#/components/schemas/CommercialPolicy'},'revision':{'type':'integer','minimum':0},'reason':{'type':'string','minLength':3,'maxLength':1000}},('policy','revision','reason'))
+requests['commercial_preview']={'$ref':'#/components/schemas/CommercialPolicy'}
+requests['commercial_approve']=obj({'reason':{'type':'string','minLength':3,'maxLength':1000}},('reason',))
+routes.extend([
+ ('get','/admin/commercial-policy',None,'CommercialPolicyState',False),
+ ('put','/admin/commercial-policy','commercial_policy','ResourceID',False),
+ ('get','/admin/commercial-policy/history',None,'AdminObjectList',False),
+ ('get','/admin/commercial-policy/proposals',None,'AdminObjectList',False),
+ ('post','/admin/commercial-policy/preview','commercial_preview','CommercialPreview',False),
+ ('post','/admin/commercial-policy/proposals/{id}/approve','commercial_approve','RewardAction',False),
+])
+
+
+requests['legacy_backing_propose']=obj({'earning_id':S,'source_id':S,'reason':{'type':'string','minLength':3,'maxLength':1000},'evidence_reference':S},('earning_id','source_id','reason','evidence_reference'))
+requests['legacy_backing_approve']=obj({'reason':{'type':'string','minLength':3,'maxLength':1000}},('reason',))
+objects['LegacyBackingApproved']=obj({'approved':B},('approved',))
+routes.extend([('get','/admin/rewards/legacy-backing',None,'AdminObjectList',False),('post','/admin/rewards/legacy-backing','legacy_backing_propose','RewardProposalResult',False),('post','/admin/rewards/legacy-backing/{id}/approve','legacy_backing_approve','LegacyBackingApproved',False)])
+
 paths={}
 for method,path,body,response,anonymous in routes:
  params=[{'name':part[1:-1],'in':'path','required':True,'schema':S}for part in path.split('/')if part.startswith('{')]
@@ -164,13 +252,15 @@ for method,path,body,response,anonymous in routes:
 
  if path=='/projects/{project}/prompt-templates/{template}':op['parameters'].append({'name':'revision','in':'query','required':True,'schema':{'type':'integer','minimum':1}})
  if path=='/billing/history':op['parameters'].extend([{'name':'cursor','in':'query','schema':S},{'name':'provider','in':'query','schema':{'type':'string','enum':['all','stripe','cryptorails']}},{'name':'product','in':'query','schema':{'type':'string','enum':['all','credits','premium']}},{'name':'limit','in':'query','schema':{'type':'integer','minimum':1,'maximum':50,'default':20}}])
- if path=='/feed':op['parameters'].extend([{'name':n,'in':'query','schema':S} for n in ('q','category','filter','format','cursor')])
+ if path in ('/feed','/videos','/search','/admin/discovery/preview'):op['parameters'].extend([{'name':n,'in':'query','schema':S} for n in ('q','category','filter','format','cursor','rank')])
+ if path in ('/feed','/videos','/search') and method=='get':op['responses']['200']={'description':'Legacy requests return an array (up to 60); requests with format, rank or cursor return a paginated object (20 per page). All use the same effective discovery policy and access filters.','content':{'application/json':{'schema':{'oneOf':[{'type':'array','items':{'$ref':'#/components/schemas/Video'}},{'$ref':'#/components/schemas/DiscoveryPreview'}]}}}}
+ if path=='/admin/discovery/audience':op['parameters'].extend([{'name':k,'in':'query','schema':S,'description':'Supply exactly one video_id or channel_id; aggregate history covers 90 days.'} for k in ('video_id','channel_id')])
  if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':requests[body]}}}
- if response:
+ if response and not (path in ('/feed','/videos','/search') and method=='get'):
   schema={'$ref':'#/components/schemas/'+response.removesuffix('[]')}
   if response.endswith('[]'):schema={'type':'array','items':schema}
   op['responses']['201' if path in ('/auth/register','/profile/images') else '200']={'description':'Success','content':{'application/json':{'schema':schema}}}
- if path=='/feed':op['responses']['200']={'description':'Legacy array without format/cursor; format-filtered requests return items and next_cursor','content':{'application/json':{'schema':{'oneOf':[{'type':'array','items':{'$ref':'#/components/schemas/Video'}},obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/Video'}},'next_cursor':S},('items','next_cursor'))]}}}}
+ if path in ('/feed','/videos','/search','/admin/discovery/preview'):op['responses']['200']={'description':'Legacy array without format/cursor; format-filtered requests return items and next_cursor','content':{'application/json':{'schema':{'oneOf':[{'type':'array','items':{'$ref':'#/components/schemas/Video'}},obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/Video'}},'next_cursor':S},('items','next_cursor'))]}}}}
  if path.startswith('/auth/oauth/'):
   for param in op['parameters']:
    if param['name']=='provider':param['schema']={'type':'string','enum':['google','apple']}
@@ -194,7 +284,7 @@ for method,path,body,response,anonymous in routes:
   op['description']='Channel membership pricing is retired; use platform-wide Premium.'
   op['responses']['410']={'description':'Per-channel subscriptions are retired'}
  paths.setdefault(path,{})[method]=op
-contract={'openapi':'3.1.0','info':{'title':'VideoFlow Cloud API','version':'1.0.0'},'servers':[{'url':'/api/v1'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'videoflow_session'}},'schemas':objects}}
+contract={'openapi':'3.1.0','info':{'title':'6eek Cloud API','version':'1.0.0'},'servers':[{'url':'https://api.6eek.com/v1'},{'url':'/api/v1'}],'paths':paths,'components':{'securitySchemes':{'session':{'type':'apiKey','in':'cookie','name':'6eek_session'}},'schemas':objects}}
 (root/'api/openapi.json').write_text(json.dumps(contract,indent=2)+'\n')
 ts=['// Generated by scripts/generate-cloud-contract.py. Do not edit by hand.']
 for name,fields in schemas.items():
@@ -206,6 +296,6 @@ ts.append("export interface StripeCheckout { provider: 'stripe'; url: string; }\
 ts.append("export interface EditorDocument { revision: number; document: Record<string, unknown> | null; updated_at?: string; }")
 ts.append("export interface PipelineScene { title: string; prompt: string; duration: number; status: string; }\nexport interface PipelineProgress { stage: string; status: string; script: string; scenes: PipelineScene[]; }")
 ts.append("export type VideoVisibility = 'public' | 'unlisted' | 'private';\nexport type VideoAudience = 'free' | 'members';")
-ts.append("export interface RewardBalance { currency: string; lifetime_confirmed_cents: number; confirmed_unvested_cents: number; vested_cents: number; available_cents: number; legacy_pending_cents: number; payout_reserved_cents: number; paid_cents: number; held: boolean; estimated_additional_cents: number | null; estimate_status: string; calculated_at: string; }\nexport interface RewardProgram { enabled: boolean; enrolled: boolean; policy_version: string; terms_version: string; earning_window_days: number; vesting_days: number; confirmation: string; payout_cadence: string; }\nexport interface RewardVideo { video_id: string; title: string; status: string; reason_code: string; first_published_at: string | null; window_ends_at: string | null; }")
+ts.append("export interface RewardBalance { currency: string; lifetime_confirmed_cents: number; confirmed_unvested_cents: number; vested_cents: number; available_cents: number; legacy_pending_cents: number; legacy_unbacked_cents: number; payout_reserved_cents: number; paid_cents: number; reward_adjustments_cents: number; held: boolean; estimated_additional_cents: number | null; estimate_status: string; calculated_at: string; }\nexport interface RewardProgram { enabled: boolean; enrolled: boolean; policy_version: string; terms_version: string; earning_window_days: number; vesting_days: number; confirmation: string; payout_cadence: string; }\nexport interface RewardVideo { video_id: string; title: string; status: string; reason_code: string; first_published_at: string | null; window_ends_at: string | null; }")
 (root/('frontend/src/lib/cloud/generated.ts' if (root/'frontend').exists() else 'api/generated.ts')).write_text('\n\n'.join(ts)+'\n')
 print(f'Generated {len(routes)} operations and {len(objects)} shared types.')

@@ -1,4 +1,4 @@
-VideoFlow desktop — start here
+6eek desktop — start here
 
 1. Open https://github.com/JienWeng/videoflow-go/releases
 2. Download the Electron package for your computer:
@@ -6,16 +6,16 @@ VideoFlow desktop — start here
    Intel Mac: mac-x64 DMG.
    Ubuntu/Debian Linux, most PCs: linux-amd64 DEB.
    Ubuntu/Debian Linux, ARM computers: linux-arm64 DEB.
-3. Mac: open the DMG, drag VideoFlow to Applications, then open VideoFlow.
+3. Mac: open the DMG, drag 6eek to Applications, then open 6eek.
    Linux: open the DEB with your software installer, install it, then open
-   VideoFlow from your applications menu. System installation can request
+   6eek from your applications menu. System installation can request
    your administrator password and install standard desktop libraries.
-4. Open Settings in VideoFlow. Paste your OpenRouter API key and test it.
+4. Open Settings in 6eek. Paste your OpenRouter API key and test it.
    You need an OpenRouter account with credits and internet access for AI.
 5. Create a project and generate your video.
 
 You do not need to install Node, Go, Python, FFmpeg or FFprobe yourself.
-Closing VideoFlow closes the local engine too. You do not keep a terminal
+Closing 6eek closes the local engine too. You do not keep a terminal
 or a separate server running.
 
 Use the rebuilt macOS 0.3.1 adhoc-preview release. Its signatures are valid,
@@ -28,8 +28,8 @@ permitting Chromium user namespaces. AppImage can also require FUSE.
 Prefer the DEB installer on Ubuntu/Debian for automatic sandbox integration.
 
 Your projects, media and saved key stay in your computer's user data folder:
-  Mac: ~/Library/Application Support/VideoFlow
-  Linux: ~/.config/VideoFlow (or $XDG_CONFIG_HOME/VideoFlow)
+  Mac: ~/Library/Application Support/6eek
+  Linux: ~/.config/6eek (or $XDG_CONFIG_HOME/6eek)
 Back up that folder and keep it private. It contains your saved API key.
 New app versions use the same data folder. Avoid running the old browser
 launcher and Electron simultaneously against the same data directory.

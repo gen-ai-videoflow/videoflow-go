@@ -30,4 +30,4 @@ with tempfile.TemporaryDirectory(prefix='videoflow-electron-smoke-') as temp:
         time.sleep(.1)
     else:
         raise AssertionError('Electron quit left the Go engine running')
-    print('Packaged Electron window rendered VideoFlow and quit without leaving its Go engine running.')
+    print('Packaged Electron window rendered 6eek and quit without leaving its Go engine running.')

@@ -1,0 +1,1 @@
+CREATE INDEX cloud_commercial_history_created ON cloud_commercial_history(created_at DESC);

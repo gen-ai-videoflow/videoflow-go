@@ -2,7 +2,7 @@
 
 [Handbook](README.md) · Previous: [How it works](01-how-it-works.md) · Next: [Providers](03-providers.md)
 
-You will run two processes: a Python API on port 8000 and the frontend on port 5173. These instructions use the existing VideoFlow repository; do not create a new Svelte project or a `backend` directory.
+You will run two processes: a Python API on port 8000 and the frontend on port 5173. These instructions use the existing 6eek repository; do not create a new Svelte project or a `backend` directory.
 
 ## 1. Install the prerequisites
 
@@ -32,7 +32,7 @@ uv python install 3.12
 
 A GPU is not required by the application: AI media generation is remote and the caption service uses CPU transcription. Initial package and speech-model downloads require internet access. Linux was used for this audit; native macOS and Windows installation has not been exercised here.
 
-## 2. Download VideoFlow
+## 2. Download 6eek
 
 Choose a folder where you keep projects, then run:
 

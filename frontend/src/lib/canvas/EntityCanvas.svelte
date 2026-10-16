@@ -169,7 +169,7 @@
       if (firstLoad) {
         try {
           coachDismissed =
-            localStorage.getItem("videoflow.canvas.coach") === "1";
+            localStorage.getItem("6eek.canvas.coach") === "1";
         } catch {
           coachDismissed = false;
         }
@@ -239,7 +239,7 @@
   function dismissCoach() {
     coachDismissed = true;
     try {
-      localStorage.setItem("videoflow.canvas.coach", "1");
+      localStorage.setItem("6eek.canvas.coach", "1");
     } catch {
       // ignore storage failures — the coachmark just reappears next load
     }

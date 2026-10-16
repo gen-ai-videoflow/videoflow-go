@@ -16,7 +16,7 @@ class PayloadTests(unittest.TestCase):
             for name in module.REQUIRED:
                 if name == missing:
                     continue
-                item = zipfile.ZipInfo('VideoFlow/' + name)
+                item = zipfile.ZipInfo('6eek/' + name)
                 item.external_attr = 0o100755 << 16
                 content = bytearray(32)
                 content[:6] = b'\x7fELF\x02\x01'
@@ -34,7 +34,7 @@ class PayloadTests(unittest.TestCase):
             self.assertTrue((root / 'payload/media-sources.zip').is_file())
 
     def test_rejects_traversal_and_private_data(self):
-        for extra in ['VideoFlow/../../escape', '/VideoFlow/escape', 'VideoFlow/db.sqlite', 'VideoFlow/.env', 'VideoFlow/storage/a']:
+        for extra in ['6eek/../../escape', '/6eek/escape', '6eek/db.sqlite', '6eek/.env', '6eek/storage/a']:
             with self.subTest(extra=extra), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 with self.assertRaises(ValueError):

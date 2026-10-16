@@ -168,7 +168,7 @@
       .then(([user, p]) => {
         if (!mounted) return;
         projects = p;
-        storageKey = `videoflow.cloud.project.${user.id}`;
+        storageKey = `6eek.cloud.project.${user.id}`;
         const saved = localStorage.getItem(storageKey);
         select(
           selectStudioProject(
@@ -293,7 +293,7 @@
                   />{/key}
               </div>
               <p class="mb-5 text-sm text-muted-foreground">
-                Describe your story. Review the credit quote before VideoFlow
+                Describe your story. Review the credit quote before 6eek
                 writes the screenplay, generates the clips and assembles your
                 video.
               </p>
@@ -386,7 +386,7 @@
                   >
                 </div>
                 <p class="text-xs text-muted-foreground">
-                  Up to 30 seconds total. Models are managed by VideoFlow.
+                  Up to 30 seconds total. Models are managed by 6eek.
                   Generation credits are separate from Premium.
                 </p>
                 <Button

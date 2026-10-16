@@ -32,7 +32,7 @@
     if (cloudMode) return watchTheme();
     initActivity();
     // ModeWatcher-style: keep <html> in sync with the saved theme preference
-    // (the Settings appearance toggle writes localStorage['videoflow.theme']).
+    // (the Settings appearance toggle writes localStorage['6eek.theme']).
     // app.html applied the initial value pre-paint; this reacts to changes.
     const stopTheme = watchTheme();
     return stopTheme;

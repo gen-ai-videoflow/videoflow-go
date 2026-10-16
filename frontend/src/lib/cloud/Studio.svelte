@@ -78,7 +78,7 @@
     kind=initialSection;
     void Promise.all([request('/me'),request('/projects')]).then(([user,value])=>{
       projects=list(value);
-      storageKey=`videoflow.cloud.project.${user.id}`;
+      storageKey=`6eek.cloud.project.${user.id}`;
       projectId=selectStudioProject(projects,page.url.searchParams.get('project'),localStorage.getItem(storageKey));
     }).catch(e=>error=e.message).finally(()=>initialLoading=false);
   });
@@ -185,7 +185,7 @@
       const value=await request(`/projects/${encodeURIComponent(projectId)}/export`);
       const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'});
       const objectUrl=URL.createObjectURL(blob);
-      const anchor=document.createElement('a');anchor.href=objectUrl;anchor.download=`videoflow-project-${projectId}.json`;anchor.click();
+      const anchor=document.createElement('a');anchor.href=objectUrl;anchor.download=`6eek-project-${projectId}.json`;anchor.click();
       setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
     } catch(e){error=(e as Error).message;}finally{saving=false;}
   }
@@ -195,7 +195,7 @@
     try {
       if(file.size>1000000)throw new Error('Choose a project JSON file smaller than 1 MB.');
       let value:any;try{value=JSON.parse(await file.text());}catch{throw new Error('This file is not valid JSON.');}
-      if(value.version!==1||!value.project||!Array.isArray(value.entities))throw new Error('Choose a VideoFlow version 1 project export.');
+      if(value.version!==1||!value.project||!Array.isArray(value.entities))throw new Error('Choose a 6eek version 1 project export.');
       const result=await request('/projects/import',value);
       projects=list(await request('/projects'));
       dirty=false;projectId=result.id || result.project?.id || result.project_id || projects.at(-1)?.id || projectId;

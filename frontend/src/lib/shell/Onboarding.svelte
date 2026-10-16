@@ -2,7 +2,7 @@
   /**
    * First-run welcome overlay. Points users to the simple Create video flow,
    * then gets out of the way. Dismissal is
-   * persisted in localStorage['videoflow.onboarded'] so it shows exactly once.
+   * persisted in localStorage['6eek.onboarded'] so it shows exactly once.
    *
    * Rendered only on the Studio route (see +page.svelte). Closing — via the
    * button, the backdrop, or Escape — sets the flag; "Show me around" also
@@ -17,7 +17,7 @@
     X
   } from '@lucide/svelte';
 
-  const STORAGE_KEY = 'videoflow.onboarded';
+  const STORAGE_KEY = '6eek.onboarded';
 
   let { onpalette }: { onpalette?: () => void } = $props();
 
@@ -66,7 +66,7 @@
 
   const steps = [
     'Describe your story and choose a visual style.',
-    'VideoFlow builds the scenes, dialogue, visuals, and render.',
+    '6eek builds the scenes, dialogue, visuals, and render.',
     'Open the advanced workspace only when you want manual control.'
   ];
 </script>
@@ -98,7 +98,7 @@
 
       <div class="mb-1 flex items-center gap-2">
         <Sparkles class="size-5 text-primary" />
-        <h2 id="onboarding-title" class="text-lg font-semibold">Welcome to VideoFlow</h2>
+        <h2 id="onboarding-title" class="text-lg font-semibold">Welcome to 6eek</h2>
       </div>
       <p class="mb-5 text-sm text-muted-foreground">
         Start with one story prompt. The rest is automatic.

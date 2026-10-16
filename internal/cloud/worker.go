@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/providers"
 )
 
 type Worker struct {

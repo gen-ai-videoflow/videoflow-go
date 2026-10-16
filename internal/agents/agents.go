@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/providers"
 )
 
 type AgentEngine struct {
@@ -181,7 +181,7 @@ type ChatIntentResponse struct {
 }
 
 func (a *AgentEngine) Chat(ctx context.Context, message string, history []map[string]string) (*ChatIntentResponse, error) {
-	system := `You are the VideoFlow Studio assistant. Help the user direct their story, build characters, scenes, and shots.
+	system := `You are the 6eek Studio assistant. Help the user direct their story, build characters, scenes, and shots.
 Respond in JSON with a natural conversational 'reply', and an optional 'action' (create_script, add_scene, none).`
 
 	historyBytes, _ := json.Marshal(history)

@@ -1,4 +1,4 @@
-# VideoFlow
+# 6eek
 
 <!-- impeccable:product-schema 1 -->
 
@@ -12,7 +12,7 @@ Viewers who mainly watch, discover and follow creators; creators who make videos
 
 ## Product Purpose
 
-Combine a visual AI video creation workspace with a video publishing and viewing platform. Users can watch standard videos and Shorts, manage their account, publish finished Studio outputs or uploaded videos on VideoFlow, and download their own finished outputs.
+Combine a visual AI video creation workspace with a video publishing and viewing platform. Users can watch standard videos and Shorts, manage their account, publish finished Studio outputs or uploaded videos on 6eek, and download their own finished outputs.
 
 ## Positioning
 
@@ -20,11 +20,11 @@ A visual canvas for arranging scenes, characters and shots, connected to creator
 
 ## Operating Context
 
-SvelteKit/shadcn-svelte frontend and Go API, published as private videoflow-web and videoflow-api repositories under gen-ai-videoflow. Local preview is available through Tailscale. AWS deployment and live payment activation have been deferred by the user. Existing cloud integrations and local tests are not evidence of deployed production media delivery.
+SvelteKit/shadcn-svelte frontend and Go API, published as private 6eek-web and videoflow-api repositories under gen-ai-videoflow. Local preview is available through Tailscale. AWS deployment and live payment activation have been deferred by the user. Existing cloud integrations and local tests are not evidence of deployed production media delivery.
 
 ## Capabilities and Constraints
 
-- Preserve the original VideoFlow Studio canvas and working creation logic. Story, Canvas and Edit share project context; Resources supports them.
+- Preserve the original 6eek Studio canvas and working creation logic. Story, Canvas and Edit share project context; Resources supports them.
 - The public cloud user guide at /help and its downloadable Markdown share one content source, separate from the desktop handbook.
 - Browsing, settings and Studio have distinct navigation and task contexts.
 - Platform-wide Premium viewing is separate from generation credits and free following. No per-channel paid membership pricing.
@@ -38,7 +38,7 @@ SvelteKit/shadcn-svelte frontend and Go API, published as private videoflow-web 
 
 ## Brand Commitments
 
-VideoFlow name; current interface and original canvas as visual authority; shadcn login-02/signup-02 composition and consistent recovery layouts; public profile based on user-profile1 adapted to Svelte. User requested familiar YouTube-like watching and Shorts behaviour, not a replacement brand.
+6eek name; current interface and original canvas as visual authority; shadcn login-02/signup-02 composition and consistent recovery layouts; public profile based on user-profile1 adapted to Svelte. User requested familiar YouTube-like watching and Shorts behaviour, not a replacement brand.
 
 ## Evidence on Hand
 
@@ -52,7 +52,7 @@ Current implementation in frontend/src/lib/cloud and internal/cloud; product-gap
 4. Show actual processing, payment and eligibility state, never optimistic financial or publication claims.
 5. Make one source usable for publication and authorised download without unnecessary re-uploading.
 
-Brand authority: the user-approved gen-ai-videoflow/landing-page repository supplies the VideoFlow SVG logo and signal-orange/warm-ink/bone palette. Preserve the existing shadcn layouts and canvas; the approved change is logo/colour alignment, not a typography or layout replacement.
+Brand authority: the user-approved gen-ai-videoflow/landing-page repository supplies the 6eek SVG logo and signal-orange/warm-ink/bone palette. Preserve the existing shadcn layouts and canvas; the approved change is logo/colour alignment, not a typography or layout replacement.
 
 ## Progressive disclosure
 

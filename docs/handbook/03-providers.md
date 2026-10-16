@@ -1,6 +1,6 @@
 # Configure OpenRouter
 
-VideoFlow Go uses OpenRouter for all AI tasks: story planning, scripts, shots, chat, image generation, character references, visual recognition, frame QA, video generation, and speech transcription. FFmpeg performs local frame extraction, audio extraction and caption burning; it is not an AI provider.
+6eek Go uses OpenRouter for all AI tasks: story planning, scripts, shots, chat, image generation, character references, visual recognition, frame QA, video generation, and speech transcription. FFmpeg performs local frame extraction, audio extraction and caption burning; it is not an AI provider.
 
 ## Setup
 

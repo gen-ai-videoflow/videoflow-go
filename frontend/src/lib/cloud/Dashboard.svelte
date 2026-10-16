@@ -3,8 +3,8 @@
  let {user}:{user:any}=$props();let projects=$state<any[]>([]),jobs=$state<any[]>([]),credits=$state<any>(null),project=$state(''),loading=$state(true),error=$state('');let alive=true;
  const current=$derived(projects.find(p=>p.id===project));
  onMount(()=>{void load();return()=>{alive=false;};});
- async function load(){loading=true;error='';try{const [p,j,c]=await Promise.allSettled([request('/projects'),request('/jobs'),request('/credits')]);if(!alive)return;if(p.status==='rejected')throw p.reason;projects=p.value;project=selectStudioProject(projects,project,localStorage.getItem(`videoflow.cloud.project.${user.id}`));if(j.status==='fulfilled')jobs=j.value.slice(0,4);if(c.status==='fulfilled')credits=c.value;}catch(e){if(alive)error=(e as Error).message;}finally{if(alive)loading=false;}}
- function choose(id:string){project=id;localStorage.setItem(`videoflow.cloud.project.${user.id}`,id);}
+ async function load(){loading=true;error='';try{const [p,j,c]=await Promise.allSettled([request('/projects'),request('/jobs'),request('/credits')]);if(!alive)return;if(p.status==='rejected')throw p.reason;projects=p.value;project=selectStudioProject(projects,project,localStorage.getItem(`6eek.cloud.project.${user.id}`));if(j.status==='fulfilled')jobs=j.value.slice(0,4);if(c.status==='fulfilled')credits=c.value;}catch(e){if(alive)error=(e as Error).message;}finally{if(alive)loading=false;}}
+ function choose(id:string){project=id;localStorage.setItem(`6eek.cloud.project.${user.id}`,id);}
 </script>
 <div class="studio-dashboard"><header class="dashboard-heading"><div><h1>Your studio</h1><p>A place for your next video.</p></div><Button href="/projects"><Plus class="size-4"/>New project</Button></header>
 {#if error}<div class="cloud-alert" role="alert">{error}<Button variant="ghost" onclick={load}>Try again</Button></div>{/if}

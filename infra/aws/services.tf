@@ -109,6 +109,10 @@ resource "aws_ecs_task_definition" "services" {
         }, {
         name = "PUBLIC_ORIGIN", value = var.public_origin
         }, {
+        name = "SESSION_COOKIE_DOMAIN", value = var.session_cookie_domain
+        }, {
+        name = "BROWSER_ORIGINS", value = join(",", var.browser_origins)
+        }, {
         name = "S3_BUCKET_ANALYTICS", value = aws_s3_bucket.media["analytics"].id
         }, {
         name = "VIDEO_UPLOADS_ENABLED", value = tostring(var.video_uploads_enabled)

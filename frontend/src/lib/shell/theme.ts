@@ -2,22 +2,22 @@
  * Theme plumbing shared by the +layout ModeWatcher and the Settings
  * appearance toggle.
  *
- * The source of truth is localStorage['videoflow.theme'] which is one of
+ * The source of truth is localStorage['6eek.theme'] which is one of
  * 'light' | 'dark' | 'system' (default 'dark', so the app keeps its current
  * look when nothing is set). app.html applies the saved value before first
  * paint to avoid a flash; this module keeps the <html> class in sync while the
  * app is running and lets any surface change the preference.
  *
  * Cross-component sync: writing the preference dispatches a window
- * 'videoflow:theme' event (same-tab) — the native 'storage' event only fires
+ * '6eek:theme' event (same-tab) — the native 'storage' event only fires
  * in *other* tabs — so the Settings toggle and the layout stay in agreement
  * without importing each other.
  */
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export const THEME_KEY = 'videoflow.theme';
-const THEME_EVENT = 'videoflow:theme';
+export const THEME_KEY = '6eek.theme';
+const THEME_EVENT = '6eek:theme';
 
 /** Read the saved preference, defaulting to dark. SSR-safe (returns 'dark'). */
 export function getTheme(): Theme {

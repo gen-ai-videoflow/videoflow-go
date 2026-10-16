@@ -19,7 +19,7 @@ class Engine {
     });
     const url = await new Promise((resolve, reject) => {
       let done = false;
-      const timer = setTimeout(() => finish(new Error('VideoFlow engine startup timed out')), this.timeout);
+      const timer = setTimeout(() => finish(new Error('6eek engine startup timed out')), this.timeout);
       const finish = (error, value) => {
         if (done) return;
         done = true;
@@ -27,14 +27,14 @@ class Engine {
         this.abortStart = null;
         error ? reject(error) : resolve(value);
       };
-      this.abortStart = () => finish(new Error('VideoFlow engine stopped during startup'));
+      this.abortStart = () => finish(new Error('6eek engine stopped during startup'));
       this.child.once('error', err => finish(err));
-      this.child.once('exit', code => finish(new Error(`VideoFlow engine exited (${code})`)));
+      this.child.once('exit', code => finish(new Error(`6eek engine exited (${code})`)));
       for (const stream of [this.child.stdout, this.child.stderr]) {
         let buffer = '';
         stream.on('data', chunk => {
           buffer = (buffer + chunk.toString()).slice(-8192);
-          const match = buffer.match(/VideoFlow ready at (http:\/\/127\.0\.0\.1:[1-9]\d*)\r?\n/);
+          const match = buffer.match(/6eek ready at (http:\/\/127\.0\.0\.1:[1-9]\d*)\r?\n/);
           if (match) finish(null, match[1]);
         });
       }
@@ -42,11 +42,11 @@ class Engine {
     try {
       const response = await this.request(url + '/api/health', {signal: AbortSignal.timeout(10000)});
       const health = await response.json();
-      if (!response.ok || health.status !== 'ok' || health.server !== 'videoflow-go-v1' || !health.media_ready) {
-        throw new Error('Bundled VideoFlow engine or media tools failed their health check');
+      if (!response.ok || health.status !== 'ok' || health.server !== '6eek-go-v1' || !health.media_ready) {
+        throw new Error('Bundled 6eek engine or media tools failed their health check');
       }
       if (this.stopping || this.child.exitCode !== null || this.child.signalCode !== null) {
-        throw new Error('VideoFlow engine stopped during startup');
+        throw new Error('6eek engine stopped during startup');
       }
       return url;
     } catch (error) { await this.stop(); throw error; }

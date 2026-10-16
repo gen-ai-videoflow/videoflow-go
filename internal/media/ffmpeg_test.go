@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 )
 
 func TestAudioExtractionAndCaptionBurn(t *testing.T) {
@@ -53,7 +53,7 @@ func TestCaptionBurnUsesBundledFont(t *testing.T) {
 	if os.PathSeparator != '/' {
 		t.Skip("Unix media package")
 	}
-	root := filepath.Join(t.TempDir(), "VideoFlow with spaces")
+	root := filepath.Join(t.TempDir(), "6eek with spaces")
 	if err := os.MkdirAll(filepath.Join(root, "fonts"), 0700); err != nil {
 		t.Fatal(err)
 	}

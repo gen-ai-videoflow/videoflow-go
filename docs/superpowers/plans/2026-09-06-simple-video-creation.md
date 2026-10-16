@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a low-friction Create video flow that orchestrates the existing VideoFlow pipeline behind one guided action.
+**Goal:** Add a low-friction Create video flow that orchestrates the existing 6eek pipeline behind one guided action.
 
 **Architecture:** Add a small video-generation service that sequences existing scene, conversation, storyboard, and render services inside the existing background operation runner. Add a focused Svelte Create route and make it the primary navigation entry while leaving advanced pages intact.
 
@@ -139,7 +139,7 @@ Replace the multi-step onboarding card with one primary link to `/create` and on
 
 - [ ] **Step 3: Update onboarding copy.**
 
-Describe the simple path: “Describe a story → VideoFlow builds the scenes and render.” Do not list every internal stage.
+Describe the simple path: “Describe a story → 6eek builds the scenes and render.” Do not list every internal stage.
 
 - [ ] **Step 4: Run frontend verification.**
 

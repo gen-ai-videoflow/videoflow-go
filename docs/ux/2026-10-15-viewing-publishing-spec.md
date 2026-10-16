@@ -1,4 +1,4 @@
-# VideoFlow settings, watching, Shorts and publishing
+# 6eek settings, watching, Shorts and publishing
 
 Status: proposed detailed scope for review. User confirmed both generated Studio outputs and uploaded files can be published, and that the current shadcn interface should be extended directly without mockups. The existing visual identity and original canvas are binding. Upload support is in scope as a separate deliverable. Numeric upload limits, Shorts thresholds and view-policy changes remain proposals. This document does not authorise production deployment.
 
@@ -6,7 +6,7 @@ Status: proposed detailed scope for review. User confirmed both generated Studio
 
 One account can watch and create. Watching never requires creator onboarding or purchasing generation credits. Free following and one platform-wide Premium entitlement remain distinct; there are no per-channel paid subscriptions. The platform selects generation models. AWS deployment, live payments and rewards activation remain deferred.
 
-Use familiar viewing conventions while retaining VideoFlow branding. Preserve the original canvas, not a replacement editor. Do not claim every interface is correct before reviewing real populated states.
+Use familiar viewing conventions while retaining 6eek branding. Preserve the original canvas, not a replacement editor. Do not claim every interface is correct before reviewing real populated states.
 
 Visitor modes: settings and Studio are Operate; standard watch and Shorts are Experience with familiar, accessible controls; discovery supports choosing something to watch. These are surface behaviours, not separate visual identities.
 
@@ -81,7 +81,7 @@ Feed state: cursor-based pagination, deduplicate IDs, retain short-term seen IDs
 
 Canonical flow:
 
-Studio project → quote/confirm generation → processing → finished output → preview → **Publish on VideoFlow** or **Download MP4**.
+Studio project → quote/confirm generation → processing → finished output → preview → **Publish on 6eek** or **Download MP4**.
 
 The finished-output page is owner-only and carries the completed job/source, output duration/orientation and real processing status. Downloading does not publish. Publishing does not require downloading/re-uploading. Both actions remain available after either one succeeds; an existing publication opens Edit publication rather than making a duplicate.
 

@@ -1,4 +1,4 @@
-# VideoFlow Studio — chat-first frontend with editable entity canvas
+# 6eek Studio — chat-first frontend with editable entity canvas
 
 Date: 2026-06-10
 Status: approved (brainstormed with user)

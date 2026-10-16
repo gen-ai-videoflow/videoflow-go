@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"videoflow-go/internal/agents"
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/events"
-	"videoflow-go/internal/jobs"
-	"videoflow-go/internal/media"
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/agents"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/events"
+	"6eek-go/internal/jobs"
+	"6eek-go/internal/media"
+	"6eek-go/internal/providers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -107,7 +107,7 @@ func (s *Server) setupRoutes() {
 			"text_model":  s.cfg.OpenRouterTextModel,
 			"image_model": s.routes().MediaModel("image"),
 			"video_model": s.routes().MediaModel("video"),
-			"server":      "videoflow-go-v1",
+			"server":      "6eek-go-v1",
 		}
 		writeJSON(w, http.StatusOK, resp)
 	})

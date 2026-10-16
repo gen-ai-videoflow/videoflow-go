@@ -146,7 +146,7 @@
     } catch {
       /* backend down — still keep history under the fallback key */
     }
-    const key = `videoflow.chat.${projectId}`;
+    const key = `6eek.chat.${projectId}`;
     try {
       const raw = sessionStorage.getItem(key);
       const saved = raw ? JSON.parse(raw) : null;

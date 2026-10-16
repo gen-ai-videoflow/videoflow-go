@@ -3,9 +3,9 @@ package routing
 import (
 	"path/filepath"
 	"testing"
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/models"
 )
 
 func TestLegacyConnectionCannotLeakKey(t *testing.T) {

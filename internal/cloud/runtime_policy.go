@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"net/http"
 	"regexp"
 	"strings"
@@ -46,7 +45,7 @@ func runtimePolicyFromConfig(c Config) RuntimePolicy {
 
 var runtimeModelID = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/-]{1,159}$`)
 
-func validateRuntimePolicy(p RuntimePolicy) error {
+func validateRuntimePolicyStructure(p RuntimePolicy) error {
 	if p.CreditsPerSecond < 1 || p.CreditsPerSecond > 10000 || p.StoryCredits < 1 || p.StoryCredits > 1000000 || p.AssemblyCredits < 1 || p.AssemblyCredits > 1000000 || p.ProviderDailyBudgetMicros < 0 || p.ProviderDailyBudgetMicros > 1000000000 || p.ProviderMaxCostMicros < 0 || p.ProviderMaxCostMicros > 100000000 || p.StoryMaxCostMicros < 0 || p.StoryMaxCostMicros > 10000000 || p.PremiumPriceCents < 0 || p.PremiumPriceCents > 100000 || (p.PremiumPriceCents > 0 && p.PremiumPriceCents < 100) || p.MaxActiveJobs < 1 || p.MaxActiveJobs > 20 {
 		return ErrValidation
 	}
@@ -68,36 +67,47 @@ func validateRuntimePolicy(p RuntimePolicy) error {
 	if len(p.StoryModels) > 0 && (p.StoryMaxCostMicros < 1 || p.ProviderDailyBudgetMicros < p.StoryMaxCostMicros || p.ProviderMaxCostMicros <= p.StoryMaxCostMicros) {
 		return ErrValidation
 	}
-	// Fixed credit packs define the lowest unit revenue. Require a minimum 20%
-	// revenue/cost buffer against approved provider ceilings for newly sold work.
-	unit := new(big.Rat)
-	for i, pack := range Packs {
-		value := big.NewRat(pack.PriceCents*10000, pack.Credits)
-		if i == 0 || value.Cmp(unit) < 0 {
-			unit = value
-		}
-	}
-	enough := func(credits, cost int64) bool {
-		return new(big.Rat).Mul(unit, big.NewRat(credits, 1)).Cmp(big.NewRat(cost*120, 100)) >= 0
-	}
-	if !enough(p.StoryCredits, p.StoryMaxCostMicros) || !enough(p.CreditsPerSecond*5, p.ProviderMaxCostMicros) {
-		return fmt.Errorf("%w: credit prices need at least a 20%% provider-cost buffer", ErrValidation)
-	}
 	return nil
 }
+func validateRuntimePolicy(p RuntimePolicy) error {
+	if err := validateRuntimePolicyStructure(p); err != nil {
+		return err
+	}
+	return validateCommercialMargin(p, DefaultCommercialPolicy())
+}
+
 func (s *Store) runtimePolicy(ctx context.Context, base Config) (RuntimePolicyRecord, error) {
 	record := RuntimePolicyRecord{Policy: runtimePolicyFromConfig(base), Source: "deployment bootstrap"}
 	var raw []byte
 	var updated time.Time
 	err := s.DB.QueryRowContext(ctx, `SELECT policy,revision,updated_at FROM cloud_runtime_policy WHERE id=true`).Scan(&raw, &record.Revision, &updated)
 	if err == sql.ErrNoRows {
+		commercial, e := s.CommercialPolicy(ctx)
+		if e != nil {
+			return record, e
+		}
+		if commercial.Revision > 0 && (base.ProviderMaxCostMicros > 0 || base.StoryMaxCostMicros > 0) {
+			if e = validateRuntimePolicyStructure(record.Policy); e != nil {
+				return record, e
+			}
+			if e = validateCommercialMargin(record.Policy, commercial.Policy); e != nil {
+				return record, e
+			}
+		}
 		return record, nil
 	}
 	if err != nil {
 		return record, err
 	}
-	if json.Unmarshal(raw, &record.Policy) != nil || validateRuntimePolicy(record.Policy) != nil {
+	if json.Unmarshal(raw, &record.Policy) != nil || validateRuntimePolicyStructure(record.Policy) != nil {
 		return record, ErrValidation
+	}
+	commercial, e := s.CommercialPolicy(ctx)
+	if e != nil {
+		return record, e
+	}
+	if e = validateCommercialMargin(record.Policy, commercial.Policy); e != nil {
+		return record, e
 	}
 	record.UpdatedAt = &updated
 	record.Source = "versioned runtime policy"
@@ -131,7 +141,7 @@ func (s *Server) effectiveConfig(ctx context.Context) (Config, error) {
 }
 func (s *Store) saveRuntimePolicy(ctx context.Context, actor string, revision int64, policy RuntimePolicy, reason string) (RuntimePolicyRecord, error) {
 	var out RuntimePolicyRecord
-	if validateRuntimePolicy(policy) != nil || revision < 0 || len(strings.TrimSpace(reason)) < 3 || len(reason) > 1000 {
+	if validateRuntimePolicyStructure(policy) != nil || revision < 0 || len(strings.TrimSpace(reason)) < 3 || len(reason) > 1000 {
 		return out, ErrValidation
 	}
 	tx, err := s.DB.BeginTx(ctx, nil)
@@ -141,6 +151,13 @@ func (s *Store) saveRuntimePolicy(ctx context.Context, actor string, revision in
 	defer tx.Rollback()
 	if _, err = tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(814037238)`); err != nil {
 		return out, err
+	}
+	commercial, e := commercialPolicyRead(ctx, tx)
+	if e != nil {
+		return out, e
+	}
+	if e = validateCommercialMargin(policy, commercial.Policy); e != nil {
+		return out, e
 	}
 	var current int64
 	err = tx.QueryRowContext(ctx, `SELECT revision FROM cloud_runtime_policy WHERE id=true FOR UPDATE`).Scan(&current)
@@ -229,7 +246,7 @@ func (s *Server) adminUpdateRuntimePolicy(w http.ResponseWriter, r *http.Request
 	if !s.decode(w, r, &body) {
 		return
 	}
-	if err := validateRuntimePolicy(body.Policy); err != nil {
+	if err := validateRuntimePolicyStructure(body.Policy); err != nil {
 		s.fail(w, err)
 		return
 	}

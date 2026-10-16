@@ -17,14 +17,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--archive', required=True)
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix='VideoFlow clean computer ') as temp:
+    with tempfile.TemporaryDirectory(prefix='6eek clean computer ') as temp:
         root = Path(temp)
         with zipfile.ZipFile(args.archive) as archive:
             assert not any('.sqlite' in item.filename or '/storage/' in item.filename or '/.env' in item.filename for item in archive.infolist()), 'Private runtime data in package'
             archive.extractall(root)
             for item in archive.infolist():
                 (root / item.filename).chmod((item.external_attr >> 16) & 0o777)
-        folder = root / 'VideoFlow'
+        folder = root / '6eek'
         for file in ['ffmpeg', 'ffprobe', 'fonts/NotoSans-Regular.ttf', 'fonts/NotoSansCJKsc-Regular.otf', 'media-sources.zip', 'licenses/NOTICE.txt']:
             assert (folder / file).is_file(), f'Missing {file}'
         ffmpeg = folder / 'ffmpeg'

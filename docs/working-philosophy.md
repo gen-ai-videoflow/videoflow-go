@@ -1,6 +1,6 @@
 # Working philosophy
 
-VideoFlow should help a person move from an idea to inspectable production artifacts, then to a video they deliberately accept. Its strongest foundation is the shared workspace: characters, assets, scenes, shots, and outputs remain available across guided and manual workflows.
+6eek should help a person move from an idea to inspectable production artifacts, then to a video they deliberately accept. Its strongest foundation is the shared workspace: characters, assets, scenes, shots, and outputs remain available across guided and manual workflows.
 
 ## Product principles
 

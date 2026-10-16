@@ -1,0 +1,13 @@
+<script lang="ts">
+ import {request} from '../api';
+ import {Button} from '$lib/components/ui/button';
+ let {zh=false}:{zh?:boolean}=$props();
+ type Campaign={id:string;title:string;brief:string;terms_version:string;ends_at:string;video_id:string};
+ let open=$state(false),loaded=$state(false),busy=$state(false),error=$state(''),items=$state<{campaign:Campaign;accepted:boolean}[]>([]),accepted=$state<Record<string,boolean>>({});
+ const t=(en:string,cn:string)=>zh?cn:en;
+ async function load(){busy=true;error='';try{items=(await request('/creator/campaigns')).items;loaded=true}catch(e){error=e instanceof Error?e.message:String(e)}finally{busy=false}}
+ async function accept(c:Campaign){busy=true;error='';try{await request('/creator/campaigns/'+encodeURIComponent(c.id)+'/accept',{terms_version:c.terms_version});await load()}catch(e){error=e instanceof Error?e.message:String(e)}finally{busy=false}}
+</script>
+<details bind:open ontoggle={(e)=>{if(e.currentTarget.open&&!loaded&&!busy)void load();}}><summary>{t('Sponsorship offers','赞助邀约')}</summary><p>{t('Review each brief before accepting. Sponsored delivery is labelled and measured separately from organic audience. Campaign awards require reviewed evidence and reward confirmation; acceptance does not guarantee earnings.','接受前请阅读活动说明。赞助播放带有标签，并与自然流量分开计量。奖励需要数据审核和奖励确认；接受邀约不保证收入。')}</p>{#if error}<p role="alert">{error}</p>{/if}{#if busy}<p role="status">{t('Loading…','正在加载…')}</p>{/if}
+{#each items as {campaign,accepted:agreed}}<article><h3>{campaign.title}</h3><p>{campaign.brief}</p><p>{t('Terms version','条款版本')}: {campaign.terms_version} · {t('Ends','结束时间')}: {new Date(campaign.ends_at).toLocaleDateString(zh?'zh-CN':'en-US')}</p>{#if agreed}<strong>{t('Accepted','已接受')}</strong>{:else}<label><input type="checkbox" bind:checked={accepted[campaign.id]}/>{t('I accept this campaign brief and the terms version shown above.','我接受此活动说明和上述版本的条款。')}</label><Button disabled={busy||!accepted[campaign.id]||new Date(campaign.ends_at)<=new Date()} onclick={()=>accept(campaign)}>{t('Accept sponsorship terms','接受赞助条款')}</Button>{/if}</article>{:else}{#if loaded}<p>{t('No sponsorship offers yet.','暂无赞助邀约。')}</p>{/if}{/each}</details>
+<style>details{padding:18px 0;border-top:1px solid var(--border);font-size:.875rem;line-height:1.8}summary{cursor:pointer;font-weight:500}details[open] summary{margin-bottom:16px}p{color:var(--muted-foreground);max-width:70ch}article{padding:16px 0;border-top:1px solid var(--border)}h3{font-weight:600}label{display:flex;gap:10px;margin:16px 0;align-items:start}input{margin-top:7px;accent-color:var(--primary)}</style>

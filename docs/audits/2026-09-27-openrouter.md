@@ -36,7 +36,7 @@ OpenRouter documents dedicated image and asynchronous video endpoints. The imple
 
 Image responses contain base64 data and can include a media type; the adapter preserves all returned outputs and their actual format. [Official image guide](https://openrouter.ai/docs/guides/overview/multimodal/image-generation).
 
-These sources were checked on the audit date. The report does not infer that all advertised models work with VideoFlow.
+These sources were checked on the audit date. The report does not infer that all advertised models work with 6eek.
 
 ## Blocking paths in the repository
 

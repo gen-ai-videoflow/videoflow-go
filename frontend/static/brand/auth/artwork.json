@@ -1,0 +1,28 @@
+{
+  "tool": "Built-in image_gen",
+  "brand": "6eek",
+  "usage": "Login and signup artwork carousel",
+  "assets": [
+    {
+      "path": "desert.webp",
+      "prompt": "A lone traveler crossing charcoal dunes beneath an amber sun. Portrait 4:5 cinematic film still, charcoal/ivory/ember-orange/muted-teal palette, analog film texture, dark negative space below, no text, logos, UI or watermark.",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 71026
+    },
+    {
+      "path": "pavilion.webp",
+      "prompt": "A floating East Asian tea pavilion among mist, moss and orange lanterns. Portrait 4:5 cinematic film still, charcoal/ivory/ember-orange/muted-teal palette, analog film texture, dark negative space below, no text, logos, UI or watermark.",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 122946
+    },
+    {
+      "path": "motion.webp",
+      "prompt": "An orange-jacketed skateboarder over a wet futuristic city street. Portrait 4:5 cinematic film still, charcoal/ivory/ember-orange/muted-teal palette, analog film texture, dark negative space below, no text, logos, UI or watermark.",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 147340
+    }
+  ]
+}

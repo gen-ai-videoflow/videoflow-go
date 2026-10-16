@@ -14,15 +14,15 @@ else {
     Promise.resolve(engine?.stop()).finally(() => app.quit());
   });
   app.whenReady().then(async () => {
-    const folder = app.isPackaged ? path.join(process.resourcesPath, 'engine') : path.join(__dirname, 'payload', 'VideoFlow');
-    engine = new Engine({executable: path.join(folder, 'videoflow')});
+    const folder = app.isPackaged ? path.join(process.resourcesPath, 'engine') : path.join(__dirname, 'payload', '6eek');
+    engine = new Engine({executable: path.join(folder, '6eek')});
     try {
       const url = await engine.start();
       if (quitting) return;
       engine.child.once('exit', () => {
         if (!quitting) {
           if (smokeTest) { console.error('Engine exited during smoke test'); process.exitCode = 1; }
-          else dialog.showErrorBox('VideoFlow stopped', 'The local engine stopped. Reopen VideoFlow to continue.');
+          else dialog.showErrorBox('6eek stopped', 'The local engine stopped. Reopen 6eek to continue.');
           app.quit();
         }
       });
@@ -44,19 +44,19 @@ else {
         const rendered = await window.webContents.executeJavaScript(`new Promise(resolve => {
           const deadline = Date.now() + 10000;
           const check = () => {
-            if (document.body.textContent.includes('VideoFlow')) resolve(true);
+            if (document.body.textContent.includes('6eek')) resolve(true);
             else if (Date.now() > deadline) resolve(false);
             else setTimeout(check, 100);
           };
           check();
         })`);
-        if (!rendered) throw new Error('VideoFlow interface did not render');
+        if (!rendered) throw new Error('6eek interface did not render');
         console.log(JSON.stringify({desktop_ready: true, url, engine_pid: engine.child.pid}));
         app.quit();
       }
     } catch (error) {
       if (smokeTest) { console.error(error.message); process.exitCode = 1; }
-      else if (!quitting) dialog.showErrorBox('VideoFlow could not start', String(error.message));
+      else if (!quitting) dialog.showErrorBox('6eek could not start', String(error.message));
       app.quit();
     }
   });

@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/providers"
 )
 
 type Resolver struct {

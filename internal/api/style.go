@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 )
 
 func (s *Server) handleGetStyle(w http.ResponseWriter, r *http.Request) {

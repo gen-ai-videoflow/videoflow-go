@@ -10,7 +10,7 @@ import (
 
 func TestDesktopRoutes(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "index.html"), []byte("VideoFlow UI"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "index.html"), []byte("6eek UI"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +26,8 @@ func TestDesktopRoutes(t *testing.T) {
 		code int
 		body string
 	}{
-		{"/", 200, "VideoFlow UI"}, {"/settings", 200, "VideoFlow UI"},
-		{"/characters", 200, "VideoFlow UI"}, {"/api/settings/providers", 200, "API"},
+		{"/", 200, "6eek UI"}, {"/settings", 200, "6eek UI"},
+		{"/characters", 200, "6eek UI"}, {"/api/settings/providers", 200, "API"},
 		{"/storage/video.mp4", 200, "API"}, {"/api/missing", 404, "404 page not found\n"},
 		{"/_app/missing.js", 404, "404 page not found\n"},
 	} {

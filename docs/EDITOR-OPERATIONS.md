@@ -1,6 +1,6 @@
 # Browser editor deployment and operations
 
-VideoFlow embeds a pinned OpenCut Classic browser editor at `/studio/editor`. The original canvas remains available as Storyboard. Discover, Watch and Shorts serve viewers; Studio groups projects, generation, editing and publishing. Premium is one platform subscription, with Premium-only video access; follows are free. Generation uses separate prepaid credits and a server-managed eligible model policy, without a customer model picker.
+6eek embeds a pinned OpenCut Classic browser editor at `/studio/editor`. The original canvas remains available as Storyboard. Discover, Watch and Shorts serve viewers; Studio groups projects, generation, editing and publishing. Premium is one platform subscription, with Premium-only video access; follows are free. Generation uses separate prepaid credits and a server-managed eligible model policy, without a customer model picker.
 
 ## Build and migrate
 

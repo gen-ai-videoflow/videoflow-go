@@ -63,6 +63,6 @@
     "body_en": "Develop an original short story from this idea: {{idea}}.\nAudience: {{audience}}. Visual style: {{style}}. Main character and stable appearance: {{subject}}.\nSetting: {{setting}}. Emotional arc: {{arc}}.\nCreate a clear opening, a visible obstacle and an earned resolution within the configured scene count and duration. Use self-contained visual directions, consistent characters and concrete actions. Write screenplay and scene titles in English. Preserve any quoted dialogue in its original language. Unknown details must remain proposals rather than facts.",
     "body_zh": "根据以下创意发展原创短故事：{{idea}}。\n观众：{{audience}}。视觉风格：{{style}}。主角及固定外观：{{subject}}。\n场景：{{setting}}。情绪变化：{{arc}}。\n在已配置的场景数量与时长内，安排清晰的开场、可见的阻碍与合理的结局。各镜头描述应独立完整，保持角色一致，使用具体可见的动作。剧本和场景标题使用简体中文，已引用的对白保留原语言。未知信息应标为提案，不能当作已确认事实。",
     "source_url": "",
-    "attribution": "VideoFlow original"
+    "attribution": "6eek original"
   }
 ]

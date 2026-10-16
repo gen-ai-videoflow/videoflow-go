@@ -26,6 +26,7 @@ func TestPayoutPrepareFreezesOnceAndOffsetsDebt(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	backLegacyTestEarnings(t, s, u.ID)
 	b, err := s.PreparePayout(ctx, u.ID, "test-operator")
 	if err != nil {
 		t.Fatal(err)
@@ -54,6 +55,7 @@ func TestPayoutRetryUsesSameTransferAndDoesNotDoublePay(t *testing.T) {
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO cloud_earnings(id,user_id,reference,amount_cents,currency,status,description,created_at)VALUES($1,$2,$1,6000,'usd','pending','test',now()-interval '31 days')`, uuid.NewString(), u.ID); err != nil {
 		t.Fatal(err)
 	}
+	backLegacyTestEarnings(t, s, u.ID)
 	batch, err := s.PreparePayout(ctx, u.ID, "operator")
 	if err != nil {
 		t.Fatal(err)

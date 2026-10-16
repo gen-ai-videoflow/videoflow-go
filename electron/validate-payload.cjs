@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 module.exports = async context => {
   const {Arch} = require('builder-util');
-  const payload = JSON.parse(fs.readFileSync(path.join(__dirname, 'payload', 'VideoFlow', 'target.json'), 'utf8'));
+  const payload = JSON.parse(fs.readFileSync(path.join(__dirname, 'payload', '6eek', 'target.json'), 'utf8'));
   const platform = context.electronPlatformName;
   const arch = Arch[context.arch];
   if (payload.platform !== platform || payload.arch !== arch) {

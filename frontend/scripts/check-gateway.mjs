@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { proxyRequest } from '../src/lib/cloud/gateway.mjs';
 let calls=0;
-let request=new Request('https://app.test/api/v1/feed',{headers:{'x-videoflow-gateway-hop':'1'}});
+let request=new Request('https://app.test/api/v1/feed',{headers:{'x-6eek-gateway-hop':'1'}});
 assert.equal((await proxyRequest(request,'https://api.test/v1/feed')).status,508);assert.equal(calls,0);
 request=new Request('https://app.test/api/v1/feed');
 assert.equal((await proxyRequest(request,'https://app.test/api/v1/feed')).status,508);
 request=new Request('https://app.test/api/v1/profile/images',{method:'POST',body:'x'.repeat(40)});
 assert.equal((await proxyRequest(request,'https://api.test/v1/profile/images',{maxBytes:20})).status,413);
 request=new Request('https://app.test/api/v1/feed');
-const result=await proxyRequest(request,'https://api.test/v1/feed',{fetch:async(_url,init)=>{calls++;assert.equal(init.headers.get('x-videoflow-gateway-hop'),'1');return new Response('{"ok":true}',{headers:{'Retry-After':'2'}});}});
+const result=await proxyRequest(request,'https://api.test/v1/feed',{fetch:async(_url,init)=>{calls++;assert.equal(init.headers.get('x-6eek-gateway-hop'),'1');return new Response('{"ok":true}',{headers:{'Retry-After':'2'}});}});
 assert.equal(result.status,200);assert.equal(calls,1);assert.equal(result.headers.get('Retry-After'),'2');
 console.log('Gateway loop prevention, body bounds and one upstream request passed');
 

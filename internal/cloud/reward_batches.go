@@ -13,6 +13,8 @@ import (
 )
 
 type RewardBatchDraft struct {
+	CampaignID        string           `json:"campaign_id,omitempty"`
+	CampaignAwardID   string           `json:"campaign_award_id,omitempty"`
 	ID                string           `json:"id"`
 	Day               string           `json:"day"`
 	SourceID          string           `json:"source_id"`
@@ -66,6 +68,18 @@ func (s *Store) DraftRewardBatch(ctx context.Context, d RewardBatchDraft) error 
 	if !active {
 		return ErrUnavailable
 	}
+	var engineRaw []byte
+	policyErr := tx.QueryRowContext(ctx, `SELECT policy FROM cloud_reward_engine_policy WHERE policy_version=$1 FOR SHARE`, d.PolicyVersion).Scan(&engineRaw)
+	if policyErr != nil && policyErr != sql.ErrNoRows {
+		return policyErr
+	}
+	if policyErr == nil {
+		var engine RewardEnginePolicy
+		if json.Unmarshal(engineRaw, &engine) != nil || !engine.Enabled || !engine.EstimatesEnabled {
+			return ErrUnavailable
+		}
+	}
+
 	var kind string
 	if err = tx.QueryRowContext(ctx, `SELECT kind FROM cloud_reward_sources WHERE id=$1`, d.SourceID).Scan(&kind); err != nil {
 		return err
@@ -87,7 +101,7 @@ func (s *Store) DraftRewardBatch(ctx context.Context, d RewardBatchDraft) error 
 			continue
 		}
 		var owner string
-		err = tx.QueryRowContext(ctx, `SELECT c.user_id FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id JOIN cloud_reward_enrollments e ON e.user_id=c.user_id AND e.policy_version=$3 WHERE v.id=$1 AND v.status='published' AND v.visibility='public' AND v.first_published_at < $2::timestamptz+interval '1 day' AND v.first_published_at+interval '30 days'>$2::timestamptz AND NOT EXISTS(SELECT 1 FROM cloud_reward_holds h WHERE h.user_id=c.user_id)`, video, day, d.PolicyVersion).Scan(&owner)
+		err = tx.QueryRowContext(ctx, `SELECT c.user_id FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id JOIN cloud_reward_enrollments e ON e.user_id=c.user_id AND e.policy_version=$3 WHERE v.id=$1 AND v.status='published' AND v.visibility='public' AND v.first_published_at < $2::timestamptz+interval '1 day' AND v.first_published_at+make_interval(secs=>v.reward_window_seconds::int)>$2::timestamptz AND NOT EXISTS(SELECT 1 FROM cloud_reward_holds h WHERE h.user_id=c.user_id)`, video, day, d.PolicyVersion).Scan(&owner)
 		if err == sql.ErrNoRows {
 			return ErrValidation
 		}
@@ -97,6 +111,9 @@ func (s *Store) DraftRewardBatch(ctx context.Context, d RewardBatchDraft) error 
 		if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_reward_allocations(id,batch_id,video_id,user_id,cents)VALUES($1,$2,$3,$4,$5)`, uuid.NewString(), d.ID, video, owner, cents); err != nil {
 			return err
 		}
+	}
+	if err = s.ValidateCampaignRewardDraftTx(ctx, tx, d.ID, d.SourceID, d.CampaignID, d.CampaignAwardID, d.BudgetCents); err != nil {
+		return err
 	}
 	return tx.Commit()
 }
@@ -110,6 +127,14 @@ func (s *Store) ConfirmRewardBatch(ctx context.Context, id, actor string) error 
 		return err
 	}
 	defer tx.Rollback()
+	var batchDay string
+	if err = tx.QueryRowContext(ctx, `SELECT day::text FROM cloud_reward_batches WHERE id=$1`, id).Scan(&batchDay); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,814037243))`, batchDay); err != nil {
+		return err
+	}
+
 	var source, proposer, status, policy string
 	var cents int64
 	err = tx.QueryRowContext(ctx, `SELECT source_id,proposed_by,status,total_cents,policy_version FROM cloud_reward_batches WHERE id=$1 FOR UPDATE`, id).Scan(&source, &proposer, &status, &cents, &policy)
@@ -129,6 +154,18 @@ func (s *Store) ConfirmRewardBatch(ctx context.Context, id, actor string) error 
 	if !active {
 		return ErrUnavailable
 	}
+	var engineRaw []byte
+	policyErr := tx.QueryRowContext(ctx, `SELECT policy FROM cloud_reward_engine_policy WHERE policy_version=$1 FOR SHARE`, policy).Scan(&engineRaw)
+	if policyErr != nil && policyErr != sql.ErrNoRows {
+		return policyErr
+	}
+	if policyErr == nil {
+		var engine RewardEnginePolicy
+		if json.Unmarshal(engineRaw, &engine) != nil || !engine.Enabled || !engine.ConfirmationsEnabled {
+			return ErrUnavailable
+		}
+	}
+
 	var sum int64
 	var invalid bool
 	err = tx.QueryRowContext(ctx, `SELECT COALESCE(sum(a.cents),0),COALESCE(bool_or(v.status<>'published' OR v.visibility<>'public' OR h.user_id IS NOT NULL),false) FROM cloud_reward_allocations a JOIN cloud_videos v ON v.id=a.video_id LEFT JOIN cloud_reward_holds h ON h.user_id=a.user_id WHERE a.batch_id=$1`, id).Scan(&sum, &invalid)
@@ -137,6 +174,17 @@ func (s *Store) ConfirmRewardBatch(ctx context.Context, id, actor string) error 
 	}
 	if sum != cents || invalid {
 		return ErrConflict
+	}
+	var duplicate bool
+	err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_reward_batches current JOIN cloud_reward_allocations a ON a.batch_id=current.id JOIN cloud_reward_allocations prior ON prior.video_id=a.video_id JOIN cloud_reward_batches previous ON previous.id=prior.batch_id WHERE current.id=$1 AND previous.status='confirmed' AND previous.day=current.day AND previous.evidence_reference<>current.evidence_reference AND coalesce(current.input_snapshot->>'campaign_id','')='' AND coalesce(previous.input_snapshot->>'campaign_id','')='' AND (current.evidence_reference LIKE 'calculation:%' OR previous.evidence_reference LIKE 'calculation:%'))`, id).Scan(&duplicate)
+	if err != nil {
+		return err
+	}
+	if duplicate {
+		return ErrConflict
+	}
+	if err = s.ReserveCampaignAwardTx(ctx, tx, id); err != nil {
+		return err
 	}
 	if err = reserveRewardFunding(ctx, tx, source, cents); err != nil {
 		return err
@@ -148,6 +196,10 @@ func (s *Store) ConfirmRewardBatch(ctx context.Context, id, actor string) error 
 		return err
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id,reason)VALUES($1,'confirm_reward_batch',$2,'Full liability reserved from reconciled source')`, actor, id); err != nil {
+		return err
+	}
+	// One durable update per recipient, committed with the confirmed obligation.
+	if err = rewardNotifyBatchTx(ctx, tx, id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -206,6 +258,12 @@ func (s *Store) ReleaseRewardVesting(ctx context.Context, user string, at time.T
 		if _, err = tx.ExecContext(ctx, `UPDATE cloud_reward_releases SET released_cents=$2,updated_at=now() WHERE allocation_id=$1`, r.id, vested); err != nil {
 			return err
 		}
+		if err = rewardNotifyTx(ctx, tx, user, reference, "release", "More confirmed creator rewards have finished unlocking. See Earnings for availability and payment requirements."); err != nil {
+			return err
+		}
+	}
+	if err = releaseRewardCorrectionsTx(ctx, tx, user, at); err != nil {
+		return err
 	}
 	return tx.Commit()
 }

@@ -1,6 +1,6 @@
-# VideoFlow banner presets
+# 6eek banner presets
 
-Four AI-generated decorative banner images created for VideoFlow on2026-10-16. They contain no UI text and are optional profile presets. These are bundled static assets; selecting one does not call an AI service or spend credits.
+Four AI-generated decorative banner images created for 6eek on2026-10-16. They contain no UI text and are optional profile presets. These are bundled static assets; selecting one does not call an AI service or spend credits.
 
 | Asset | Original generated source suffix |
 |---|---|

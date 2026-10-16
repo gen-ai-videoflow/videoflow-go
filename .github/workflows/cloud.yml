@@ -110,10 +110,10 @@ jobs:
           python3 scripts/audit-cloud-secrets.py --root build/client
       - name: Build cloud SSR image
         if: needs.detect.outputs.frontend == 'true'
-        run: docker build -f deploy/Dockerfile.cloud-web -t videoflow-web:ci .
+        run: docker build -f deploy/Dockerfile.cloud-web -t 6eek-web:ci .
       - name: Build extracted web image
         if: needs.detect.outputs.standalone_web == 'true'
-        run: docker build -t videoflow-web:ci .
+        run: docker build -t 6eek-web:ci .
   terraform:
     needs: detect
     if: needs.detect.outputs.terraform == 'true'

@@ -121,7 +121,7 @@
             <Card.Header>
             <Card.Title>Make your first video</Card.Title>
             <Card.Description>
-              Describe the story and VideoFlow handles the pipeline.
+              Describe the story and 6eek handles the pipeline.
               </Card.Description>
             </Card.Header>
             <Card.Content>

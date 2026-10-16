@@ -4,17 +4,17 @@
   "assets": [
     {
       "file": "explainer.webp",
-      "prompt": "Use case: stylized-concept. Create a premium editorial 16:9 cinematic template cover for VideoFlow's Explainer starter template. A single delicate orange beam of light passes through a clear glass prism, revealing ordered rays on a warm charcoal background. Physical glass, subtle photographic texture, beautiful studio lighting, precise simple composition. Bone highlights and signal orange #ff5b1f against ink #0b0c0b. No lettering, no logos, no UI, no borders. This is conceptual cover art, not a finished video.",
+      "prompt": "Use case: stylized-concept. Create a premium editorial 16:9 cinematic template cover for 6eek's Explainer starter template. A single delicate orange beam of light passes through a clear glass prism, revealing ordered rays on a warm charcoal background. Physical glass, subtle photographic texture, beautiful studio lighting, precise simple composition. Bone highlights and signal orange #ff5b1f against ink #0b0c0b. No lettering, no logos, no UI, no borders. This is conceptual cover art, not a finished video.",
       "optimization": "960px WebP, quality 82"
     },
     {
       "file": "product-story.webp",
-      "prompt": "Use case: product-mockup. Create a premium cinematic 16:9 template cover for VideoFlow Product story. One unbranded orange portable speaker on a low warm charcoal stone plinth, directional soft sunlight, tactile mesh and clean industrial design, close editorial product photography, rich natural shadows, ink black background with warm bone light. Single focal subject, restrained composition, no lettering, logos, UI or borders. Conceptual example artwork, not a real brand or finished video.",
+      "prompt": "Use case: product-mockup. Create a premium cinematic 16:9 template cover for 6eek Product story. One unbranded orange portable speaker on a low warm charcoal stone plinth, directional soft sunlight, tactile mesh and clean industrial design, close editorial product photography, rich natural shadows, ink black background with warm bone light. Single focal subject, restrained composition, no lettering, logos, UI or borders. Conceptual example artwork, not a real brand or finished video.",
       "optimization": "960px WebP, quality 82"
     },
     {
       "file": "short-story.webp",
-      "prompt": "Use case: illustration-story. Create a cinematic photorealistic 16:9 cover for VideoFlow Short story starter template. A lone traveler in a muted orange coat stands on a winding cliff path looking toward a tiny warmly lit coastal house at dusk. Wide atmospheric landscape, dark teal sea, warm bone sky, thoughtful film still, realistic texture, strong silhouette and clear focal point readable at thumbnail size. No text, logos, UI or borders. Conceptual narrative artwork, not a finished video.",
+      "prompt": "Use case: illustration-story. Create a cinematic photorealistic 16:9 cover for 6eek Short story starter template. A lone traveler in a muted orange coat stands on a winding cliff path looking toward a tiny warmly lit coastal house at dusk. Wide atmospheric landscape, dark teal sea, warm bone sky, thoughtful film still, realistic texture, strong silhouette and clear focal point readable at thumbnail size. No text, logos, UI or borders. Conceptual narrative artwork, not a finished video.",
       "optimization": "960px WebP, quality 82"
     }
   ]

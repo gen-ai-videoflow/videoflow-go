@@ -12,8 +12,9 @@ import (
 func (s *Server) rewardProgram(w http.ResponseWriter, r *http.Request) {
 	var active, enrolled bool
 	var version, terms string
-	err := s.Store.DB.QueryRowContext(r.Context(), `SELECT p.active,p.version,p.terms_version,EXISTS(SELECT 1 FROM cloud_reward_enrollments e WHERE e.user_id=$1 AND e.policy_version=p.version) FROM cloud_reward_policies p ORDER BY p.active DESC,p.created_at DESC,p.version DESC LIMIT 1`, currentUser(r).ID).Scan(&active, &version, &terms, &enrolled)
-	s.result(w, map[string]any{"enabled": s.Config.RewardsEnabled && active, "enrolled": enrolled, "earning_window_days": 30, "vesting_days": 30, "confirmation": "daily_funded_batches", "payout_cadence": "monthly_approved_runs", "individual_spending_cap": false, "currency": "usd", "estimate_is_guaranteed": false, "policy_version": version, "terms_version": terms}, err)
+	var window, vesting int64
+	err := s.Store.DB.QueryRowContext(r.Context(), `SELECT p.active,p.version,p.terms_version,p.window_seconds,p.vesting_seconds,EXISTS(SELECT 1 FROM cloud_reward_enrollments e WHERE e.user_id=$1 AND e.policy_version=p.version) FROM cloud_reward_policies p ORDER BY p.active DESC,p.created_at DESC,p.version DESC LIMIT 1`, currentUser(r).ID).Scan(&active, &version, &terms, &window, &vesting, &enrolled)
+	s.result(w, map[string]any{"enabled": s.Config.RewardsEnabled && active, "enrolled": enrolled, "earning_window_days": window / 86400, "vesting_days": vesting / 86400, "confirmation": "daily_funded_batches", "payout_cadence": "monthly_approved_runs", "individual_spending_cap": false, "currency": "usd", "estimate_is_guaranteed": false, "policy_version": version, "terms_version": terms}, err)
 }
 func (s *Server) rewardEnroll(w http.ResponseWriter, r *http.Request) {
 	if !s.Config.RewardsEnabled {
@@ -46,10 +47,12 @@ func (s *Server) rewardVideos(w http.ResponseWriter, r *http.Request) {
 }
 
 type RewardBalance struct {
+	AdjustmentCents     int64     `json:"reward_adjustments_cents"`
 	Currency            string    `json:"currency"`
 	ConfirmedCents      int64     `json:"lifetime_confirmed_cents"`
 	UnvestedCents       int64     `json:"confirmed_unvested_cents"`
 	VestedCents         int64     `json:"vested_cents"`
+	LegacyUnbackedCents int64     `json:"legacy_unbacked_cents"`
 	AvailableCents      int64     `json:"available_cents"`
 	PendingLegacyCents  int64     `json:"legacy_pending_cents"`
 	PayoutReservedCents int64     `json:"payout_reserved_cents"`
@@ -95,14 +98,32 @@ func (s *Store) RewardBalance(ctx context.Context, user string, at time.Time) (R
 	if err != nil {
 		return out, err
 	}
-	err = tx.QueryRowContext(ctx, `SELECT coalesce(sum(amount_cents)FILTER(WHERE (status='available' OR (status='pending' AND amount_cents<0))),0),coalesce(sum(amount_cents)FILTER(WHERE status='pending' AND amount_cents>0),0),coalesce(sum(amount_cents)FILTER(WHERE status='held'),0),coalesce(sum(amount_cents)FILTER(WHERE status='paid'),0) FROM cloud_earnings WHERE user_id=$1 AND currency='usd'`, user).Scan(&out.AvailableCents, &out.PendingLegacyCents, &out.PayoutReservedCents, &out.PaidCents)
+	err = tx.QueryRowContext(ctx, `SELECT coalesce(sum(amount_cents)FILTER(WHERE (status='available' OR (status='pending' AND amount_cents<0)) AND cloud_reward_earning_backed(id)),0),coalesce(sum(amount_cents)FILTER(WHERE status='pending' AND amount_cents>0),0),coalesce(sum(amount_cents)FILTER(WHERE status='held'),0),coalesce(sum(amount_cents)FILTER(WHERE status='paid'),0) FROM cloud_earnings WHERE user_id=$1 AND currency='usd'`, user).Scan(&out.AvailableCents, &out.PendingLegacyCents, &out.PayoutReservedCents, &out.PaidCents)
 	if err != nil {
 		return out, err
 	}
+	if err = tx.QueryRowContext(ctx, `SELECT coalesce(sum(amount_cents),0) FROM cloud_earnings WHERE user_id=$1 AND currency='usd' AND amount_cents>0 AND status<>'paid' AND NOT cloud_reward_earning_backed(id)`, user).Scan(&out.LegacyUnbackedCents); err != nil {
+		return out, err
+	}
+	correctionReleased, correctionErr := correctionBalanceTx(ctx, tx, user, at, &out)
+	if correctionErr != nil {
+		return out, correctionErr
+	}
+	released += correctionReleased
 	out.AvailableCents += out.VestedCents - released
 	err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_reward_holds WHERE user_id=$1) OR EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed'))`, user).Scan(&out.Held)
 	if err != nil {
 		return out, err
+	}
+	var estimated int64
+	var count int
+	err = tx.QueryRowContext(ctx, `SELECT count(*),coalesce(sum(e.cents),0) FROM cloud_reward_estimates e JOIN cloud_reward_batches b ON b.id=e.batch_id JOIN cloud_reward_calculation_runs r ON r.id=e.run_id JOIN cloud_reward_engine_policy p ON p.policy_version=r.policy_version WHERE e.user_id=$1 AND b.status='draft' AND r.status='succeeded' AND (p.policy->>'enabled')::boolean AND (p.policy->>'estimates_enabled')::boolean AND NOT EXISTS(SELECT 1 FROM cloud_reward_revenue_source_holds h WHERE h.source_id=b.source_id)`, user).Scan(&count, &estimated)
+	if err != nil {
+		return out, err
+	}
+	if count > 0 && !out.Held {
+		out.Estimate = &estimated
+		out.EstimateStatus = "provisional"
 	}
 	return out, tx.Commit()
 }

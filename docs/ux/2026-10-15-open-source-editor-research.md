@@ -1,10 +1,10 @@
-# Browser video editor reuse for VideoFlow
+# Browser video editor reuse for 6eek
 
 Research date: 2026-10-15. Source inspection only: no candidate was installed, built, or exercised in a browser. “Implemented” below means a source path exists, not that its behavior passed QA. This is an engineering selection memo, not a complete dependency/legal audit.
 
 ## Recommendation
 
-Use **OpenCut Classic as the first bounded integration spike**, with OpenReel as the second candidate. OpenCut has a permissive MIT application license, an actual timeline/project model and browser renderer, and no Remotion package in its inspected web manifest. It is an application fork, not a supported embeddable SDK. Its archived status means VideoFlow must own maintenance. **Neither candidate is an all-permissive dependency stack:** OpenCut ships MPL Mediabunny and LGPL SoundTouchJS; OpenReel adds FFmpeg WASM and GSAP terms. If “permissive only” includes every dependency, neither qualifies unchanged. Narrow the adopted surface and remove/replace unwanted dependencies before shipping.
+Use **OpenCut Classic as the first bounded integration spike**, with OpenReel as the second candidate. OpenCut has a permissive MIT application license, an actual timeline/project model and browser renderer, and no Remotion package in its inspected web manifest. It is an application fork, not a supported embeddable SDK. Its archived status means 6eek must own maintenance. **Neither candidate is an all-permissive dependency stack:** OpenCut ships MPL Mediabunny and LGPL SoundTouchJS; OpenReel adds FFmpeg WASM and GSAP terms. If “permissive only” includes every dependency, neither qualifies unchanged. Narrow the adopted surface and remove/replace unwanted dependencies before shipping.
 
 Do not pick Twick or current DesignCombo/OpenVideo under an assumption that “open source” means unrestricted SaaS reuse. Their actual license files impose commercial restrictions.
 
@@ -23,7 +23,7 @@ The [current OpenCut README](https://github.com/OpenCut-app/OpenCut#status) says
 
 The [web manifest](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/package.json) specifies React 19, Next 16, Zustand, Mediabunny, and opencut-wasm. It is not a Svelte component. The [SceneExporter](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/src/services/renderer/scene-exporter.ts) renders the scene frame by frame through CanvasRenderer and feeds Mediabunny CanvasSource/AudioBufferSource into MP4 AVC/AAC or WebM VP9/Opus. It buffers output in memory; long or high-resolution projects require explicit memory testing. AAC capability fallback exists in this path, so verify the actual container/audio output rather than assuming every MP4 is AAC.
 
-The [TProject model](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/src/project/types.ts) contains metadata, scenes, current scene, settings, version, and timeline view state. [Storage service](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/src/services/storage/service.ts) and adjacent IndexedDB/OPFS adapters persist projects and media locally. Many version migrations exist. This is not automatically a portable cloud project file: VideoFlow must map media IDs to durable server assets and preserve project schema versions.
+The [TProject model](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/src/project/types.ts) contains metadata, scenes, current scene, settings, version, and timeline view state. [Storage service](https://github.com/OpenCut-app/opencut-classic/blob/cf5e79e919144200294fb9fed22a222592a0aeea/apps/web/src/services/storage/service.ts) and adjacent IndexedDB/OPFS adapters persist projects and media locally. Many version migrations exist. This is not automatically a portable cloud project file: 6eek must map media IDs to durable server assets and preserve project schema versions.
 
 ## OpenReel: active alternative with a broader surface
 
@@ -48,16 +48,16 @@ This was a targeted direct-dependency review, not an SBOM clearance. Exact adopt
 
 ## Integration boundary for SvelteKit + Go
 
-Recommended architecture (proposal, not an upstream supported API): run a pinned React editor application at an isolated editor route/origin and open it from VideoFlow. A full-page route is the simplest first spike; an iframe requires a small explicit bridge. Keep SvelteKit’s project workflow and Go’s auth, asset ownership, storage, and export job API authoritative. Do not rewrite the editor UI into Svelte.
+Recommended architecture (proposal, not an upstream supported API): run a pinned React editor application at an isolated editor route/origin and open it from 6eek. A full-page route is the simplest first spike; an iframe requires a small explicit bridge. Keep SvelteKit’s project workflow and Go’s auth, asset ownership, storage, and export job API authoritative. Do not rewrite the editor UI into Svelte.
 
-Define a versioned bridge with `loadProject`, `saveProject`, `export`, `progress`, `completed`, and `error`. Validate message origin/schema, exchange short-lived project-scoped credentials, and supply signed asset URLs with correct CORS/range behavior. Keep a VideoFlow envelope `{schemaVersion, editorKind, editorCommit, editorProject, assetManifest}`. Store durable asset IDs rather than blob URLs/OPFS handles, and rehydrate local media caches on open. A JSON save alone does not make a project portable.
+Define a versioned bridge with `loadProject`, `saveProject`, `export`, `progress`, `completed`, and `error`. Validate message origin/schema, exchange short-lived project-scoped credentials, and supply signed asset URLs with correct CORS/range behavior. Keep a 6eek envelope `{schemaVersion, editorKind, editorCommit, editorProject, assetManifest}`. Store durable asset IDs rather than blob URLs/OPFS handles, and rehydrate local media caches on open. A JSON save alone does not make a project portable.
 
 Use browser export for the first proof. The existing Go FFmpeg pipeline cannot consume either editor’s native JSON without a semantic adapter; effects, text measurement, compositing, keyframes, transitions, and audio mixing need fidelity mapping. Do not promise identical Go exports simply because both produce MP4. A server running the same browser renderer is another option, with separate reliability and resource work.
 
 ## Acceptance gates before committing to the fork
 
 1. Pin source and lockfile, produce a dependency/asset notice inventory, and resolve MPL/LGPL/FFmpeg/GSAP exposure for the exact adopted build.
-2. Import a real VideoFlow video with audio; trim/split, add text and a second clip, preview, save, close the browser, reopen from server state, and recover originals on another machine.
+2. Import a real 6eek video with audio; trim/split, add text and a second clip, preview, save, close the browser, reopen from server state, and recover originals on another machine.
 3. Export actual MP4 and WebM files in supported Chromium/Safari/Firefox combinations; inspect codecs, duration, frames, audio sync, cut boundaries and text via ffprobe and visual playback. Test unsupported codec, expired asset URL, missing original, cancellation, tab crash and retry.
 4. Measure time and memory with the intended median and largest supported inputs. No 4K, mobile, or long-form reliability claim until measured.
 5. Compare preview and export effects. Set an explicit supported feature set, document schema upgrade ownership, and budget security/maintenance work for archived Classic.

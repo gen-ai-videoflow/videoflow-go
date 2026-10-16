@@ -28,7 +28,7 @@
     <div>
       <h2 class="font-semibold">{status === 'rendering' ? 'Rendering your video' : status === 'completed' ? 'Video complete' : 'Creating your video'}</h2>
       <p class="text-sm text-muted-foreground">
-        VideoFlow is handling the scenes, dialogue, visuals, and render.
+        6eek is handling the scenes, dialogue, visuals, and render.
       </p>
     </div>
     {#if status === 'running'}

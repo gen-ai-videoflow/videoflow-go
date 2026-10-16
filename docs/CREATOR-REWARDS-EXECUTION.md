@@ -1,45 +1,28 @@
-# Creator rewards execution ledger
+# 6eek creator economy and rebrand execution record
 
-Plan: aggregate repository docs/superpowers/plans/2026-10-16-creator-rewards.md.
+Updated 2026-10-16. Implemented across the API, web, admin and public documentation feature branches; no production activation or AWS provisioning.
 
-- Base: d87f1d2. Canonical implementation starts in API feature branch, no production activation.
-- Ruling: funding policy is unapproved; ship durable funding/confirmation primitives and disabled defaults before wiring automated revenue reconciliation. Never classify an administrator-entered number as verified provider funding.
-- Ruling: do not expose private estimates without an implemented scoring/evidence source; use insufficient_data until qualified evidence exists.
-- Task status: core accounting and user/admin surfaces implemented; complete commercial rollout remains gated by the outstanding items below.
+## Delivered
 
-## Implemented and verified
+- Migrations 041–084 add versioned reward/commercial policy, frozen qualified evidence, durable daily jobs, funded allocation, per-batch vesting, corrections, independent receipt/cost reconciliation, source recovery, legacy backing clearance, support credits, appeals, notifications, discovery curation and sponsor contracts.
+- Dedicated worker processes shadow readiness jobs even while money is paused, then separately gates new estimates, scheduled confirmation and payout preparation. Claims are fenced and retry-bounded. Preparation never submits transfers.
+- Financial review found and fixed quality revision updates, retroactive policy reuse, exhausted-source starvation, duplicate day-slice confirmation races, stale-worker status writes, payout retry persistence, partial transfer reversal handling and unbacked legacy payment paths. Regression tests cover them.
+- Creator Earnings remains two tabs with progressive disclosure. Admin has funding/calculation/liability/payout/review/policy workflows, exact evidence inspection, policy comparison, creator timeline, independent commercial pricing and protected Swagger. Contract covers263 operations and 65 schemas, checked against live routes.
+- 6eek branding spans web/editor/admin/API/docs and domain examples 6eek.com/api.6eek.com/admin.6eek.com/docs.6eek.com. New cookie names preserve legacy session/OAuth compatibility; shared-cookie configuration and exact browser-origin allowlists are validated. Historical resource identities and actual GitHub URLs remain factual.
+- Built-in image_gen produced three cinematic portrait artworks. Optimized project assets live under web/static/brand/auth/{desert,pavilion,motion}.webp with prompt metadata in artwork.json (341 KB combined). Login, registration and recovery use the shared accessible carousel. Mobile requests no artwork; reduced-motion disables autoplay; focus/hover/visibility pause advancement.
+- Public bilingual Fumadocs stays user-facing; operator/reward evidence stays private. Docs deploy separately.
 
-- Migrations 041–045 isolate new confirmed liabilities from legacy earnings; preserve first publication; make source, allocation, input snapshot, release events and vested principal immutable.
-- Reviewed funding requests require a different reconciling administrator. Daily draft batches preserve canonical inputs; independent confirmation atomically reserves the complete liability. Existing legacy financial history is unchanged.
-- Exact, overflow-safe 30-day linear vesting and idempotent release events feed the existing payout ledger. New `cmd/cloud-rewards` materializes maturity in bounded cursor passes. Payout preparation also catches up maturity. Holds and pending negative adjustments apply before payout.
-- Owner-authorized creator program/enrollment, summary, paginated videos, per-video schedules and payout history endpoints; finance/owner admin review endpoints, existing recent MFA and source/recipient preview.
-- Web: two simple Earnings tabs with secondary disclosures, nullable honest estimates, per-video windows/schedules, payout setup/history, enrollment gating, lazy audience analytics and publication handoff. Removed duplicate parent earnings requests. Wire types generated from API contracts.
-- Admin: funding proposals/reconciliation, allocation drafts/recipient preview/independent confirmation, policy status. Explicit reward proxy allowlist has a Node test.
-- Public English/Mandarin reward guides; operator material remains excluded. Fixed relative MDX Card links and added an export regression check.
-- Fixed web npm build/dev scripts so cloud mode also reaches Vite, retaining Node cloud adapter/API gateway.
+## Verification
 
-## Evidence
+- Full API `go test -p 1 ./... -count=1` passed against fresh isolated PostgreSQL database six_eek_release_20261016_v2, with Redis and real FFmpeg/FFprobe integration enabled. Log: /tmp/6eek-release-tests-v2.log. Cloud package 39.820s; all packages successful.
+- Financial/discovery/support/commercial/security race suite passed: `go test -race -p 1 ./internal/cloud -run 'TestReward|TestCorrection|TestSupport|TestAppeal|TestCommercial|TestLegacy|TestDiscovery|TestSponsor|Test6eek' -count=1`; 22.968s. Log: /tmp/6eek-race-tests.log.
+- `go vet` passed for cloud API/worker/rewards/admin modules.
+- A subsequent commercial-read regression test and route/OpenAPI parity passed after browser QA found that an unconfigured generation policy prevented inspection of the pricing registry. GET now returns current settings with an explicit generation_policy_required preview state; proposal approval still requires valid costs.
+- Web/editor production build and Svelte checks passed. Admin production build/check passed with 0 errors/0 warnings; font URL warnings resolved. Docs content/types/build/export passed 32 localized pages and 124 steps, including Markdown/search/sitemap outputs.
+- Aggregate packaging Python checks passed 13 tests (one native-media-bundle suite skipped because a native redistribution bundle was not built); Electron unit tests passed 5, one native integration test skipped. The safety test now isolates media validation from an unrelated frontend-build prerequisite.
+- Browser 1280×800 login: 6eek wordmark, generated image loads, next/pause controls work. Registration works through the actual form and reaches Discover. 390×844 registration: no horizontal overflow and zero artwork requests. Creator Earnings shows Earnings/Videos, no fabricated estimates and disabled money status. Admin six tabs and all 10 new reward read namespaces returned 200; policy readiness has no error after its fix; mobile has no page-level overflow.
+- Browser admin authorization used an explicitly isolated database role/MFA-session fixture. This is not a physical authenticator ceremony. Expected logged-out /me 401 requests and host Electron preview sandbox diagnostics are not represented as successful provider/authenticator tests.
 
-- Initial vesting test failed with missing VestedCents; lifecycle tests failed with missing implementation before the new service modules were added.
-- `go test ./... -count=1` passed against a separate PostgreSQL database (`videoflow_rewards_test`), with all packages successful. Test output: /tmp/reward-all-tests.log.
-- `go test -race ./internal/cloud -run TestReward -count=1` passed.
-- Targeted reward tests cover funding concurrency, self-approval rejection, deterministic retries, immutable principal/inputs, vesting rounding/endpoints, first-publication preservation, expired windows, private reads, disabled enrollment and pending-refund availability.
-- Web and admin `npm run check` report zero errors/warnings; web cloud Node-adapter production build and admin production build passed.
-- Docs types/build/content/export passed: 32 localized pages, 124 explicit steps; exported relative MDX Card links are resolved.
-- Browser: authenticated dedicated preview at :10550, 1280×800 Overview and 390×844 Videos; tabs switch, Payouts shows disabled setup correctly, no page-level horizontal overflow. This is an isolated test database, not production rollout. Physical provider/authenticator and live money flows were not exercised.
-- Fresh code review found pending-refund availability mismatch and missing canonical allocation inputs. Both were fixed with regression coverage and explicit recipient/input preview.
+## Release gates
 
-## Remaining release gates (not claimed complete)
-
-- Automatic consumed-revenue/cost reconciliation adapters and source reversal/shortfall workflows. Funding currently requires independent manual evidence review; a receipt reference alone does not prove provider cash.
-- Automated multifactor scoring, originality/reupload fraud qualification, external evidence adapters and provisional estimate generation. Estimates intentionally remain null; manual reviewed weights are not described as an automatic model.
-- Dedicated late-evidence correction and appeals workflows, policy-management UI and independent money-moving controls beyond the implemented confirmation workflow.
-- Monthly payout scheduling/notifications, continuity promotional-credit accounting/expiry/milestone UI, advertiser campaign operations and cross-country activation review.
-- Exhaustive admin visual/keyboard/screen-reader and Mandarin application-locale integration review. Creator component has translated copy but the existing application has no full locale switcher; do not claim full app localization.
-- Full liability coverage reconciliation for preexisting legacy balances; no historical backing was fabricated in migration.
-
-Ruling: keep the new policy inactive and existing REWARDS_ENABLED/CASH_PAYOUTS_ENABLED defaults off. The core is reviewable and tested, but the entire commercial launch checklist is not complete. No AWS provisioning, production migration, production deployment or real transfer was performed.
-
-## UX refinement — 2026-10-16
-
-User requested simpler earnings and progressive disclosure. The default now emphasizes available earnings and relevant unlocking funds; only Earnings/Videos remain as tabs. Payment history/settings, program rules and audience analytics expand on demand. Null estimates are omitted; important holds and payment unavailability remain visible. Optional video/history requests are lazy. This is recorded as durable product guidance.
+See CREATOR-REWARDS-ADMIN-GAP-AUDIT.md and private CREATOR-REWARDS-OPERATIONS.md. Real provider credentials, statements, actual realized USD token conversions, historical liability clearance, country/provider support, pilot reconciliation and deployment/DNS still require operational evidence. Rewards and cash transfers remain off. External notification delivery is not activated; durable in-app updates are implemented. No guaranteed returns, fake audience or bank-arrival claims.

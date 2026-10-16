@@ -3,7 +3,7 @@ const router = {
   replace: (_path?: string) => {},
   back: () =>
     window.parent.postMessage(
-      { type: "videoflow:editor:exit" },
+      { type: "6eek:editor:exit" },
       location.origin,
     ),
 };

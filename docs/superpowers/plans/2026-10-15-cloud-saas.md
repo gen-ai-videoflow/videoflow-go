@@ -40,7 +40,7 @@
 
 - Additional delivered scope: workspace-scoped advanced studio CRUD and captions, protected WebVTT sidecars, import/export ID remapping, S3 archive-before-delete maintenance, confirmed upload quota reclamation, history clearing and account-deletion requests.
 - Final checks: Go race tests across all packages passed; go vet passed; Svelte check reports zero errors/warnings; desktop static and Node cloud builds passed; Terraform fmt/validate and compose config passed; API/worker/web container builds passed.
-- Independent repositories created at /home/jienweng/projects/videoflow-saas/videoflow-web and /home/jienweng/projects/videoflow-saas/videoflow-api. Backend tests pass outside the source repository; standalone web Docker build passes. They are source snapshots with no remotes or rewritten source history.
+- Independent repositories created at /home/jienweng/projects/videoflow-saas/6eek-web and /home/jienweng/projects/videoflow-saas/videoflow-api. Backend tests pass outside the source repository; standalone web Docker build passes. They are source snapshots with no remotes or rewritten source history.
 - Local runtime uses a separate videoflow_app database, so integration test public-video fixtures are not shown in the app.
 - Remaining verification gates: browser visual automation (tool failed), deployed AWS HLS/SES/provider tests, payment sandbox integration, restore/load drills and commercial activation. Full master-spec remaining features are explicit in docs/CLOUD-IMPLEMENTATION.md.
 

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const {Engine} = require('../engine.cjs');
 const fixture = path.join(__dirname, 'fixture.cjs');
-test('starts on an assigned loopback port and stops its process', {skip: !process.env.VIDEOFLOW_INTEGRATION}, async () => {
+test('starts on an assigned loopback port and stops its process', {skip: !process.env.SIXEEK_INTEGRATION}, async () => {
   const engine = new Engine({executable: process.execPath, args: [fixture], timeout: 3000});
   try {
     const url = await engine.start();
@@ -34,7 +34,7 @@ function fakeSpawn(_command, _args, options) {
   Object.assign(child, {stdout: new EventEmitter(), stderr: new EventEmitter(), exitCode: null, signalCode: null});
   child.kill = signal => { child.signalCode = signal; setImmediate(() => child.emit('exit', null, signal)); return true; };
   setImmediate(() => {
-    child.stderr.emit('data', Buffer.from('VideoFlow ready at http://127.'));
+    child.stderr.emit('data', Buffer.from('6eek ready at http://127.'));
     child.stdout.emit('data', Buffer.from('unrelated log\n'));
     child.stderr.emit('data', Buffer.from('0.0.1:12345\n'));
   });
@@ -43,18 +43,18 @@ function fakeSpawn(_command, _args, options) {
 test('fragmented readiness, health verification and graceful shutdown', async () => {
   const engine = new Engine({executable: 'fixture', spawnProcess: fakeSpawn,
     request: async url => { assert.equal(url, 'http://127.0.0.1:12345/api/health');
-      return {ok: true, json: async () => ({status: 'ok', server: 'videoflow-go-v1', media_ready: true})}; }});
+      return {ok: true, json: async () => ({status: 'ok', server: '6eek-go-v1', media_ready: true})}; }});
   await engine.start();
   await engine.stop();
   assert.equal(engine.child.signalCode, 'SIGTERM');
 });
 test('failed media health stops the engine', async () => {
   const engine = new Engine({executable: 'fixture', spawnProcess: fakeSpawn,
-    request: async () => ({ok: true, json: async () => ({status: 'ok', server: 'videoflow-go-v1', media_ready: false})})});
+    request: async () => ({ok: true, json: async () => ({status: 'ok', server: '6eek-go-v1', media_ready: false})})});
   await assert.rejects(engine.start(), /health check/);
   assert.equal(engine.child.signalCode, 'SIGTERM');
 });
 test('missing executable reports startup error without waiting for shutdown timeout', async () => {
-  const engine = new Engine({executable: '/nonexistent/videoflow-engine'});
+  const engine = new Engine({executable: '/nonexistent/6eek-engine'});
   await assert.rejects(engine.start(), /ENOENT/);
 });

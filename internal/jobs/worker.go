@@ -13,13 +13,13 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"videoflow-go/internal/routing"
+	"6eek-go/internal/routing"
 
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/events"
-	"videoflow-go/internal/media"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/events"
+	"6eek-go/internal/media"
+	"6eek-go/internal/models"
 )
 
 type WorkerPool struct {

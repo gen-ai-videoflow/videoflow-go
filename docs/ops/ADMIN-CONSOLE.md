@@ -1,4 +1,4 @@
-# VideoFlow administration
+# 6eek administration
 
 The standalone SvelteKit application lives in the separate `admin` repository at `/home/jienweng/projects/videoflow-saas/admin`. It uses the same product origin, mounted at `/admin`, while the existing application handles sign-in and security enrollment. It never receives a database connection or provider credentials.
 
@@ -6,7 +6,7 @@ The standalone SvelteKit application lives in the separate `admin` repository at
 
 1. Apply migrations 031, 034 and 037 along with the full migration sequence using the migration owner.
 2. Re-run `cloud-migrate provision-role` after migration. The runtime role can read administrator grants, never create, edit, or remove them. Administrative audit is append-only with read access. `CheckRuntimeRole` rejects credentials that can change administrator grants.
-3. Register the intended operator normally and complete a passkey or authenticator setup in VideoFlow security settings.
+3. Register the intended operator normally and complete a passkey or authenticator setup in 6eek security settings.
 4. An authorized database operator grants the first owner in an audited transaction. Substitute the actual operator email and an identifying change ticket. No public API can grant administrator access:
 
 ```sql

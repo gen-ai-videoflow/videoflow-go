@@ -1,6 +1,6 @@
-VideoFlow now bundles the app, browser interface, FFmpeg, FFprobe and a caption font in each macOS/Linux download.
+6eek now bundles the app, browser interface, FFmpeg, FFprobe and a caption font in each macOS/Linux download.
 
-Download the ZIP for your computer, extract the entire folder and open **Start VideoFlow**. Enter your OpenRouter key in Settings. **No Go, Node.js, Python or FFmpeg installation is required.** Projects and your saved key stay in your user data folder when you update.
+Download the ZIP for your computer, extract the entire folder and open **Start 6eek**. Enter your OpenRouter key in Settings. **No Go, Node.js, Python or FFmpeg installation is required.** Projects and your saved key stay in your user data folder when you update.
 
 Internet access and OpenRouter credits are required; AI generation is billable. This is an unsigned preview, so macOS may show a security prompt.
 

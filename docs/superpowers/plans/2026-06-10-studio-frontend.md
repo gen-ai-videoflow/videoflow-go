@@ -1,4 +1,4 @@
-# VideoFlow Studio Implementation Plan
+# 6eek Studio Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -1025,7 +1025,7 @@ git commit -m "chore: migrate frontend to Svelte 5 + Tailwind + shadcn-svelte"
 
 <div class="flex h-screen bg-background text-foreground">
   <aside class="flex w-48 shrink-0 flex-col border-r border-border p-3 gap-1">
-    <div class="px-2 py-3 text-sm font-semibold tracking-wide">VideoFlow</div>
+    <div class="px-2 py-3 text-sm font-semibold tracking-wide">6eek</div>
     {#each nav as item}
       <a
         href={item.href}

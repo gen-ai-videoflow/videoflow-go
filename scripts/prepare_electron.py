@@ -22,7 +22,7 @@ def prepare(archive, destination, target=None):
             for item in bundle.infolist():
                 name = PurePosixPath(item.filename)
                 mode = item.external_attr >> 16
-                if (not name.parts or name.parts[0] != 'VideoFlow' or '..' in name.parts or
+                if (not name.parts or name.parts[0] != '6eek' or '..' in name.parts or
                         '\\' in item.filename or stat.S_ISLNK(mode) or
                         any(part.startswith('.env') or '.sqlite' in part or part == 'storage' for part in name.parts)):
                     raise ValueError(f'Unsafe or private archive entry: {item.filename}')
@@ -33,7 +33,7 @@ def prepare(archive, destination, target=None):
                     entry_path.parent.mkdir(parents=True, exist_ok=True)
                     entry_path.write_bytes(bundle.read(item))
                     entry_path.chmod(mode & 0o777)
-        folder = temp / 'VideoFlow'
+        folder = temp / '6eek'
         for name in REQUIRED:
             if not (folder / name).is_file():
                 raise ValueError(f'Missing runtime resource: {name}')
@@ -60,5 +60,5 @@ if __name__ == '__main__':
     parser.add_argument('--archive', required=True)
     parser.add_argument('--target', required=True, choices=['linux-amd64', 'linux-arm64', 'darwin-amd64', 'darwin-arm64'])
     args = parser.parse_args()
-    prepare(args.archive, ROOT / 'electron/payload/VideoFlow', args.target)
+    prepare(args.archive, ROOT / 'electron/payload/6eek', args.target)
     print('Electron runtime prepared; includes native engine, interface, media tools, fonts and licenses.')

@@ -2,10 +2,10 @@
 region = "ap-southeast-1"
 environment = "staging"
 image_tag = "replace-with-immutable-release-tag"
-public_origin = "https://studio.example.com"
-web_domain = "studio.example.com"
-media_domain = "media.example.com"
-alb_origin_domain = "origin.example.com"
+public_origin = "https://6eek.com"
+web_domain = "6eek.com"
+media_domain = "media.6eek.com"
+alb_origin_domain = "api.6eek.com"
 alb_certificate_arn = "arn:aws:acm:ap-southeast-1:123456789012:certificate/REPLACE"
 # us-east-1 certificate covering BOTH web_domain and media_domain.
 edge_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE"
@@ -24,7 +24,7 @@ secret_arns = {
  OPENROUTER_API_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:openrouter-REPLACE"
  CLOUDFRONT_PRIVATE_KEY = "arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:playback-signing-REPLACE"
 }
-budget_email = "operations@example.com"
+budget_email = "operations@6eek.com"
 monthly_budget_usd = 500
 multi_az = false
 
@@ -62,3 +62,10 @@ cryptorails_usd_peg_accepted = false
 # restarts, restores and deployments. The ARN points to a base64 32-byte value.
 # Do not put AUTH_ENCRYPTION_KEY in shared secret_arns or paste its value here.
 auth_encryption_secret_arn = ""
+
+# Admin: https://admin.6eek.com/admin; user docs: https://docs.6eek.com
+# Configure backend SESSION_COOKIE_DOMAIN=.6eek.com and exact BROWSER_ORIGINS
+# https://6eek.com,https://admin.6eek.com before enabling cross-subdomain login.
+
+session_cookie_domain = ".6eek.com"
+browser_origins = ["https://6eek.com", "https://admin.6eek.com"]

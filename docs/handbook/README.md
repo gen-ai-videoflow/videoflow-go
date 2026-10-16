@@ -1,6 +1,6 @@
-# VideoFlow handbook
+# 6eek handbook
 
-This handbook describes the local VideoFlow workflow inspected on 27 September 2026. Start here whether you have an empty computer, an empty VideoFlow project, or an existing story.
+This handbook describes the local 6eek workflow inspected on 27 September 2026. Start here whether you have an empty computer, an empty 6eek project, or an existing story.
 
 **Current readiness:** all 640 backend tests pass, frontend checks and build pass, and GitHub CI is green. No paid live provider generation was run for this guide, so confirm credentials, account access, and model behavior before production use. AtlasCloud H3 Developer Reference-to-Video is the default video route; OpenRouter route behavior has contract coverage, but live account/model behavior still needs a smoke test. See [provider setup](03-providers.md) and the [implementation audit](../audits/2026-09-27-implementation.md).
 
@@ -8,7 +8,7 @@ This handbook describes the local VideoFlow workflow inspected on 27 September 2
 
 | Part | What you will learn |
 |---|---|
-| [1. How VideoFlow works](01-how-it-works.md) | Concepts, workflow philosophy, and what automation actually does |
+| [1. How 6eek works](01-how-it-works.md) | Concepts, workflow philosophy, and what automation actually does |
 | [2. Install from zero](02-installation.md) | Prerequisites, download, launch, health checks, and stopping safely |
 | [3. Configure providers](03-providers.md) | Keys, models, agents, media engines, and OpenRouter limitations |
 | [4. Projects](04-projects.md) | Create, switch, export, import, and back up work |

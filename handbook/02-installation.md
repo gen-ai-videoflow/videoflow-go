@@ -5,7 +5,7 @@
 You will run two processes: the high-performance Go backend on port 8000 and the SvelteKit frontend on port 5173. 
 
 > [!NOTE]
-> **No Python or uv Required**: VideoFlow Go is a streamlined, single-binary Go backend. It eliminates Python, `uv`, virtual environments (`.venv`), and complex runtime setups.
+> **No Python or uv Required**: 6eek Go is a streamlined, single-binary Go backend. It eliminates Python, `uv`, virtual environments (`.venv`), and complex runtime setups.
 
 ---
 
@@ -32,13 +32,13 @@ A GPU is not required by the local application: AI media generation is handled v
 
 ---
 
-## 2. Download VideoFlow Go
+## 2. Download 6eek Go
 
 Clone the repository:
 
 ```sh
 git clone https://github.com/JienWeng/videoflow-go.git
-cd videoflow-go
+cd 6eek-go
 ```
 
 The repository root contains the Go backend source code (`cmd/server`, `internal/`) and the frontend directory (`frontend/`). No Python package synchronization or virtualenv creation is needed.

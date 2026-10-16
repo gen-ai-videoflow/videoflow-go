@@ -18,12 +18,12 @@ func (s *Server) sendAccountEmail(ctx context.Context, email, token, purpose str
 	if err != nil {
 		return err
 	}
-	subject, action := "Verify your VideoFlow email", "verify-email"
+	subject, action := "Verify your 6eek email", "verify-email"
 	if purpose == "reset_password" {
-		subject, action = "Reset your VideoFlow password", "reset-password"
+		subject, action = "Reset your 6eek password", "reset-password"
 	}
 	if purpose == "magic_login" {
-		subject, action = "Sign in to VideoFlow", "magic-link"
+		subject, action = "Sign in to 6eek", "magic-link"
 	}
 	link := s.Config.PublicOrigin + "/" + action + "?token=" + url.QueryEscape(token)
 	expiry := "This link expires in 30 minutes."

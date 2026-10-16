@@ -49,7 +49,7 @@ def main():
         dest = cache / item['filename']
         if not dest.exists():
             print(f'Downloading {name}', flush=True)
-            request = urllib.request.Request(item['url'], headers={'User-Agent': 'VideoFlow-media-build'})
+            request = urllib.request.Request(item['url'], headers={'User-Agent': '6eek-media-build'})
             with urllib.request.urlopen(request, timeout=120) as response:
                 data = response.read()
             if hashlib.sha256(data).hexdigest() != item['sha256']:
@@ -132,7 +132,7 @@ def main():
             shutil.copy2(source, licenses / (name + '-' + source.name))
     for name in ['font_license', 'font_cjk_license']:
         shutil.copy2(cache / sources[name]['filename'], licenses / sources[name]['filename'])
-    (licenses / 'NOTICE.txt').write_text('This download uses FFmpeg built with GPLv3 components, libass, FreeType, FriBidi, HarfBuzz, x264 and the OFL Noto Sans font. License texts are in this folder. Exact source archives, download checksums and the build script are provided in ../media-sources.zip. FFmpeg runs as a separate process; it is not linked into VideoFlow.\n')
+    (licenses / 'NOTICE.txt').write_text('This download uses FFmpeg built with GPLv3 components, libass, FreeType, FriBidi, HarfBuzz, x264 and the OFL Noto Sans font. License texts are in this folder. Exact source archives, download checksums and the build script are provided in ../media-sources.zip. FFmpeg runs as a separate process; it is not linked into 6eek.\n')
     with zipfile.ZipFile(bundle / 'media-sources.zip', 'w', zipfile.ZIP_STORED) as archive:
         for item in sources.values():
             archive.write(cache / item['filename'], item['filename'])

@@ -298,7 +298,7 @@ func (s *Server) legacyMembershipCheckout(w http.ResponseWriter, r *http.Request
 		s.fail(w, ErrValidation)
 		return
 	}
-	form := url.Values{"expires_at": {intString(checkoutCreated.Add(31 * time.Minute).Unix())}, "mode": {"subscription"}, "customer_email": {u.Email}, "client_reference_id": {id}, "success_url": {s.Config.PublicOrigin + "/memberships?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/memberships?checkout=cancelled"}, "line_items[0][price_data][currency]": {currency}, "line_items[0][price_data][unit_amount]": {intString(price)}, "line_items[0][price_data][recurring][interval]": {"month"}, "line_items[0][price_data][product_data][name]": {"VideoFlow creator membership"}, "line_items[0][quantity]": {"1"}, "metadata[membership_checkout_id]": {id}, "subscription_data[metadata][membership_checkout_id]": {id}}
+	form := url.Values{"expires_at": {intString(checkoutCreated.Add(31 * time.Minute).Unix())}, "mode": {"subscription"}, "customer_email": {u.Email}, "client_reference_id": {id}, "success_url": {s.Config.PublicOrigin + "/memberships?checkout=success"}, "cancel_url": {s.Config.PublicOrigin + "/memberships?checkout=cancelled"}, "line_items[0][price_data][currency]": {currency}, "line_items[0][price_data][unit_amount]": {intString(price)}, "line_items[0][price_data][recurring][interval]": {"month"}, "line_items[0][price_data][product_data][name]": {"6eek creator membership"}, "line_items[0][quantity]": {"1"}, "metadata[membership_checkout_id]": {id}, "subscription_data[metadata][membership_checkout_id]": {id}}
 	// Funds remain with the platform. Creator share is journaled on verified invoices;
 	// transfers and cash payouts require a separate approved, reconciled batch.
 	var out struct {

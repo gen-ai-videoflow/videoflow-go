@@ -1,0 +1,2 @@
+-- New measured qualifications have replayable event provenance; older daily counts remain untouched.
+CREATE TABLE cloud_view_qualifications(video_id text NOT NULL REFERENCES cloud_videos(id), viewer_hash text NOT NULL,day date NOT NULL,session_id text NOT NULL REFERENCES cloud_watch_sessions(id),threshold_seconds integer NOT NULL CHECK(threshold_seconds>0),valid boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(video_id,viewer_hash,day));

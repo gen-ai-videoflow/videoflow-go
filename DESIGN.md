@@ -1,5 +1,5 @@
 ---
-name: VideoFlow
+name: 6eek
 description: Warm ink and signal orange for watching and creating video.
 colors:
   signal: "#ff5b1f"
@@ -67,13 +67,13 @@ components:
     padding: "0.125rem 0.5rem"
 ---
 
-# Design System: VideoFlow
+# Design System: 6eek
 
 ## Overview
 
-**Creative North Star: "VideoFlow’s existing workspace, aligned with its landing-page brand"**
+**Creative North Star: "6eek’s existing workspace, aligned with its landing-page brand"**
 
-VideoFlow uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.
+6eek uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.
 
 Inter, compact controls, fine borders and muted supporting copy remain the incumbent visual language. Media and the original Studio canvas lead; brand appears in the logo, primary actions and selected states.
 
@@ -157,7 +157,7 @@ The successfully loaded empty Discover feed offers a three-column starter sectio
 
 ### Logo
 
-`BrandLogo.svelte` selects the supplied transparent logo on dark surfaces and supplied light variant on light surfaces. Width is 122px by default and 108px in compact headers, with intrinsic aspect ratio preserved. Both images expose the VideoFlow name; the supplied mark is the favicon. Do not reproduce logo lettering with a font or generate substitute artwork.
+`BrandLogo.svelte` selects the supplied transparent logo on dark surfaces and supplied light variant on light surfaces. Width is 122px by default and 108px in compact headers, with intrinsic aspect ratio preserved. Both images expose the 6eek name; the supplied mark is the favicon. Do not reproduce logo lettering with a font or generate substitute artwork.
 
 ## Do's and Don'ts
 

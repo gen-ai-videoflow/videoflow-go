@@ -1,4 +1,4 @@
-BINARY_NAME=videoflow-server
+BINARY_NAME=6eek-server
 
 .PHONY: all build run test clean tidy build-all
 
@@ -47,10 +47,10 @@ cloud-contract:
 	python3 scripts/generate-cloud-contract.py
 
 cloud-build:
-	go build -o bin/videoflow-cloud ./cmd/cloud
-	go build -o bin/videoflow-cloud-worker ./cmd/cloud-worker
-	go build -o bin/videoflow-cloud-admin ./cmd/cloud-admin
-	go build -o bin/videoflow-cloud-rewards ./cmd/cloud-rewards
+	go build -o bin/6eek-cloud ./cmd/cloud
+	go build -o bin/6eek-cloud-worker ./cmd/cloud-worker
+	go build -o bin/6eek-cloud-admin ./cmd/cloud-admin
+	go build -o bin/6eek-cloud-rewards ./cmd/cloud-rewards
 
 cloud-dev:
 	docker compose --env-file .env.cloud -f compose.cloud.yml --profile app up --build

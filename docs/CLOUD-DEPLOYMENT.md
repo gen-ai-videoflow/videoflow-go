@@ -1,4 +1,4 @@
-> Current product decision: new credit and Premium checkout uses [CryptoRails](CRYPTORAILS.md). Premium is platform-wide prepaid 30-day access with explicit renewal; generation credits are separate. Historical Stripe payments remain reconcilable, with no new Stripe sales. The original VideoFlow canvas/sidebar remains the protected Studio; public browsing uses Discover and starters use Templates.
+> Current product decision: new credit and Premium checkout uses [CryptoRails](CRYPTORAILS.md). Premium is platform-wide prepaid 30-day access with explicit renewal; generation credits are separate. Historical Stripe payments remain reconcilable, with no new Stripe sales. The original 6eek canvas/sidebar remains the protected Studio; public browsing uses Discover and starters use Templates.
 
 # Cloud development and AWS deployment
 

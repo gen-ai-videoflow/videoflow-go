@@ -1,9 +1,9 @@
 {
-  "name": "videoflow-desktop",
+  "name": "6eek-desktop",
   "version": "0.3.1",
   "private": true,
-  "description": "VideoFlow desktop with its bundled Go engine and media tools",
-  "author": "VideoFlow contributors",
+  "description": "6eek desktop with its bundled Go engine and media tools",
+  "author": "6eek contributors",
   "main": "main.cjs",
   "scripts": {
     "test": "node --test test/*.test.cjs",
@@ -15,8 +15,8 @@
     "electron-builder": "^26.0.0"
   },
   "build": {
-    "appId": "io.videoflow.desktop",
-    "productName": "VideoFlow",
+    "appId": "io.6eek.desktop",
+    "productName": "6eek",
     "directories": {
       "output": "../dist/electron"
     },
@@ -28,7 +28,7 @@
     ],
     "extraResources": [
       {
-        "from": "payload/VideoFlow",
+        "from": "payload/6eek",
         "to": "engine"
       }
     ],
@@ -44,7 +44,7 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "binaries": [
-        "Contents/Resources/engine/videoflow",
+        "Contents/Resources/engine/6eek",
         "Contents/Resources/engine/ffmpeg",
         "Contents/Resources/engine/ffprobe"
       ]
@@ -56,10 +56,10 @@
         "tar.gz"
       ],
       "category": "AudioVideo",
-      "maintainer": "VideoFlow contributors"
+      "maintainer": "6eek contributors"
     },
     "beforePack": "./validate-payload.cjs",
-    "artifactName": "VideoFlow-${version}-${os}-${arch}.${ext}"
+    "artifactName": "6eek-${version}-${os}-${arch}.${ext}"
   },
   "homepage": "https://github.com/JienWeng/videoflow-go"
 }

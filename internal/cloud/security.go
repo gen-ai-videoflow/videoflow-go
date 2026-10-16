@@ -176,7 +176,7 @@ func (s *Server) reauth(ctx context.Context, r *http.Request, u User, password, 
 	}
 	if keys {
 		fresh := false
-		cookie, cookieErr := r.Cookie("videoflow_session")
+		cookie, cookieErr := sessionCookie(r)
 		if cookieErr == nil {
 			e = s.Store.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_sessions WHERE token_hash=$1 AND user_id=$2 AND passkey_verified_at>now()-interval '5 minutes')`, tokenHash(cookie.Value), u.ID).Scan(&fresh)
 			if e != nil {
@@ -224,7 +224,7 @@ func (s *Server) totpBegin(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, e)
 		return
 	}
-	key, e := totp.Generate(totp.GenerateOpts{Issuer: "VideoFlow", AccountName: u.Email, SecretSize: 32})
+	key, e := totp.Generate(totp.GenerateOpts{Issuer: "6eek.com", AccountName: u.Email, SecretSize: 32})
 	if e != nil {
 		s.fail(w, e)
 		return

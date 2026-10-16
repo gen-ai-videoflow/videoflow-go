@@ -1,6 +1,6 @@
 disposition: fix
 
-Inputs bounded: no QUALITY BAR card was supplied; incumbent shadcn/VideoFlow authority applies. Compressed remote captures bound fine typography and pixel-contrast conclusions. OriginalStudio.svelte and Storyboard.svelte were not read in full. This was a delegated fresh-eye file review; no browser or second detector run was used.
+Inputs bounded: no QUALITY BAR card was supplied; incumbent shadcn/6eek authority applies. Compressed remote captures bound fine typography and pixel-contrast conclusions. OriginalStudio.svelte and Storyboard.svelte were not read in full. This was a delegated fresh-eye file review; no browser or second detector run was used.
 
 ## persistence
 
@@ -36,7 +36,7 @@ Incumbent application finish is the appropriate ceiling: aligned labels, quiet d
 
 ## keep
 
-Preserve supplied VideoFlow branding, original canvas, neutral YouTube-like rail, working project-aware resources, authoritative saves, quiet empty states and final mobile single-column editor.
+Preserve supplied 6eek branding, original canvas, neutral YouTube-like rail, working project-aware resources, authoritative saves, quiet empty states and final mobile single-column editor.
 
 ## verdict
 

@@ -106,7 +106,7 @@
     const duration = `${route.min_duration}–${route.max_duration}s`;
     const resolution = route.resolution ? `, ${route.resolution}` : '';
     const references = route.max_reference_images > 0
-      ? `${route.min_reference_count ? `${route.min_reference_count}+ image reference required; ` : ''}up to ${route.max_reference_images} image references${route.reference_limit_source === 'application' ? ' (VideoFlow upload cap)' : ''}`
+      ? `${route.min_reference_count ? `${route.min_reference_count}+ image reference required; ` : ''}up to ${route.max_reference_images} image references${route.reference_limit_source === 'application' ? ' (6eek upload cap)' : ''}`
       : 'no image references (storyboards are not sent to this route)';
     const audio = route.supports_generated_audio ? ', generated audio supported' : '';
     return `${route.provider} / ${route.model || 'no model selected'} (${duration}${resolution}; ${references}${audio})`;
@@ -197,7 +197,7 @@
       </div>
       <h1 class="text-2xl font-semibold tracking-tight">Create a video</h1>
       <p class="mt-2 max-w-xl text-muted-foreground">
-        Describe the story. VideoFlow builds scenes, dialogue, visuals, and render jobs. Provider calls may incur charges.
+        Describe the story. 6eek builds scenes, dialogue, visuals, and render jobs. Provider calls may incur charges.
       </p>
     </div>
 

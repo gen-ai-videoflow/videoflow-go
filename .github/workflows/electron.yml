@@ -62,13 +62,13 @@ jobs:
         working-directory: frontend
       - run: python3 scripts/test_package.py
       - run: python3 scripts/package.py --target '${{ matrix.target }}'
-      - run: python3 scripts/smoke_package.py --archive 'dist/VideoFlow-${{ matrix.target }}.zip'
+      - run: python3 scripts/smoke_package.py --archive 'dist/6eek-${{ matrix.target }}.zip'
       - run: python3 scripts/test_prepare_electron.py
-      - run: python3 scripts/prepare_electron.py --archive 'dist/VideoFlow-${{ matrix.target }}.zip' --target '${{ matrix.target }}'
+      - run: python3 scripts/prepare_electron.py --archive 'dist/6eek-${{ matrix.target }}.zip' --target '${{ matrix.target }}'
       - run: npm ci && npm test
         working-directory: electron
       - name: Test engine listener and shutdown
-        run: VIDEOFLOW_INTEGRATION=1 npm test
+        run: SIXEEK_INTEGRATION=1 npm test
         working-directory: electron
       - name: Prepare Linux display
         if: runner.os == 'Linux'
@@ -108,22 +108,22 @@ jobs:
           NATIVE_TARGET: ${{ matrix.target }}
         run: |
           case "$NATIVE_TARGET" in
-            darwin-amd64) python3 scripts/smoke_electron.py --executable dist/electron/mac/VideoFlow.app/Contents/MacOS/VideoFlow ;;
-            darwin-arm64) python3 scripts/smoke_electron.py --executable dist/electron/mac-arm64/VideoFlow.app/Contents/MacOS/VideoFlow ;;
-            linux-amd64) xvfb-run -a python3 scripts/smoke_electron.py --executable /usr/bin/videoflow-desktop ;;
-            linux-arm64) xvfb-run -a python3 scripts/smoke_electron.py --executable /usr/bin/videoflow-desktop ;;
+            darwin-amd64) python3 scripts/smoke_electron.py --executable dist/electron/mac/6eek.app/Contents/MacOS/6eek ;;
+            darwin-arm64) python3 scripts/smoke_electron.py --executable dist/electron/mac-arm64/6eek.app/Contents/MacOS/6eek ;;
+            linux-amd64) xvfb-run -a python3 scripts/smoke_electron.py --executable /usr/bin/6eek-desktop ;;
+            linux-arm64) xvfb-run -a python3 scripts/smoke_electron.py --executable /usr/bin/6eek-desktop ;;
           esac
       - name: Verify the downloaded macOS ZIP against Gatekeeper
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/macos-download-check
           ditto -x -k dist/electron/*.zip dist/macos-download-check
-          xattr -w com.apple.quarantine '0083;00000000;VideoFlowReleaseCheck;' dist/macos-download-check/VideoFlow.app
-          python3 scripts/audit_macos.py --app dist/macos-download-check/VideoFlow.app --output dist/macos-download-check/report.json --require-trusted
-          python3 scripts/smoke_electron.py --executable dist/macos-download-check/VideoFlow.app/Contents/MacOS/VideoFlow
+          xattr -w com.apple.quarantine '0083;00000000;6eekReleaseCheck;' dist/macos-download-check/6eek.app
+          python3 scripts/audit_macos.py --app dist/macos-download-check/6eek.app --output dist/macos-download-check/report.json --require-trusted
+          python3 scripts/smoke_electron.py --executable dist/macos-download-check/6eek.app/Contents/MacOS/6eek
       - uses: actions/upload-artifact@v4
         with:
-          name: VideoFlow-Electron-${{ matrix.target }}
+          name: 6eek-Electron-${{ matrix.target }}
           path: |
             dist/electron/*.dmg
             dist/electron/*.zip
@@ -139,7 +139,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: VideoFlow-Electron-*
+          pattern: 6eek-Electron-*
           merge-multiple: true
           path: dist/electron
       - name: Checksum the native installers
@@ -151,5 +151,5 @@ jobs:
           RELEASE_TAG: v0.3.1-electron.1
         run: |
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" dist/electron/*.deb dist/electron/*.dmg dist/electron/*.zip dist/electron/*.AppImage dist/electron/*.tar.gz dist/electron/SHA256SUMS.txt --target "$GITHUB_SHA" --title 'VideoFlow 0.3.1 — signed macOS desktop' --notes-file docs/electron-release-notes.md --prerelease
+            gh release create "$RELEASE_TAG" dist/electron/*.deb dist/electron/*.dmg dist/electron/*.zip dist/electron/*.AppImage dist/electron/*.tar.gz dist/electron/SHA256SUMS.txt --target "$GITHUB_SHA" --title '6eek 0.3.1 — signed macOS desktop' --notes-file docs/electron-release-notes.md --prerelease
           fi

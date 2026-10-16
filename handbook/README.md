@@ -1,6 +1,6 @@
-# VideoFlow handbook
+# 6eek handbook
 
-This handbook describes the local VideoFlow workflow inspected on 27 September 2026. Start here whether you have an empty computer, an empty VideoFlow project, or an existing story.
+This handbook describes the local 6eek workflow inspected on 27 September 2026. Start here whether you have an empty computer, an empty 6eek project, or an existing story.
 
 **Current readiness:** Go backend and SvelteKit frontend tests pass, and zero-dependency single binary build is operational. Confirm credentials, account access, and model behavior before production use. AtlasCloud and OpenRouter routes are supported. See [provider setup](03-providers.md).
 
@@ -8,7 +8,7 @@ This handbook describes the local VideoFlow workflow inspected on 27 September 2
 
 | Part | What you will learn |
 |---|---|
-| [1. How VideoFlow works](01-how-it-works.md) | Concepts, workflow philosophy, and what automation actually does |
+| [1. How 6eek works](01-how-it-works.md) | Concepts, workflow philosophy, and what automation actually does |
 | [2. Install from zero](02-installation.md) | Prerequisites, download, launch, health checks, and stopping safely |
 | [3. Configure providers](03-providers.md) | Keys, models, agents, media engines, and OpenRouter limitations |
 | [4. Projects](04-projects.md) | Create, switch, export, import, and back up work |

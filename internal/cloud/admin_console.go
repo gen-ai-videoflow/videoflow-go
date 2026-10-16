@@ -56,10 +56,10 @@ func (s *Server) adminAccess(next http.Handler) http.Handler {
 			return
 		}
 		if !enrolled {
-			s.json(w, 403, map[string]string{"message": "Set up a passkey or authenticator in VideoFlow security settings before opening administration."})
+			s.json(w, 403, map[string]string{"message": "Set up a passkey or authenticator in 6eek security settings before opening administration."})
 			return
 		}
-		cookie, _ := r.Cookie("videoflow_session")
+		cookie, _ := sessionCookie(r)
 		fresh := false
 		window := "24 hours"
 		if r.Method != http.MethodGet {
@@ -96,6 +96,14 @@ func (s *Server) adminConsoleRoutes(r chi.Router) {
 			s.result(w, map[string]any{"user": currentUser(r), "role": role, "sections": adminSections(role), "readable_kinds": adminReadableKinds(role), "export_kinds": adminExportKinds(role)}, err)
 		})
 		r.Get("/rewards", s.adminRewards)
+		s.rewardSupportAdminRoutes(r)
+		s.rewardCorrectionAdminRoutes(r)
+		s.discoveryAdminRoutes(r)
+		s.campaignAdminRoutes(r)
+		s.rewardEngineAdminRoutes(r)
+		s.rewardRevenueAdminRoutes(r)
+		s.commercialAdminRoutes(r)
+		s.rewardLegacyBackingRoutes(r)
 		r.Post("/rewards/users/{id}/hold", s.adminRewardHold)
 		r.Post("/rewards/funding", s.adminRewardFunding)
 		r.Post("/rewards/funding/{id}/reconcile", s.adminRewardReconcile)

@@ -1,7 +1,7 @@
 import { request } from './api';
 let project = '';
 export function getCanvasProject() { return project; }
-export function canvasStorageKey() { return `videoflow.cloud.canvas.${project}`; }
+export function canvasStorageKey() { return `6eek.cloud.canvas.${project}`; }
 export function setCanvasProject(id: string) { project = id; }
 export async function canvasRequest(path: string, body?: unknown, method = 'GET') {
   if (typeof window === 'undefined' || !project) throw new Error('Select a project first.');

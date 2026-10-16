@@ -135,7 +135,7 @@ function ExportPopover({
             const filename=`${activeProject.metadata.name.replace(/[\\/\r\n\0]/g,"-").slice(0,170)}${getExportFileExtension({format})}`;
             if(destination==="publish"&&window.parent!==window){
                 // Structured clone to the verified parent; retain buffer for download fallback.
-                window.parent.postMessage({type:"videoflow:editor:exported",buffer:result.buffer,filename,mime:getExportMimeType({format})},window.location.origin);
+                window.parent.postMessage({type:"6eek:editor:exported",buffer:result.buffer,filename,mime:getExportMimeType({format})},window.location.origin);
             } else {downloadBuffer({buffer:result.buffer,filename,mimeType:getExportMimeType({format})});}
 
 			editor.project.clearExportState();

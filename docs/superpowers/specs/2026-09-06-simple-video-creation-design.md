@@ -2,7 +2,7 @@
 
 ## Goal
 
-Give a first-time VideoFlow user one guided path from a story idea to a rendered video, while keeping the existing scene, character, asset, render, and settings tools available for advanced work.
+Give a first-time 6eek user one guided path from a story idea to a rendered video, while keeping the existing scene, character, asset, render, and settings tools available for advanced work.
 
 ## Product flow
 

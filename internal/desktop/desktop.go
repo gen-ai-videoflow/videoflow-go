@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"videoflow-go/internal/config"
+	"6eek-go/internal/config"
 )
 
 // Configure keeps projects outside the download folder so updates preserve data.
@@ -24,13 +24,13 @@ func Configure(cfg *config.Config, uiDir string) (string, error) {
 		uiDir = filepath.Join(folder, "frontend")
 	}
 	if _, err := os.Stat(filepath.Join(uiDir, "index.html")); err != nil {
-		return "", fmt.Errorf("interface missing: extract the entire VideoFlow download before starting: %w", err)
+		return "", fmt.Errorf("interface missing: extract the entire 6eek download before starting: %w", err)
 	}
 	dataRoot, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
-	dataRoot = filepath.Join(dataRoot, "VideoFlow")
+	dataRoot = filepath.Join(dataRoot, "6eek")
 	if err := os.MkdirAll(dataRoot, 0700); err != nil {
 		return "", err
 	}

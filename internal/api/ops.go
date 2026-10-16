@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 
 	"github.com/go-chi/chi/v5"
 )

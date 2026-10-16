@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"videoflow-go/internal/providers"
-	"videoflow-go/internal/routing"
+	"6eek-go/internal/providers"
+	"6eek-go/internal/routing"
 
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

@@ -1,6 +1,6 @@
 {
   "extends": "./base-config.cjs",
-  "artifactName": "VideoFlow-${version}-mac-${arch}-adhoc-preview.${ext}",
+  "artifactName": "6eek-${version}-mac-${arch}-adhoc-preview.${ext}",
   "mac": {
     "identity": "-",
     "forceCodeSigning": false,
@@ -8,7 +8,7 @@
     "notarize": false
   },
   "extraResources": [
-    {"from": "payload/VideoFlow", "to": "engine"},
+    {"from": "payload/6eek", "to": "engine"},
     {"from": "../docs/MACOS-PREVIEW-START-HERE.txt", "to": "START HERE.txt"}
   ],
   "dmg": {

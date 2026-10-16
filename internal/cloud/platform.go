@@ -183,7 +183,7 @@ func (s *Store) SubmitJob(ctx context.Context, u User, quoteID, key string) (Job
 	defer tx.Rollback()
 	// Account lock serializes reservations and identical submissions, not Redis.
 	var available int64
-	if err = tx.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR dispute_hold OR debt>0 THEN 0 ELSE balance-reserved END FROM cloud_credit_accounts WHERE workspace_id=$1 FOR UPDATE`, u.WorkspaceID).Scan(&available); err != nil {
+	if err = tx.QueryRowContext(ctx, `SELECT CASE WHEN restricted OR dispute_hold OR debt>0 THEN 0 ELSE balance-reserved+coalesce((SELECT sum(credits-consumed-reserved) FROM cloud_promotional_credits WHERE workspace_id=$1 AND expires_at>now()),0) END FROM cloud_credit_accounts WHERE workspace_id=$1 FOR UPDATE`, u.WorkspaceID).Scan(&available); err != nil {
 		return Job{}, err
 	}
 	existing, e := scanJob(tx.QueryRowContext(ctx, `SELECT `+jobCols+` FROM cloud_jobs WHERE workspace_id=$1 AND idempotency_key=$2`, u.WorkspaceID, key))
@@ -237,10 +237,14 @@ func (s *Store) SubmitJob(ctx context.Context, u User, quoteID, key string) (Job
 	if err != nil {
 		return Job{}, err
 	}
+	promo, err := reservePromotionalCredits(ctx, tx, u.WorkspaceID, id, credits)
+	if err != nil {
+		return Job{}, err
+	}
 	for _, q := range []struct {
 		sql  string
 		args []any
-	}{{`UPDATE cloud_credit_accounts SET reserved=reserved+$2 WHERE workspace_id=$1`, []any{u.WorkspaceID, credits}}, {`UPDATE cloud_quotes SET consumed=true WHERE id=$1`, []any{quoteID}}, {`INSERT INTO cloud_outbox(id,kind,aggregate_id)VALUES($1,'generation',$2)`, []any{uuid.NewString(), id}}, {`INSERT INTO cloud_job_events(job_id,status)VALUES($1,'queued')`, []any{id}}} {
+	}{{`UPDATE cloud_credit_accounts SET reserved=reserved+$2 WHERE workspace_id=$1`, []any{u.WorkspaceID, credits - promo}}, {`UPDATE cloud_quotes SET consumed=true WHERE id=$1`, []any{quoteID}}, {`INSERT INTO cloud_outbox(id,kind,aggregate_id)VALUES($1,'generation',$2)`, []any{uuid.NewString(), id}}, {`INSERT INTO cloud_job_events(job_id,status)VALUES($1,'queued')`, []any{id}}} {
 		if _, err = tx.ExecContext(ctx, q.sql, q.args...); err != nil {
 			return Job{}, err
 		}
@@ -330,7 +334,14 @@ func (s *Store) finishJob(ctx context.Context, id string, attempt int, status, k
 			return ErrValidation
 		}
 	}
-	if _, err = tx.ExecContext(ctx, `UPDATE cloud_credit_accounts SET reserved=reserved-$2,balance=balance-$3 WHERE workspace_id=$1`, j.WorkspaceID, j.Credits, amount); err != nil {
+	promo, err := settlePromotionalCredits(ctx, tx, id, j.WorkspaceID, status == "succeeded")
+	if err != nil {
+		return err
+	}
+	if status == "succeeded" {
+		amount -= promo
+	}
+	if _, err = tx.ExecContext(ctx, `UPDATE cloud_credit_accounts SET reserved=reserved-$2,balance=balance-$3 WHERE workspace_id=$1`, j.WorkspaceID, j.Credits-promo, amount); err != nil {
 		return err
 	}
 	if _, err = tx.ExecContext(ctx, `UPDATE cloud_credit_accounts SET balance=balance-least(debt,balance-reserved),debt=debt-least(debt,balance-reserved) WHERE workspace_id=$1`, j.WorkspaceID); err != nil {

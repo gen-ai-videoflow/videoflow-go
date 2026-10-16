@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"videoflow-go/internal/media"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/media"
+	"6eek-go/internal/models"
 )
 
 // operation preserves the existing synchronous/background API contract and records failures.

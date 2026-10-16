@@ -2,7 +2,7 @@ package cloud
 
 import (
 	"net/http"
-	apicontract "videoflow-go/api"
+	apicontract "6eek-go/api"
 )
 
 // The route lives under adminAccess: role, enrollment and recent MFA still apply.

@@ -8,7 +8,7 @@ import (
 // ReleaseRewardPage bounds a worker pass. Cursor pagination avoids one failed
 // account starving all later accounts; errors are returned for operator review.
 func (s *Store) ReleaseRewardPage(ctx context.Context, after string) (string, []error, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT a.user_id FROM cloud_reward_allocations a JOIN cloud_reward_releases r ON r.allocation_id=a.id WHERE a.user_id>$1 AND r.released_cents<a.cents ORDER BY a.user_id LIMIT 100`, after)
+	rows, err := s.DB.QueryContext(ctx, `SELECT user_id FROM (SELECT a.user_id FROM cloud_reward_allocations a JOIN cloud_reward_releases r ON r.allocation_id=a.id WHERE r.released_cents<a.cents UNION SELECT c.user_id FROM cloud_reward_corrections c JOIN cloud_reward_correction_releases r ON r.correction_id=c.id WHERE c.approved_by IS NOT NULL AND c.cents>r.released_cents) u WHERE user_id>$1 ORDER BY user_id LIMIT 100`, after)
 	if err != nil {
 		return after, nil, err
 	}

@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: deploy/Dockerfile.backend
     volumes:
-      - videoflow-data:/data
+      - 6eek-data:/data
     restart: unless-stopped
   frontend:
     build:
@@ -16,4 +16,4 @@ services:
       - backend
     restart: unless-stopped
 volumes:
-  videoflow-data:
+  6eek-data:

@@ -69,7 +69,7 @@ def main():
         except (OSError, ValueError, KeyError) as error:
             parser.error(str(error))
         with tempfile.TemporaryDirectory(prefix='videoflow-package-') as temp:
-            folder = Path(temp) / 'VideoFlow'
+            folder = Path(temp) / '6eek'
             folder.mkdir()
             binary = 'videoflow.exe' if system == 'windows' else 'videoflow'
             env = dict(os.environ, GOOS=system, GOARCH=arch, CGO_ENABLED='0')
@@ -84,12 +84,12 @@ def main():
                 shutil.copy2(media / file, folder / file)
             shutil.copyfile(ROOT / 'docs/QUICKSTART.txt', folder / 'START HERE.txt')
             if system == 'windows':
-                (folder / 'Start VideoFlow.bat').write_text('@echo off\ncd /d "%~dp0"\nvideoflow.exe --desktop\nif errorlevel 1 pause\n', encoding='utf-8')
+                (folder / 'Start 6eek.bat').write_text('@echo off\ncd /d "%~dp0"\nvideoflow.exe --desktop\nif errorlevel 1 pause\n', encoding='utf-8')
             else:
-                launcher = folder / ('Start VideoFlow.command' if system == 'darwin' else 'Start VideoFlow.sh')
+                launcher = folder / ('Start 6eek.command' if system == 'darwin' else 'Start 6eek.sh')
                 launcher.write_text('#!/bin/sh\ncd "$(dirname "$0")" || exit 1\nexec ./videoflow --desktop\n')
                 launcher.chmod(0o755)
-            archive = output / f'VideoFlow-{target}.zip'
+            archive = output / f'6eek-{target}.zip'
             with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
                 for path in sorted(folder.rglob('*')):
                     if path.is_file():

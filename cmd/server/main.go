@@ -12,19 +12,19 @@ import (
 	"syscall"
 	"time"
 
-	"videoflow-go/internal/agents"
-	"videoflow-go/internal/api"
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/desktop"
-	"videoflow-go/internal/events"
-	"videoflow-go/internal/jobs"
-	"videoflow-go/internal/media"
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/agents"
+	"6eek-go/internal/api"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/desktop"
+	"6eek-go/internal/events"
+	"6eek-go/internal/jobs"
+	"6eek-go/internal/media"
+	"6eek-go/internal/providers"
 )
 
 func main() {
-	log.Println("Starting VideoFlow Go Backend Engine...")
+	log.Println("Starting 6eek Go Backend Engine...")
 
 	desktopMode := flag.Bool("desktop", false, "serve the bundled interface and keep projects in your user data folder")
 	noBrowser := flag.Bool("no-browser", false, "do not open a browser on startup")
@@ -68,7 +68,7 @@ func main() {
 	addr := net.JoinHostPort(*bindHost, fmt.Sprint(cfg.Port))
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf("Cannot start VideoFlow on %s: %v. Another copy may already be running.", addr, err)
+		log.Fatalf("Cannot start 6eek on %s: %v. Another copy may already be running.", addr, err)
 	}
 	// PORT=0 is used by Electron; guard and report the actual assigned port.
 	addr = listener.Addr().String()
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("VideoFlow ready at http://%s", addr)
+		log.Printf("6eek ready at http://%s", addr)
 		if err := httpServer.Serve(listener); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
@@ -94,7 +94,7 @@ func main() {
 	if *desktopMode && !*noBrowser {
 		go func() {
 			if err := desktop.OpenBrowser("http://" + addr); err != nil {
-				log.Printf("Open http://%s in your browser to use VideoFlow", addr)
+				log.Printf("Open http://%s in your browser to use 6eek", addr)
 			}
 		}()
 	}
@@ -115,5 +115,5 @@ func main() {
 		log.Printf("Server forced to shutdown: %v", err)
 		_ = httpServer.Close()
 	}
-	log.Println("VideoFlow Go backend stopped.")
+	log.Println("6eek Go backend stopped.")
 }

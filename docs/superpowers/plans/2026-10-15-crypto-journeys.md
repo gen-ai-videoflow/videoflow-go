@@ -1,6 +1,6 @@
 # Crypto checkout and user journeys implementation plan
 
-**Goal:** Replace new card checkouts with CryptoRails payments and separate watching from creating while retaining the original VideoFlow canvas.
+**Goal:** Replace new card checkouts with CryptoRails payments and separate watching from creating while retaining the original 6eek canvas.
 
 **Authorization:** The user approved the implementation checklist and requested completion without further questions. External provider onboarding prerequisites gate live activation, not implementation with mocked credentials.
 

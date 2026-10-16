@@ -1,5 +1,5 @@
-// cloud-rewards materializes already confirmed vesting. It never creates
-// reward promises, confirms allocations, or sends provider transfers.
+// cloud-rewards runs bounded reconciliation, calculations and approved-policy
+// confirmation, and materializes vesting. It never sends provider transfers.
 package main
 
 import (
@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func main() {
@@ -40,6 +40,9 @@ func main() {
 	for {
 		pass, stop := context.WithTimeout(ctx, 45*time.Second)
 		next, failures, e := store.ReleaseRewardPage(pass, cursor)
+		if maintenanceErr := store.RunRewardMaintenance(pass, cfg.RewardsEnabled, cfg.CashPayoutsEnabled); maintenanceErr != nil {
+			slog.Error("reward maintenance requires review", "error", maintenanceErr)
+		}
 		stop()
 		if e != nil {
 			slog.Error("vesting pass", "error", e)

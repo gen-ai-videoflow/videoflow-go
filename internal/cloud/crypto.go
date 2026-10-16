@@ -111,7 +111,12 @@ func (s *Server) cryptoRoutes(r chi.Router) {
 			s.fail(w, err)
 			return
 		}
-		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled() || s.stripeEnabled(), "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": Packs, "premium_price_cents": cfg.PremiumPriceCents, "premium_days": 30})
+		packs, packErr := s.Store.CreditPacks(r.Context())
+		if packErr != nil {
+			s.fail(w, packErr)
+			return
+		}
+		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled() || s.stripeEnabled(), "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": packs, "premium_price_cents": cfg.PremiumPriceCents, "premium_days": 30})
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireUser, s.mutationLimits)
@@ -211,26 +216,36 @@ func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, ke
 	if len(key) < 8 || len(key) > 200 {
 		return empty, ErrValidation
 	}
-	var credits, price int64
-	switch purpose {
-	case "credits":
-		p, e := findPack(pack)
-		if e != nil {
-			return empty, e
-		}
-		credits, price = p.Credits, p.PriceCents
-	case "premium":
-		if pack != "" || cfg.PremiumPriceCents < 100 || cfg.PremiumPriceCents > 100000 {
-			return empty, ErrValidation
-		}
-		price = cfg.PremiumPriceCents
-	default:
-		return empty, ErrValidation
-	}
-	var prior string
-	priorErr := s.Store.DB.QueryRowContext(ctx, `SELECT id FROM cloud_crypto_invoices WHERE user_id=$1 AND idempotency_key=$2`, u.ID, key).Scan(&prior)
+	var credits, price, commercialRevision int64
+	var prior, priorPurpose, priorPack string
+	priorErr := s.Store.DB.QueryRowContext(ctx, `SELECT id,purpose,pack_id,credits,price_cents,commercial_revision FROM cloud_crypto_invoices WHERE user_id=$1 AND idempotency_key=$2`, u.ID, key).Scan(&prior, &priorPurpose, &priorPack, &credits, &price, &commercialRevision)
 	if priorErr != nil && priorErr != sql.ErrNoRows {
 		return empty, priorErr
+	}
+	if priorErr == nil && (priorPurpose != purpose || priorPack != pack) {
+		return empty, ErrConflict
+	}
+	if priorErr == sql.ErrNoRows {
+		switch purpose {
+		case "credits":
+			commercial, e := s.Store.CommercialPolicy(ctx)
+			if e != nil {
+				return empty, e
+			}
+			commercialRevision = commercial.Revision
+			p, e := findCommercialPack(commercial.Policy, pack)
+			if e != nil {
+				return empty, e
+			}
+			credits, price = p.Credits, p.PriceCents
+		case "premium":
+			if pack != "" || cfg.PremiumPriceCents < 100 || cfg.PremiumPriceCents > 100000 {
+				return empty, ErrValidation
+			}
+			price = cfg.PremiumPriceCents
+		default:
+			return empty, ErrValidation
+		}
 	}
 	if priorErr == sql.ErrNoRows {
 		if e := s.validateLiveCryptoPolicy(ctx); e != nil {
@@ -253,7 +268,7 @@ func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, ke
 			return empty, e
 		}
 	}
-	_, e = insertTx.ExecContext(ctx, `INSERT INTO cloud_crypto_invoices(id,user_id,workspace_id,purpose,pack_id,credits,price_cents,idempotency_key,reference,network,vm_type,token,token_address,treasury_address,amount,consolidate_amount,amount_net,fee_amount)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$1,$9,$10,$11,$12,$13,$14,$15,$16,$17) ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, u.WorkspaceID, purpose, pack, credits, price, key, s.Config.CryptoRailsNetwork, s.Config.CryptoRailsVMType, s.Config.CryptoRailsToken, s.Config.CryptoRailsTokenAddress, s.Config.CryptoRailsTreasuryAddress, amount, gross, net, fee)
+	_, e = insertTx.ExecContext(ctx, `INSERT INTO cloud_crypto_invoices(id,user_id,workspace_id,purpose,pack_id,credits,price_cents,idempotency_key,reference,network,vm_type,token,token_address,treasury_address,amount,consolidate_amount,amount_net,fee_amount,commercial_revision)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$1,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, u.WorkspaceID, purpose, pack, credits, price, key, s.Config.CryptoRailsNetwork, s.Config.CryptoRailsVMType, s.Config.CryptoRailsToken, s.Config.CryptoRailsTokenAddress, s.Config.CryptoRailsTreasuryAddress, amount, gross, net, fee, commercialRevision)
 	if e != nil {
 		return empty, e
 	}
@@ -293,7 +308,7 @@ func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, ke
 			return empty, e
 		}
 		defer tx.Rollback()
-		_, _, err := s.cryptoCall(ctx, "POST", "/api/create-address", map[string]string{"vmType": v.VMType, "reference": v.Reference, "name": "VideoFlow invoice"}, &addr)
+		_, _, err := s.cryptoCall(ctx, "POST", "/api/create-address", map[string]string{"vmType": v.VMType, "reference": v.Reference, "name": "6eek invoice"}, &addr)
 		if err != nil {
 			return empty, err
 		}

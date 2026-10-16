@@ -22,19 +22,19 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           mkdir -p audit
-          gh release download v0.3.0-electron.1 --pattern "VideoFlow-0.3.0-mac-$ARCH.zip" --dir audit
-          ditto -x -k "audit/VideoFlow-0.3.0-mac-$ARCH.zip" audit/extracted
+          gh release download v0.3.0-electron.1 --pattern "6eek-0.3.0-mac-$ARCH.zip" --dir audit
+          ditto -x -k "audit/6eek-0.3.0-mac-$ARCH.zip" audit/extracted
       - name: Reproduce downloaded-app policy
         run: |
-          xattr -w com.apple.quarantine '0083;00000000;VideoFlowReleaseAudit;' audit/extracted/VideoFlow.app
-          python3 scripts/audit_macos.py --app audit/extracted/VideoFlow.app --output audit/report.json
+          xattr -w com.apple.quarantine '0083;00000000;6eekReleaseAudit;' audit/extracted/6eek.app
+          python3 scripts/audit_macos.py --app audit/extracted/6eek.app --output audit/report.json
       - name: Test bundle-seal repair independently of Apple trust
         run: |
           for name in videoflow ffmpeg ffprobe; do
-            codesign --force --sign - --options 0 "audit/extracted/VideoFlow.app/Contents/Resources/engine/$name"
+            codesign --force --sign - --options 0 "audit/extracted/6eek.app/Contents/Resources/engine/$name"
           done
-          codesign --force --deep --sign - --options 0 audit/extracted/VideoFlow.app
-          python3 scripts/audit_macos.py --app audit/extracted/VideoFlow.app --output audit/repaired-signature-report.json --require-valid-signature
+          codesign --force --deep --sign - --options 0 audit/extracted/6eek.app
+          python3 scripts/audit_macos.py --app audit/extracted/6eek.app --output audit/repaired-signature-report.json --require-valid-signature
       - uses: actions/upload-artifact@v4
         with:
           name: macOS-release-audit-${{ matrix.arch }}

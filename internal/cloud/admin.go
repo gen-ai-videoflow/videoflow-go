@@ -137,7 +137,7 @@ func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (Payout
 	if _, err = tx.ExecContext(ctx, `UPDATE cloud_earnings SET status='available' WHERE user_id=$1 AND currency='usd' AND status='pending' AND created_at<=now()-interval '30 days'`, userID); err != nil {
 		return PayoutBatch{}, err
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT id,amount_cents FROM cloud_earnings WHERE user_id=$1 AND currency='usd' AND (status='available' OR (status='pending' AND amount_cents<0)) FOR UPDATE`, userID)
+	rows, err := tx.QueryContext(ctx, `SELECT id,amount_cents FROM cloud_earnings WHERE user_id=$1 AND currency='usd' AND (status='available' OR (status='pending' AND amount_cents<0)) AND cloud_reward_earning_backed(id) FOR UPDATE`, userID)
 	if err != nil {
 		return PayoutBatch{}, err
 	}
@@ -158,7 +158,14 @@ func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (Payout
 	if err != nil {
 		return PayoutBatch{}, err
 	}
-	if amount < 5000 {
+	var threshold int64 = 5000
+	var configured int64
+	if e = tx.QueryRowContext(ctx, `SELECT (policy->>'payout_threshold_cents')::bigint FROM cloud_reward_engine_policy WHERE id=true`).Scan(&configured); e == nil {
+		threshold = configured
+	} else if e != sql.ErrNoRows {
+		return PayoutBatch{}, e
+	}
+	if amount < threshold {
 		return PayoutBatch{}, ErrInsufficientCredits
 	}
 	b := PayoutBatch{ID: uuid.NewString(), UserID: userID, Destination: destination, Country: country, AmountCents: amount, Currency: "usd", Status: "prepared"}
@@ -174,6 +181,9 @@ func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (Payout
 		}
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id)VALUES($1,'prepare_payout',$2)`, actor, b.ID); err != nil {
+		return PayoutBatch{}, err
+	}
+	if err = rewardNotifyTx(ctx, tx, userID, "payout-prepared:"+b.ID, "payout", "Your creator payment has been prepared for review. It has not yet been transferred."); err != nil {
 		return PayoutBatch{}, err
 	}
 	return b, tx.Commit()
@@ -198,6 +208,27 @@ func (s *Server) ExecutePayout(ctx context.Context, batchID, actor string, execu
 	if b.Status == "paid" {
 		return nil
 	}
+	var unbacked bool
+	if err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payout_batch_entries pe JOIN cloud_earnings e ON e.id=pe.earning_id WHERE pe.batch_id=$1 AND e.amount_cents>0 AND NOT cloud_reward_earning_backed(e.id))`, batchID).Scan(&unbacked); err != nil {
+		return err
+	}
+	if unbacked {
+		return fmt.Errorf("%w: legacy payout requires independently approved fresh backing; use provider reconciliation for already-submitted transfers", ErrConflict)
+	}
+	var programPayout bool
+	if err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payout_batch_entries pe JOIN cloud_earnings e ON e.id=pe.earning_id WHERE pe.batch_id=$1 AND (e.reference LIKE 'vesting:%' OR e.reference LIKE 'correction:%'))`, batchID).Scan(&programPayout); err != nil {
+		return err
+	}
+	if programPayout {
+		p, e := s.Store.RewardEnginePolicy(ctx)
+		if e != nil {
+			return e
+		}
+		if !p.Policy.PayoutsEnabled {
+			return ErrUnavailable
+		}
+	}
+
 	if _, err = conn.ExecContext(ctx, `SELECT pg_advisory_lock(hashtextextended($1,814037226))`, b.UserID); err != nil {
 		return err
 	}
@@ -217,7 +248,7 @@ func (s *Server) ExecutePayout(ctx context.Context, batchID, actor string, execu
 	// Pending positive earnings do not cover a matured payout; negative entries do.
 	if !first.Valid {
 		var net int64
-		if err = conn.QueryRowContext(ctx, `SELECT COALESCE(sum(amount_cents),0) FROM cloud_earnings WHERE user_id=$1 AND currency=$2 AND (status='available' OR (status='pending' AND amount_cents<0) OR id IN(SELECT earning_id FROM cloud_payout_batch_entries WHERE batch_id=$3))`, b.UserID, b.Currency, batchID).Scan(&net); err != nil {
+		if err = conn.QueryRowContext(ctx, `SELECT COALESCE(sum(amount_cents),0) FROM cloud_earnings WHERE user_id=$1 AND currency=$2 AND cloud_reward_earning_backed(id) AND (status='available' OR (status='pending' AND amount_cents<0) OR id IN(SELECT earning_id FROM cloud_payout_batch_entries WHERE batch_id=$3))`, b.UserID, b.Currency, batchID).Scan(&net); err != nil {
 			return err
 		}
 		if net < b.AmountCents {
@@ -289,6 +320,9 @@ func (s *Server) ExecutePayout(ctx context.Context, batchID, actor string, execu
 		return err
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO cloud_admin_audit(actor,action,resource_id,reason)VALUES($1,'execute_payout',$2,$3)`, actor, batchID, transfer.ID); err != nil {
+		return err
+	}
+	if err = rewardNotifyTx(ctx, tx, b.UserID, "payout-transferred:"+batchID, "payout", "Your creator payment was transferred to your connected payment account. Bank arrival depends on your payment provider."); err != nil {
 		return err
 	}
 	return tx.Commit()

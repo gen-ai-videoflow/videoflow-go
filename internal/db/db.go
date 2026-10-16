@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"videoflow-go/internal/models"
+	"6eek-go/internal/models"
 
 	"github.com/google/uuid"
 	_ "modernc.org/sqlite"

@@ -10,10 +10,10 @@ export async function proxyRequest(request,target,options={}){
  finally{clearTimeout(timer);active--;}
 }
 async function forwardRequest(request,target,{maxBytes=5*1024*1024,fetch=globalThis.fetch,signal}={}){
- if(request.headers.has('x-videoflow-gateway-hop')||new URL(target).origin===new URL(request.url).origin)return Response.json({message:'The API gateway connection is misconfigured.'},{status:508});
+ if((request.headers.has('x-6eek-gateway-hop')||request.headers.has('x-videoflow-gateway-hop'))||new URL(target).origin===new URL(request.url).origin)return Response.json({message:'The API gateway connection is misconfigured.'},{status:508});
  const headers=new Headers(request.headers);
  for(const header of ['host','connection','content-length','transfer-encoding'])headers.delete(header);
- headers.set('x-videoflow-gateway-hop','1');
+ headers.set('x-6eek-gateway-hop','1');
  let body;
  if(!['GET','HEAD'].includes(request.method)){
   if(Number(request.headers.get('content-length'))>maxBytes)return Response.json({message:'Request body is too large.'},{status:413});

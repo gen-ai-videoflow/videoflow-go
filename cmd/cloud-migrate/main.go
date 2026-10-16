@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"videoflow-go/internal/cloud"
+	"6eek-go/internal/cloud"
 )
 
 func main() {

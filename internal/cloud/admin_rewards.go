@@ -135,6 +135,14 @@ func (s *Server) adminRewardHold(w http.ResponseWriter, r *http.Request) {
 		_, err = tx.ExecContext(r.Context(), `INSERT INTO cloud_admin_audit(actor,action,resource_id,reason)VALUES($1,$2,$3,$4)`, actor, map[bool]string{true: "hold_creator_rewards", false: "release_creator_reward_hold"}[b.Held], user, b.Reason)
 	}
 	if err == nil {
+		// Use the audited state transition identity rather than wall-clock text.
+		var auditID int64
+		err = tx.QueryRowContext(r.Context(), `SELECT id FROM cloud_admin_audit WHERE resource_id=$1 AND actor=$2 AND action=$3 ORDER BY id DESC LIMIT 1`, user, actor, map[bool]string{true: "hold_creator_rewards", false: "release_creator_reward_hold"}[b.Held]).Scan(&auditID)
+		if err == nil {
+			err = rewardNotifyTx(r.Context(), tx, user, "reward-hold:"+intString(auditID), map[bool]string{true: "hold", false: "release"}[b.Held], map[bool]string{true: "Your creator rewards are under review. See Earnings for review options.", false: "Your creator reward hold has been released. See Earnings for payment availability."}[b.Held])
+		}
+	}
+	if err == nil {
 		err = tx.Commit()
 	}
 	s.result(w, map[string]bool{"held": b.Held}, err)

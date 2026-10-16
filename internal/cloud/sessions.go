@@ -15,7 +15,7 @@ type accountSession struct {
 }
 
 func (s *Server) listSessions(w http.ResponseWriter, r *http.Request) {
-	cookie, e := r.Cookie("videoflow_session")
+	cookie, e := sessionCookie(r)
 	if e != nil {
 		s.fail(w, ErrUnauthorized)
 		return
@@ -38,7 +38,7 @@ func (s *Server) listSessions(w http.ResponseWriter, r *http.Request) {
 	s.result(w, result, rows.Err())
 }
 func (s *Server) revokeSession(w http.ResponseWriter, r *http.Request) {
-	cookie, e := r.Cookie("videoflow_session")
+	cookie, e := sessionCookie(r)
 	if e != nil {
 		s.fail(w, ErrUnauthorized)
 		return
@@ -71,7 +71,7 @@ func (s *Server) revokeSession(w http.ResponseWriter, r *http.Request) {
 	s.json(w, 200, map[string]bool{"ok": true})
 }
 func (s *Server) revokeOtherSessions(w http.ResponseWriter, r *http.Request) {
-	cookie, e := r.Cookie("videoflow_session")
+	cookie, e := sessionCookie(r)
 	if e != nil {
 		s.fail(w, ErrUnauthorized)
 		return

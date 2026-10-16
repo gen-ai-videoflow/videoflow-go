@@ -86,6 +86,7 @@ func TestCreatorDisputeBlocksAlreadyPreparedPayout(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	backLegacyTestEarnings(t, store, u.ID)
 	batch, err := store.PreparePayout(ctx, u.ID, "test")
 	if err != nil {
 		t.Fatal(err)
@@ -119,6 +120,7 @@ func TestRefundAfterPayoutPreparationBlocksFirstTransfer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	backLegacyTestEarnings(t, store, u.ID)
 	batch, err := store.PreparePayout(ctx, u.ID, "test")
 	if err != nil {
 		t.Fatal(err)

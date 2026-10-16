@@ -1,6 +1,6 @@
 # One codebase, desktop and web
 
-The Svelte frontend and Go backend remain shared. Electron starts a private loopback backend on an automatically assigned port and displays the same frontend in an app window. Closing the app stops the backend. Projects and the OpenRouter key use the existing VideoFlow user configuration directory, so existing native download data remains available. Avoid running the browser download and Electron simultaneously against the same data folder.
+The Svelte frontend and Go backend remain shared. Electron starts a private loopback backend on an automatically assigned port and displays the same frontend in an app window. Closing the app stops the backend. Projects and the OpenRouter key use the existing 6eek user configuration directory, so existing native download data remains available. Avoid running the browser download and Electron simultaneously against the same data folder.
 
 Desktop packages include Electron, Go engine, compiled frontend, FFmpeg, FFprobe, fonts and the media licenses/corresponding source archive. End users do not install Node, Go, Python or FFmpeg. They still need internet access and an OpenRouter API key with credits for AI generation. Packaging does not make unsupported OpenRouter capabilities available.
 
@@ -16,8 +16,8 @@ npm run build
 cd ..
 python3 scripts/build_media.py
 python3 scripts/package.py --target linux-amd64
-python3 scripts/smoke_package.py --archive dist/VideoFlow-linux-amd64.zip
-python3 scripts/prepare_electron.py --archive dist/VideoFlow-linux-amd64.zip --target linux-amd64
+python3 scripts/smoke_package.py --archive dist/6eek-linux-amd64.zip
+python3 scripts/prepare_electron.py --archive dist/6eek-linux-amd64.zip --target linux-amd64
 python3 scripts/test_prepare_electron.py
 cd electron
 npm ci

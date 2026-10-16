@@ -80,7 +80,7 @@ func (s *Server) adminExport(w http.ResponseWriter, r *http.Request) {
 		columns = []string{"no_records"}
 	}
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="videoflow-`+kind+`.csv"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="6eek-`+kind+`.csv"`)
 	w.Header().Set("X-Export-Limit", "1000")
 	w.Header().Set("Cache-Control", "no-store")
 	writer := csv.NewWriter(w)

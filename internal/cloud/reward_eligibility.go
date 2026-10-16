@@ -38,7 +38,7 @@ func (s *Store) RewardVideos(ctx context.Context, user string, limit, offset int
 	if limit < 1 || limit > 100 || offset < 0 {
 		return nil, ErrValidation
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT v.id,v.title,v.status,v.visibility,v.first_published_at,EXISTS(SELECT 1 FROM cloud_reward_enrollments e JOIN cloud_reward_policies p ON p.version=e.policy_version WHERE e.user_id=$1 AND p.active) FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE c.user_id=$1 ORDER BY v.created_at DESC,v.id LIMIT $2 OFFSET $3`, user, limit, offset)
+	rows, err := s.DB.QueryContext(ctx, `SELECT v.id,v.title,v.status,v.visibility,v.first_published_at,v.reward_window_seconds,EXISTS(SELECT 1 FROM cloud_reward_enrollments e JOIN cloud_reward_policies p ON p.version=e.policy_version WHERE e.user_id=$1 AND p.active) FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE c.user_id=$1 ORDER BY v.created_at DESC,v.id LIMIT $2 OFFSET $3`, user, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +50,15 @@ func (s *Store) RewardVideos(ctx context.Context, user string, limit, offset int
 		var status, visibility string
 		var first sql.NullTime
 		var enrolled bool
-		if err = rows.Scan(&v.VideoID, &v.Title, &status, &visibility, &first, &enrolled); err != nil {
+		var window int64
+		if err = rows.Scan(&v.VideoID, &v.Title, &status, &visibility, &first, &window, &enrolled); err != nil {
 			return nil, err
 		}
 		v.Status = "ineligible"
 		v.Reason = "not_published"
 		if first.Valid {
 			v.FirstPublishedAt = &first.Time
-			end := first.Time.Add(30 * 24 * time.Hour)
+			end := first.Time.Add(time.Duration(window) * time.Second)
 			v.WindowEndsAt = &end
 			switch {
 			case !now.Before(end):

@@ -142,7 +142,7 @@
   }
 
   // Theme radio — persisted to the shared localStorage key the shell reads.
-  const THEME_KEY = 'videoflow.theme';
+  const THEME_KEY = '6eek.theme';
   let theme = $state<'light' | 'dark' | 'system'>('system');
 
   // Active settings tab (bound so clicking a trigger switches sections).
@@ -1245,7 +1245,7 @@
             <CardTitle class="flex items-center gap-2 text-base">
               <Palette class="size-4" />Appearance
             </CardTitle>
-            <CardDescription>Choose how VideoFlow looks. Stored on this device.</CardDescription>
+            <CardDescription>Choose how 6eek looks. Stored on this device.</CardDescription>
           </CardHeader>
           <CardContent>
             <div role="radiogroup" aria-label="Theme" class="flex flex-wrap gap-2">

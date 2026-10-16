@@ -208,7 +208,7 @@
     return out;
   });
 
-  /** Subsequence ("vf" matches "VideoFlow") fuzzy test, case-insensitive. */
+  /** Subsequence ("vf" matches "6eek") fuzzy test, case-insensitive. */
   function fuzzy(needle: string, haystack: string): boolean {
     const n = needle.toLowerCase();
     const h = haystack.toLowerCase();

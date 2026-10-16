@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-15T14:47:32.402504+00:00",
-  "title": "Design System: VideoFlow",
+  "title": "Design System: 6eek",
   "extensions": {
     "colorMeta": {
       "signal": {
@@ -338,8 +338,8 @@
     }
   ],
   "narrative": {
-    "northStar": "VideoFlow’s existing workspace, aligned with its landing-page brand",
-    "overview": "VideoFlow uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.\n\nInter, compact controls, fine borders and muted supporting copy remain the incumbent visual language. Media and the original Studio canvas lead; brand appears in the logo, primary actions and selected states.",
+    "northStar": "6eek’s existing workspace, aligned with its landing-page brand",
+    "overview": "6eek uses warm ink surfaces, bone text and a restrained signal-orange accent within its existing shadcn interface. The supplied logo connects watching, account management and Studio without changing their task-specific layouts.\n\nInter, compact controls, fine borders and muted supporting copy remain the incumbent visual language. Media and the original Studio canvas lead; brand appears in the logo, primary actions and selected states.",
     "keyCharacteristics": [
       "Warm ink and bone surfaces with signal-orange actions.",
       "Compact shadcn controls and readable Inter typography.",

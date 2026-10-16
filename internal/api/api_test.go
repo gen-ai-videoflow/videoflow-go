@@ -10,15 +10,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"videoflow-go/internal/agents"
-	"videoflow-go/internal/api"
-	"videoflow-go/internal/config"
-	"videoflow-go/internal/db"
-	"videoflow-go/internal/events"
-	"videoflow-go/internal/jobs"
-	"videoflow-go/internal/media"
-	"videoflow-go/internal/models"
-	"videoflow-go/internal/providers"
+	"6eek-go/internal/agents"
+	"6eek-go/internal/api"
+	"6eek-go/internal/config"
+	"6eek-go/internal/db"
+	"6eek-go/internal/events"
+	"6eek-go/internal/jobs"
+	"6eek-go/internal/media"
+	"6eek-go/internal/models"
+	"6eek-go/internal/providers"
 )
 
 func setupTestServer(t *testing.T) (*api.Server, func()) {

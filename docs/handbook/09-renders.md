@@ -10,7 +10,7 @@ Open **My videos** to monitor scene jobs, compare outputs, and download media. A
 |---|---|
 | Create operation succeeded | Planning and submission finished; video jobs may still be running |
 | Pending/running | The provider request is queued or generating |
-| Downloading | VideoFlow is retrieving the provider output |
+| Downloading | 6eek is retrieving the provider output |
 | QA | The app is attempting a visual review |
 | Succeeded | Output handling finished and QA was attempted |
 | Failed | Read the error to identify submission, polling, or download failure |

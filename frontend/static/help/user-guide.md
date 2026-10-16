@@ -1,4 +1,4 @@
-# VideoFlow cloud user guide
+# 6eek cloud user guide
 
 From your first account to watching, creating, editing and publishing.
 
@@ -6,7 +6,7 @@ This document is generated from the same content as the in-app Help guide. It co
 
 ## Getting started
 
-VideoFlow is a place to watch videos and create your own. Viewing and Studio use the same account, while each creative project keeps its story, designs and outputs together.
+6eek is a place to watch videos and create your own. Viewing and Studio use the same account, while each creative project keeps its story, designs and outputs together.
 
 1. Browse Discover or Shorts. Sign in when you want to follow creators, save videos or create a project.
 
@@ -60,7 +60,7 @@ A project is the home for your scripts, characters, scenes, shots, asset referen
 
 ## Turn an idea into a video
 
-Start in Story when you want VideoFlow to plan and generate a short sequence from an idea. Paid generation always has an explicit quote and confirmation.
+Start in Story when you want 6eek to plan and generate a short sequence from an idea. Paid generation always has an explicit quote and confirmation.
 
 1. Choose the intended project and open Story. Expand Generate or assemble video if it is collapsed.
 
@@ -202,27 +202,35 @@ Profile settings control how your creator identity appears. Security settings co
 
 - Banner presets are bundled images. Selecting one does not call an AI service or spend credits.
 
-## Creator analytics and earnings
+## Creator earnings, videos and optional support
 
-Creator earnings shows measured audience activity alongside confirmed financial balances. Audience metrics and payable money should be read separately.
+Earnings keeps cash balances separate from measured audience activity, generation credits and promotional support credits. Start with the Earnings and Videos tabs; open other details only when needed.
 
-1. Open Creator earnings. Choose the available 7-, 28- or 90-day analytics window.
+1. Open Earnings to see available funds, rewards still unlocking and any visible account or payment restriction. An estimate appears only when enough accepted evidence is available; it can change and is not money owed.
 
-2. Review qualified views, measured watch time and the available per-video details. Read freshness and privacy notes next to the data.
+2. Choose Videos to see each video’s reward status. Select a video for its earning window and confirmed rewards. Use My content when you want to manage publication.
 
-3. Use My content to inspect the videos associated with the channel.
+3. Expand Audience analytics to choose a 7-, 28- or 90-day window and inspect measured views, watch time and available video details. Read the privacy notes.
 
-4. Review available, pending and paid balances separately from views.
+4. Expand Payout settings & history when you need verification requirements or payment records. Connecting an account does not activate cash payments or confirm arrival at your bank.
 
-5. When payout onboarding is enabled, enter your legal residence and complete the provider's identity and payment verification.
+5. Open Creator support, reviews & updates only when needed. Read a published milestone’s criteria, credit amount, expiry and grant limit before submitting evidence. Track the request status, review decisions, approved corrections and in-app updates there.
 
-- Repeated viewing is validated and deduplicated under platform rules. Raw playback events are not all qualified views.
+6. If you need a review, select eligibility, account hold, support credits or payment, then describe the issue and include supporting references. A successful review needs separate funded approval before any cash correction.
 
-- Small audiences may have unique or rate metrics withheld for privacy. Watch-through and reach estimates are not universal, independently verified audience measurements.
+7. Expand Sponsorship offers to read each available brief, terms version and end date. Accept only the specific offer you agree to; acceptance does not publish a video, promise distribution or guarantee payment.
 
-- Global availability is an ambition, not a promise that every payment or payout method supports every country. Provider eligibility and platform activation still apply.
+- Repeated playback is validated and deduplicated. Distribution changes and sponsorship budgets do not create views. Measured audience activity is separate from the private qualification and weights used for rewards.
 
-- Rewards require an enabled policy and capped revenue funding. Views alone do not guarantee earnings or a fixed rate.
+- The default earning window is 30 days from first publication, with a default 30-day unlock period after reward confirmation. The program can publish different durations for future activity. Your video dates and confirmed unlock schedules keep their applicable terms; republishing does not restart a window.
+
+- Support credits pay for generation services, expire under the displayed terms and cannot be withdrawn or exchanged for cash. Purchased credits and cash earnings remain separate. Buying credits does not unlock support or existing earnings.
+
+- Sponsored delivery is labelled and measured separately from organic reward evidence. Campaign awards require reviewed delivery evidence, funding and confirmation. An invitation or audience count is not proof of payment.
+
+- Small audiences may have unique or rate metrics withheld for privacy. Global payment availability remains subject to provider support, country eligibility and platform activation.
+
+- Rewards require an available program and capped funding. Neither earnings, a fixed payment per view nor recovery of generation costs is guaranteed.
 
 ## Troubleshooting and safe recovery
 

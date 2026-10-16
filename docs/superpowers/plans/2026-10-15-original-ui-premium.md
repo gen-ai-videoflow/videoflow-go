@@ -1,6 +1,6 @@
-# Original VideoFlow interface and platform Premium
+# Original 6eek interface and platform Premium
 
-User corrections: restore the original VideoFlow application appearance and real interactive entity canvas; login and signup use the shadcn login-02/signup-02 layouts adapted to the existing Svelte stack. Preserve the original local application/backend. Cloud account isolation, prepaid generation credits, platform-controlled models and durable cloud jobs remain necessary behavior changes.
+User corrections: restore the original 6eek application appearance and real interactive entity canvas; login and signup use the shadcn login-02/signup-02 layouts adapted to the existing Svelte stack. Preserve the original local application/backend. Cloud account isolation, prepaid generation credits, platform-controlled models and durable cloud jobs remain necessary behavior changes.
 
 The original canvas is reused through a cloud-only scoped adapter: owned project graph, scene/character creation, scene/shot edits, relationship attachment/detachment and deletion. Private object paths are never exposed. The original unrestricted desktop AI chat/refinement/history and local timeline renderer are not silently connected to multi-user SaaS APIs. Cloud generation uses explicit credit quotes and confirmations in the original resizable canvas/assistant layout; unsupported desktop-only actions are hidden or return an explicit unavailable error.
 

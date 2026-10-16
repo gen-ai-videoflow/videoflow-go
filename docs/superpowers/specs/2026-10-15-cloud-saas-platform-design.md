@@ -2,9 +2,9 @@
 
 # Current decision amendment
 
-The user subsequently chose one platform-wide Premium subscription, like Medium, replacing per-channel subscription pricing described below. Premium grants viewing access across creators; generation credits remain separate and creator payouts use the capped approved platform-revenue pool. The original VideoFlow canvas/sidebar design is preserved, with shadcn login-02/signup-02 layouts. See [Premium implementation](../../PREMIUM.md) and [UI/Premium execution record](../plans/2026-10-15-original-ui-premium.md). Historical design sections below remain context, not authority for new channel subscriptions.
+The user subsequently chose one platform-wide Premium subscription, like Medium, replacing per-channel subscription pricing described below. Premium grants viewing access across creators; generation credits remain separate and creator payouts use the capped approved platform-revenue pool. The original 6eek canvas/sidebar design is preserved, with shadcn login-02/signup-02 layouts. See [Premium implementation](../../PREMIUM.md) and [UI/Premium execution record](../plans/2026-10-15-original-ui-premium.md). Historical design sections below remain context, not authority for new channel subscriptions.
 
-# VideoFlow Cloud SaaS Platform Specification
+# 6eek Cloud SaaS Platform Specification
 
 Date: 2026-10-15
 Status: Architecture accepted for implementation. Delivered coverage and remaining work are tracked in [implementation status](../../CLOUD-IMPLEMENTATION.md).
@@ -12,7 +12,7 @@ Scope: Product architecture, repository separation, AWS deployment, data ownersh
 
 ## 1. Intent and agreed constraints
 
-VideoFlow becomes a browser-based AI video studio and publishing platform. Creators purchase platform credits, create videos, publish to channels, attract viewers, and earn through paid memberships and a capped engagement rewards pool. The platform controls models and earns a margin on generation and memberships.
+6eek becomes a browser-based AI video studio and publishing platform. Creators purchase platform credits, create videos, publish to channels, attract viewers, and earn through paid memberships and a capped engagement rewards pool. The platform controls models and earns a margin on generation and memberships.
 
 Agreed requirements:
 
@@ -22,7 +22,7 @@ Agreed requirements:
 - Do not use Cognito. Application-owned accounts and sessions live in the Go backend and PostgreSQL.
 - Target a global audience; enable payments and creator payouts only in supported jurisdictions.
 - Initial infrastructure budget: US$500–2,000 per month, excluding AI provider spend, payment fees, creator payouts, taxes, and engineering labour.
-- Users purchase credits from VideoFlow. They neither supply provider keys nor select models.
+- Users purchase credits from 6eek. They neither supply provider keys nor select models.
 - Prefer the cheapest eligible OpenRouter model for each operation; enforce capability and spending requirements.
 - Fund engagement rewards from a capped share of eligible platform revenue.
 - Preserve private creation, public profiles, publishing controls, discovery, free follows, paid creator memberships, and eventual personalized recommendations.
@@ -67,7 +67,7 @@ Repository extraction alone does not make the current application safe for multi
 | Channel | A creator's public identity and publication collection |
 | Follow | Free channel subscription; grants no paid content access |
 | Creator membership | Paid recurring subscription granting channel-specific benefits |
-| Platform plan | Optional VideoFlow subscription with studio benefits or credit grants |
+| Platform plan | Optional 6eek subscription with studio benefits or credit grants |
 | Credit | Non-withdrawable unit used to purchase platform operations |
 | Creator earning | Money payable to an eligible creator, separate from credits |
 | Qualified engagement | Validated viewing activity eligible for the rewards calculation |

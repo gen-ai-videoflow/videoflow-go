@@ -1,4 +1,4 @@
-VideoFlow macOS preview — start here
+6eek macOS preview — start here
 
 This preview uses valid ad-hoc code signatures to repair the broken
 bundle signature in version 0.3.0. It is NOT Apple-notarized or signed
@@ -6,15 +6,15 @@ with a Developer ID. macOS still requires your explicit approval.
 
 1. Use the NEW version 0.3.1 adhoc-preview download for your processor.
    arm64: Apple Silicon (M1 or newer). x64: Intel Mac.
-2. Quit the old VideoFlow app. Open the DMG and drag VideoFlow to Applications.
+2. Quit the old 6eek app. Open the DMG and drag 6eek to Applications.
    Replace the old APP only. Your projects and saved settings are separate;
-   do not delete your VideoFlow user data folder.
-3. Try opening VideoFlow once. If macOS blocks it, close that message.
+   do not delete your 6eek user data folder.
+3. Try opening 6eek once. If macOS blocks it, close that message.
 4. Open System Settings > Privacy & Security. Find the message about
-   VideoFlow and click Open Anyway, then confirm your choice.
-   Approve only the VideoFlow download you obtained from this project's
+   6eek and click Open Anyway, then confirm your choice.
+   Approve only the 6eek download you obtained from this project's
    GitHub release. Company-managed Macs may prohibit this override.
-5. Open VideoFlow and add your OpenRouter key in Settings.
+5. Open 6eek and add your OpenRouter key in Settings.
 
 Apple's instructions: https://support.apple.com/102445
 

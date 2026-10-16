@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"videoflow-go/internal/agents"
-	"videoflow-go/internal/models"
+	"6eek-go/internal/agents"
+	"6eek-go/internal/models"
 )
 
 func (s *Server) handleVideoPreflight(w http.ResponseWriter, r *http.Request) {

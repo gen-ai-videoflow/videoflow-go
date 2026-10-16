@@ -164,3 +164,17 @@ variable "video_uploads_enabled" {
   default     = false
   description = "Enable file publication only after private storage, validation workers and moderation operations are verified."
 }
+
+# Explicit opt-in for the 6eek application/admin subdomain session.
+variable "session_cookie_domain" {
+  type = string
+  default = ""
+}
+variable "browser_origins" {
+  type = list(string)
+  default = []
+  validation {
+    condition = alltrue([for origin in var.browser_origins : startswith(origin, "https://") && !strcontains(origin, "*")])
+    error_message = "Browser origins must be explicit HTTPS origins without wildcards."
+  }
+}

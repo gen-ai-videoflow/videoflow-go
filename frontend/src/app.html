@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/brand/videoflow-mark.svg" />
+    <link rel="icon" type="image/svg+xml" href="/brand/6eek-mark.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VideoFlow Studio</title>
+    <title>6eek Studio</title>
     <!--
       Apply the saved theme BEFORE first paint so dark (the default) never
       flashes light during hydration. The +layout ModeWatcher keeps this in
@@ -13,7 +13,20 @@
     <script>
       (function () {
         try {
-          var pref = localStorage.getItem('videoflow.theme') || 'dark';
+          // Retain same-origin preferences and saved project references from the former brand.
+          for (var index = 0, oldKeys = Object.keys(localStorage); index < oldKeys.length; index++) {
+            var oldKey = oldKeys[index];
+            if (oldKey.indexOf('videoflow.') === 0) {
+              var newKey = '6eek.' + oldKey.slice(10);
+              if (localStorage.getItem(newKey) === null) {
+                var savedValue = localStorage.getItem(oldKey);
+                localStorage.removeItem(oldKey);
+                try { localStorage.setItem(newKey, savedValue); }
+                catch (migrationError) { localStorage.setItem(oldKey, savedValue); }
+              }
+            }
+          }
+          var pref = localStorage.getItem('6eek.theme') || 'dark';
           var dark =
             pref === 'dark' ||
             (pref === 'system' &&

@@ -7,6 +7,7 @@ import json
 import hashlib
 import sys
 import unittest
+import importlib.util
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,9 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class PackageSafetyTests(unittest.TestCase):
     def test_media_bundle_is_required(self):
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/package.py'), '--target', 'linux-amd64', '--media-root', '/nonexistent/videoflow-media'], capture_output=True, text=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('media bundle is missing', result.stderr)
+        spec = importlib.util.spec_from_file_location('six_eek_packager', ROOT / 'scripts/package.py')
+        packager = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(packager)
+        with self.assertRaisesRegex(ValueError, 'media bundle is missing'):
+            packager.validate_media(Path('/nonexistent/6eek-media'), 'linux-amd64')
 
 
 class CompleteBundleTests(unittest.TestCase):

@@ -33,23 +33,23 @@ jobs:
         run: |
           git diff v0.3.0-electron.1 --exit-code -- cmd internal frontend scripts/build_media.py scripts/media-sources.json
           mkdir -p seed
-          gh release download v0.3.0-electron.1 --pattern "VideoFlow-0.3.0-mac-$ARCH.zip" --pattern SHA256SUMS.txt --dir seed
+          gh release download v0.3.0-electron.1 --pattern "6eek-0.3.0-mac-$ARCH.zip" --pattern SHA256SUMS.txt --dir seed
           python3 - <<'PY'
           import hashlib, os
           from pathlib import Path
-          name = 'VideoFlow-0.3.0-mac-' + os.environ['ARCH'] + '.zip'
+          name = '6eek-0.3.0-mac-' + os.environ['ARCH'] + '.zip'
           hashes = dict((line.split()[1], line.split()[0]) for line in Path('seed/SHA256SUMS.txt').read_text().splitlines())
           assert hashlib.sha256(Path('seed', name).read_bytes()).hexdigest() == hashes[name]
           PY
-          ditto -x -k "seed/VideoFlow-0.3.0-mac-$ARCH.zip" seed/extracted
+          ditto -x -k "seed/6eek-0.3.0-mac-$ARCH.zip" seed/extracted
           python3 - <<'PY'
           import os, zipfile
           from pathlib import Path
-          root = Path('seed/extracted/VideoFlow.app/Contents/Resources/engine')
+          root = Path('seed/extracted/6eek.app/Contents/Resources/engine')
           with zipfile.ZipFile('seed/native.zip', 'w') as archive:
               for item in root.rglob('*'):
                   if item.is_file():
-                      archive.write(item, 'VideoFlow/' + str(item.relative_to(root)))
+                      archive.write(item, '6eek/' + str(item.relative_to(root)))
           PY
           python3 scripts/prepare_electron.py --archive seed/native.zip --target "$TARGET"
       - run: npm ci && npm test
@@ -63,9 +63,9 @@ jobs:
         run: |
           mkdir -p verified
           ditto -x -k dist/electron/*.zip verified
-          xattr -w com.apple.quarantine '0083;00000000;VideoFlowPreviewCheck;' verified/VideoFlow.app
-          python3 scripts/audit_macos.py --app verified/VideoFlow.app --output verified/signature-report.json --require-valid-signature
-          python3 scripts/smoke_electron.py --executable verified/VideoFlow.app/Contents/MacOS/VideoFlow
+          xattr -w com.apple.quarantine '0083;00000000;6eekPreviewCheck;' verified/6eek.app
+          python3 scripts/audit_macos.py --app verified/6eek.app --output verified/signature-report.json --require-valid-signature
+          python3 scripts/smoke_electron.py --executable verified/6eek.app/Contents/MacOS/6eek
       - uses: actions/upload-artifact@v4
         with:
           name: macOS-adhoc-preview-${{ matrix.arch }}
@@ -90,5 +90,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view v0.3.1-macos-preview.1 >/dev/null 2>&1; then
-            gh release create v0.3.1-macos-preview.1 dist/*.dmg dist/*.zip dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title 'VideoFlow 0.3.1 — macOS ad-hoc preview (manual approval required)' --notes-file docs/MACOS-PREVIEW-RELEASE.md --prerelease
+            gh release create v0.3.1-macos-preview.1 dist/*.dmg dist/*.zip dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title '6eek 0.3.1 — macOS ad-hoc preview (manual approval required)' --notes-file docs/MACOS-PREVIEW-RELEASE.md --prerelease
           fi

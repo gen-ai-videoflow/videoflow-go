@@ -65,7 +65,7 @@ func (c *OpenRouterClient) request(ctx context.Context, method, path string, pay
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("HTTP-Referer", "http://localhost:5173")
-	req.Header.Set("X-Title", "VideoFlow Go")
+	req.Header.Set("X-Title", "6eek Go")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("OpenRouter request: %s", strings.ReplaceAll(err.Error(), c.apiKey, "[redacted]"))

@@ -4,7 +4,7 @@ Date: 2026-10-16. This is a scope and acceptance checklist, not a claim that the
 
 ## Decisions and boundaries
 
-- Customer web app stays in `videoflow-web`; business logic, workers, payments and authoritative data stay in `videoflow-api`; create a separate repository named `admin` for the operator web application.
+- Customer web app stays in `6eek-web`; business logic, workers, payments and authoritative data stay in `videoflow-api`; create a separate repository named `admin` for the operator web application.
 - Admin uses authenticated, role-scoped API endpoints; no browser database credentials or provider secrets. Reuse the API rather than duplicating business logic in admin.
 - Support Stripe and CryptoRails as customer payment choices. Platform Premium covers eligible content across creators; channel follows are free and independent. Credits fund generation and are separate from Premium.
 - All AI inference must go through OpenRouter, including story, image/character generation, video, transcription and other AI-assisted features. Unsupported tasks remain disabled with truthful UI; no silent direct-provider fallback. Deterministic encoding, editing, caption formatting and streaming are not AI inference. Models are platform-selected. Choose the cheapest eligible model for each task after capability, quality, reliability and commercial-use checks; a cheap text model is not a video generator.

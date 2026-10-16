@@ -1,10 +1,13 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "VideoFlow Cloud API",
+    "title": "6eek Cloud API",
     "version": "1.0.0"
   },
   "servers": [
+    {
+      "url": "https://api.6eek.com/v1"
+    },
     {
       "url": "/api/v1"
     }
@@ -2298,6 +2301,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "rank",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2359,17 +2369,83 @@
       "get": {
         "operationId": "get_search",
         "security": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rank",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Legacy array without format/cursor; format-filtered requests return items and next_cursor",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Video"
-                  }
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Video"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Video"
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "next_cursor"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -2396,17 +2472,83 @@
       "get": {
         "operationId": "get_videos",
         "security": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rank",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Legacy array without format/cursor; format-filtered requests return items and next_cursor",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Video"
-                  }
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Video"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Video"
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "next_cursor"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -2435,14 +2577,83 @@
             "session": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rank",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Legacy array without format/cursor; format-filtered requests return items and next_cursor",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Video"
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Video"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Video"
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "next_cursor"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -10523,6 +10734,12 @@
                       "type": "integer",
                       "minimum": 0
                     }
+                  },
+                  "campaign_id": {
+                    "type": "string"
+                  },
+                  "campaign_award_id": {
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -10708,6 +10925,3970 @@
         },
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
+    },
+    "/admin/discovery/policy": {
+      "get": {
+        "operationId": "get_admin_discovery_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "put": {
+        "operationId": "put_admin_discovery_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "policy": {
+                    "$ref": "#/components/schemas/DiscoveryPolicy"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "policy",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/history": {
+      "get": {
+        "operationId": "get_admin_discovery_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/overrides": {
+      "get": {
+        "operationId": "get_admin_discovery_overrides",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_discovery_overrides",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "video_id": {
+                    "type": "string"
+                  },
+                  "channel_id": {
+                    "type": "string"
+                  },
+                  "search_query": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  },
+                  "expires_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "weight",
+                  "expires_at",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/preview": {
+      "get": {
+        "operationId": "get_admin_discovery_preview",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rank",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Legacy array without format/cursor; format-filtered requests return items and next_cursor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Video"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Video"
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "next_cursor"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/index": {
+      "get": {
+        "operationId": "get_admin_discovery_index",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryIndexHealth"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/audience": {
+      "get": {
+        "operationId": "get_admin_discovery_audience",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "video_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Supply exactly one video_id or channel_id; aggregate history covers 90 days."
+          },
+          {
+            "name": "channel_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Supply exactly one video_id or channel_id; aggregate history covers 90 days."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryAudience"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/discovery/exclusions": {
+      "post": {
+        "operationId": "post_admin_discovery_exclusions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudienceCorrection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/campaigns": {
+      "get": {
+        "operationId": "get_admin_campaigns",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorCampaignList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_campaigns",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorCampaign"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "campaign": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "brief": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 10000
+                      },
+                      "terms_version": {
+                        "type": "string"
+                      },
+                      "video_id": {
+                        "type": "string"
+                      },
+                      "source_id": {
+                        "type": "string"
+                      },
+                      "budget_cents": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100000000
+                      },
+                      "starts_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "ends_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "title",
+                      "brief",
+                      "terms_version",
+                      "video_id",
+                      "source_id",
+                      "budget_cents",
+                      "starts_at",
+                      "ends_at"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "campaign",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/campaigns/{id}/report": {
+      "get": {
+        "operationId": "get_admin_campaigns_id_report",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/campaigns/{id}/awards": {
+      "get": {
+        "operationId": "get_admin_campaigns_id_awards",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_campaigns_id_awards",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cents": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "evidence_reference": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "cents",
+                  "evidence_reference"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/campaign-awards/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_campaign_awards_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorApproved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/creator/campaigns": {
+      "get": {
+        "operationId": "get_creator_campaigns",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorCampaignList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator"
+        ]
+      }
+    },
+    "/creator/campaigns/{id}/accept": {
+      "post": {
+        "operationId": "post_creator_campaigns_id_accept",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "terms_version": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "terms_version"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{id}/watch": {
+      "post": {
+        "operationId": "post_campaigns_id_watch",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsoredWatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Watching and publishing"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/rewards/policy": {
+      "get": {
+        "operationId": "get_admin_rewards_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardEnginePolicyRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "put": {
+        "operationId": "put_admin_rewards_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardProposalResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "policy": {
+                    "$ref": "#/components/schemas/RewardEnginePolicy"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "policy",
+                  "revision",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/policy/proposals": {
+      "get": {
+        "operationId": "get_admin_rewards_policy_proposals",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/policy/proposals/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_rewards_policy_proposals_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/health": {
+      "get": {
+        "operationId": "get_admin_rewards_health",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardHealth"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/calculations": {
+      "get": {
+        "operationId": "get_admin_rewards_calculations",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/calculate": {
+      "post": {
+        "operationId": "post_admin_rewards_calculate",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardCalculationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "day": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "shadow": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "day",
+                  "shadow",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/reviews": {
+      "get": {
+        "operationId": "get_admin_rewards_reviews",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/quality": {
+      "get": {
+        "operationId": "get_admin_rewards_quality",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/quality/{id}": {
+      "get": {
+        "operationId": "get_admin_rewards_quality_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "put": {
+        "operationId": "put_admin_rewards_quality_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "originality_bps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "trust_bps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "eligible": {
+                    "type": "boolean"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "originality_bps",
+                  "trust_bps",
+                  "eligible",
+                  "revision",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/users/{id}": {
+      "get": {
+        "operationId": "get_admin_rewards_users_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardCreatorDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/payout-runs": {
+      "get": {
+        "operationId": "get_admin_rewards_payout_runs",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_rewards_payout_runs",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardPayoutRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/payouts/{id}/reconcile": {
+      "post": {
+        "operationId": "post_admin_rewards_payouts_id_reconcile",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "transfer_id": {
+                    "type": "string",
+                    "pattern": "^tr_",
+                    "maxLength": 200
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "transfer_id",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/revenue": {
+      "get": {
+        "operationId": "get_admin_rewards_revenue",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/revenue/stripe/{id}/statement": {
+      "get": {
+        "operationId": "get_admin_rewards_revenue_stripe_id_statement",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/revenue/evidence": {
+      "post": {
+        "operationId": "post_admin_rewards_revenue_evidence",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardProposalResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "receipt",
+                      "cost",
+                      "reversal",
+                      "recovery"
+                    ]
+                  },
+                  "resource_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "replacement_source_id": {
+                    "type": "string"
+                  },
+                  "gross_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "fee_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "tax_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "refund_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "provider_cost_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "media_cost_cents": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "settled_at": {
+                    "type": "string"
+                  },
+                  "evidence_reference": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "resource_id",
+                  "reason",
+                  "evidence_reference"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/revenue/evidence/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_rewards_revenue_evidence_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/revenue/reconcile": {
+      "post": {
+        "operationId": "post_admin_rewards_revenue_reconcile",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardRevenueResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "day": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "day",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/calculations/{id}": {
+      "get": {
+        "operationId": "get_admin_rewards_calculations_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/policy/history": {
+      "get": {
+        "operationId": "get_admin_rewards_policy_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/webhooks/stripe": {
+      "post": {
+        "operationId": "post_webhooks_stripe",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
+      }
+    },
+    "/webhooks/cryptorails": {
+      "post": {
+        "operationId": "post_webhooks_cryptorails",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
+      }
+    },
+    "/admin/export/{kind}": {
+      "post": {
+        "operationId": "post_admin_export_kind",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/creator/rewards/support": {
+      "get": {
+        "operationId": "get_creator_rewards_support",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
+      }
+    },
+    "/creator/rewards/support/{id}/claims": {
+      "post": {
+        "operationId": "post_creator_rewards_support_id_claims",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "evidence"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/rewards/appeals": {
+      "get": {
+        "operationId": "get_creator_rewards_appeals",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAppealList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
+      },
+      "post": {
+        "operationId": "post_creator_rewards_appeals",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "enum": [
+                      "eligibility",
+                      "hold",
+                      "allocation",
+                      "support",
+                      "payout"
+                    ]
+                  },
+                  "allocation_id": {
+                    "type": "string"
+                  },
+                  "evidence": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  }
+                },
+                "required": [
+                  "subject",
+                  "evidence"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/rewards/notifications": {
+      "get": {
+        "operationId": "get_creator_rewards_notifications",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardNotificationList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
+      }
+    },
+    "/creator/rewards/notifications/{id}/read": {
+      "post": {
+        "operationId": "post_creator_rewards_notifications_id_read",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creator/rewards/corrections": {
+      "get": {
+        "operationId": "get_creator_rewards_corrections",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorRewardCorrectionList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
+      }
+    },
+    "/admin/rewards/support": {
+      "get": {
+        "operationId": "get_admin_rewards_support",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_rewards_support",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "criteria": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "source_id": {
+                    "type": "string"
+                  },
+                  "budget_cents": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000000
+                  },
+                  "grant_credits": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "service_cost_cents": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "creator_cap": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "grant_cap": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "expiry_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 365
+                  },
+                  "minimum_publications": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "criteria",
+                  "source_id",
+                  "budget_cents",
+                  "grant_credits",
+                  "service_cost_cents",
+                  "creator_cap",
+                  "grant_cap",
+                  "expiry_days",
+                  "minimum_publications"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/support/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_rewards_support_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/support/claims/{id}/review": {
+      "post": {
+        "operationId": "post_admin_rewards_support_claims_id_review",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "approve": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "reason",
+                  "approve"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/appeals": {
+      "get": {
+        "operationId": "get_admin_rewards_appeals",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/appeals/{id}/resolve": {
+      "post": {
+        "operationId": "post_admin_rewards_appeals_id_resolve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "upheld": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "resolution",
+                  "upheld"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/corrections": {
+      "get": {
+        "operationId": "get_admin_rewards_corrections",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_rewards_corrections",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "original_batch_id": {
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "cents": {
+                    "type": "integer",
+                    "minimum": -100000000,
+                    "maximum": 100000000,
+                    "not": {
+                      "const": 0
+                    }
+                  },
+                  "source_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "evidence_reference": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "id",
+                  "original_batch_id",
+                  "user_id",
+                  "cents",
+                  "reason",
+                  "evidence_reference"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/corrections/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_rewards_corrections_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/commercial-policy": {
+      "get": {
+        "operationId": "get_admin_commercial_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommercialPolicyState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "put": {
+        "operationId": "put_admin_commercial_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "policy": {
+                    "$ref": "#/components/schemas/CommercialPolicy"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "policy",
+                  "revision",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/commercial-policy/history": {
+      "get": {
+        "operationId": "get_admin_commercial_policy_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/commercial-policy/proposals": {
+      "get": {
+        "operationId": "get_admin_commercial_policy_proposals",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/commercial-policy/preview": {
+      "post": {
+        "operationId": "post_admin_commercial_policy_preview",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommercialPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommercialPolicy"
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/commercial-policy/proposals/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_commercial_policy_proposals_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/legacy-backing": {
+      "get": {
+        "operationId": "get_admin_rewards_legacy_backing",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "post": {
+        "operationId": "post_admin_rewards_legacy_backing",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardProposalResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "earning_id": {
+                    "type": "string"
+                  },
+                  "source_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  },
+                  "evidence_reference": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "earning_id",
+                  "source_id",
+                  "reason",
+                  "evidence_reference"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/rewards/legacy-backing/{id}/approve": {
+      "post": {
+        "operationId": "post_admin_rewards_legacy_backing_id_approve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyBackingApproved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
     }
   },
   "components": {
@@ -10715,7 +14896,7 @@
       "session": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "videoflow_session"
+        "name": "6eek_session"
       }
     },
     "schemas": {
@@ -11616,6 +15797,9 @@
           "legacy_pending_cents": {
             "type": "integer"
           },
+          "legacy_unbacked_cents": {
+            "type": "integer"
+          },
           "payout_reserved_cents": {
             "type": "integer"
           },
@@ -11639,6 +15823,9 @@
           },
           "calculated_at": {
             "type": "string"
+          },
+          "reward_adjustments_cents": {
+            "type": "integer"
           }
         },
         "required": [
@@ -11647,6 +15834,7 @@
           "vested_cents",
           "available_cents",
           "legacy_pending_cents",
+          "legacy_unbacked_cents",
           "payout_reserved_cents",
           "paid_cents",
           "currency",
@@ -11741,6 +15929,1148 @@
           "reason_code",
           "first_published_at",
           "window_ends_at"
+        ]
+      },
+      "DiscoveryPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "watch_cap": {
+            "type": "integer"
+          },
+          "view_cap": {
+            "type": "integer"
+          },
+          "view_weight": {
+            "type": "integer"
+          },
+          "follow_weight": {
+            "type": "integer"
+          },
+          "like_weight": {
+            "type": "integer"
+          },
+          "history_weight": {
+            "type": "integer"
+          },
+          "candidate_limit": {
+            "type": "integer"
+          },
+          "title_weight": {
+            "type": "integer"
+          },
+          "description_weight": {
+            "type": "integer"
+          },
+          "page_limit": {
+            "type": "integer"
+          },
+          "signal_limit": {
+            "type": "integer"
+          },
+          "history_days": {
+            "type": "integer"
+          },
+          "freshness_seconds": {
+            "type": "integer"
+          },
+          "freshness_weight": {
+            "type": "integer"
+          },
+          "synonyms": {
+            "type": "object",
+            "maxProperties": 100,
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        },
+        "required": [
+          "revision",
+          "enabled",
+          "watch_cap",
+          "view_cap",
+          "view_weight",
+          "follow_weight",
+          "like_weight",
+          "history_weight",
+          "candidate_limit",
+          "title_weight",
+          "description_weight",
+          "page_limit",
+          "signal_limit",
+          "history_days",
+          "freshness_seconds",
+          "freshness_weight"
+        ]
+      },
+      "AdminObjectList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "DiscoveryIndexHealth": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fts_index_ready": {
+            "type": "boolean"
+          },
+          "estimated_video_rows": {
+            "type": "integer"
+          },
+          "index_version": {
+            "type": "integer"
+          },
+          "maintenance": {
+            "type": "string"
+          },
+          "cjk_analysis": {
+            "type": "string"
+          },
+          "cache": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fts_index_ready",
+          "estimated_video_rows",
+          "index_version",
+          "maintenance",
+          "cjk_analysis",
+          "cache"
+        ]
+      },
+      "DiscoveryAudience": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "daily": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "measured_seconds": {
+                  "type": "integer"
+                },
+                "accepted_seconds": {
+                  "type": "integer"
+                },
+                "excluded_events": {
+                  "type": "integer"
+                },
+                "unique_viewers": {
+                  "type": "integer"
+                },
+                "organic_seconds": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "paid_seconds": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "date",
+                "measured_seconds",
+                "accepted_seconds",
+                "excluded_events",
+                "unique_viewers",
+                "organic_seconds",
+                "paid_seconds"
+              ]
+            }
+          },
+          "privacy_minimum": {
+            "type": "integer"
+          },
+          "metric_version": {
+            "type": "integer"
+          },
+          "traffic_provenance": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "daily",
+          "privacy_minimum",
+          "metric_version",
+          "traffic_provenance"
+        ]
+      },
+      "DiscoveryPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Video"
+            }
+          },
+          "next_cursor": {
+            "type": "string"
+          },
+          "ranking": {
+            "type": "string"
+          },
+          "history_used": {
+            "type": "boolean"
+          },
+          "candidate_limit": {
+            "type": "integer"
+          },
+          "policy_revision": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "ranking",
+          "history_used",
+          "candidate_limit",
+          "policy_revision"
+        ]
+      },
+      "AudienceCorrection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "video_id": {
+            "type": "string"
+          },
+          "views": {
+            "type": "integer"
+          },
+          "watch_seconds": {
+            "type": "integer"
+          },
+          "metric_version": {
+            "type": "integer"
+          },
+          "rebuilt_at": {
+            "type": "string"
+          },
+          "view_correction_status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "video_id",
+          "views",
+          "watch_seconds",
+          "metric_version",
+          "rebuilt_at",
+          "view_correction_status"
+        ]
+      },
+      "ResourceID": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "SponsorCampaign": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "brief": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 10000
+          },
+          "terms_version": {
+            "type": "string"
+          },
+          "video_id": {
+            "type": "string"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "budget_cents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "brief",
+          "terms_version",
+          "video_id",
+          "source_id",
+          "budget_cents",
+          "starts_at",
+          "ends_at"
+        ]
+      },
+      "SponsorCampaignList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "campaign": {
+                  "$ref": "#/components/schemas/SponsorCampaign"
+                },
+                "accepted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "campaign",
+                "accepted"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SponsorReport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "measured_paid_seconds": {
+            "type": "integer"
+          },
+          "accepted_paid_seconds": {
+            "type": "integer"
+          },
+          "sessions": {
+            "type": "integer"
+          },
+          "approved_obligations_cents": {
+            "type": "integer"
+          },
+          "settlement": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "measured_paid_seconds",
+          "accepted_paid_seconds",
+          "sessions",
+          "approved_obligations_cents",
+          "settlement"
+        ]
+      },
+      "SponsoredWatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sponsored": {
+            "type": "boolean",
+            "const": true
+          },
+          "disclosure": {
+            "type": "string",
+            "const": "Sponsored"
+          },
+          "campaign_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sponsored",
+          "disclosure",
+          "campaign_id"
+        ]
+      },
+      "SponsorAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ]
+      },
+      "SponsorApproved": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "approved"
+        ]
+      },
+      "RewardEnginePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "earning_window_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          },
+          "vesting_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
+          },
+          "payout_threshold_cents": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 10000000
+          },
+          "payout_interval_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          },
+          "funding_bps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "reserve_bps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "daily_cap_cents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "minimum_qualified_views": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "quality_weights": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "watch": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "retention": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "originality": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "trust": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              }
+            },
+            "required": [
+              "watch",
+              "retention",
+              "originality",
+              "trust"
+            ]
+          },
+          "estimates_enabled": {
+            "type": "boolean"
+          },
+          "confirmations_enabled": {
+            "type": "boolean"
+          },
+          "payouts_enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled",
+          "earning_window_days",
+          "vesting_days",
+          "payout_threshold_cents",
+          "payout_interval_days",
+          "funding_bps",
+          "reserve_bps",
+          "daily_cap_cents",
+          "minimum_qualified_views",
+          "quality_weights",
+          "estimates_enabled",
+          "confirmations_enabled",
+          "payouts_enabled"
+        ]
+      },
+      "RewardEnginePolicyRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/RewardEnginePolicy"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "policy",
+          "revision",
+          "policy_version",
+          "updated_at"
+        ]
+      },
+      "RewardCalculationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "videos": {
+            "type": "integer"
+          },
+          "estimated_cents": {
+            "type": "integer"
+          },
+          "draft_batches": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "videos",
+          "estimated_cents",
+          "draft_batches"
+        ]
+      },
+      "RewardHealth": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "funded_cents": {
+            "type": "integer"
+          },
+          "reserved_cents": {
+            "type": "integer"
+          },
+          "available_cents": {
+            "type": "integer"
+          },
+          "confirmed_cents": {
+            "type": "integer"
+          },
+          "unvested_cents": {
+            "type": "integer"
+          },
+          "held_accounts": {
+            "type": "integer"
+          },
+          "failed_runs": {
+            "type": "integer"
+          },
+          "legacy_pending_cents": {
+            "type": "integer"
+          },
+          "recovery_reserved_cents": {
+            "type": "integer"
+          },
+          "latest_run": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "funded_cents",
+          "reserved_cents",
+          "available_cents",
+          "confirmed_cents",
+          "unvested_cents",
+          "held_accounts",
+          "failed_runs",
+          "legacy_pending_cents",
+          "recovery_reserved_cents",
+          "latest_run"
+        ]
+      },
+      "RewardItems": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "RewardProposalResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "RewardPayoutRun": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "batches": {
+            "type": "integer"
+          },
+          "failures": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "batches",
+          "failures"
+        ]
+      },
+      "RewardCreatorDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "allocations": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object"
+            }
+          },
+          "earnings": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object"
+            }
+          },
+          "payouts": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object"
+            }
+          },
+          "holds": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "user_id",
+          "allocations",
+          "earnings",
+          "payouts",
+          "holds"
+        ]
+      },
+      "RewardRevenueResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "jobs": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "net_cents": {
+            "type": "integer"
+          },
+          "funded_cents": {
+            "type": "integer"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "status",
+          "jobs",
+          "pending",
+          "net_cents",
+          "funded_cents"
+        ]
+      },
+      "RewardAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "type": "boolean"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "proposed": {
+            "type": "boolean"
+          },
+          "read": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      },
+      "RewardAppeal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "allocation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "upheld",
+              "declined"
+            ]
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "allocation_id",
+          "evidence",
+          "status",
+          "resolution",
+          "created_at",
+          "resolved_at"
+        ]
+      },
+      "RewardNotification": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "confirmation",
+              "hold",
+              "release",
+              "payout",
+              "appeal",
+              "support",
+              "correction"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "read_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "message",
+          "read_at",
+          "created_at"
+        ]
+      },
+      "CreatorRewardCorrection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "original_batch_id": {
+            "type": "string"
+          },
+          "cents": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "approved_at": {
+            "type": "string"
+          },
+          "vesting_seconds": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "original_batch_id",
+          "cents",
+          "reason",
+          "approved_at",
+          "vesting_seconds"
+        ]
+      },
+      "RewardAppealList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RewardAppeal"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit"
+        ]
+      },
+      "RewardNotificationList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RewardNotification"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit"
+        ]
+      },
+      "CreatorRewardCorrectionList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatorRewardCorrection"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit"
+        ]
+      },
+      "CommercialPack": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000
+          },
+          "price_cents": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 10000000
+          },
+          "currency": {
+            "type": "string",
+            "const": "usd"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "credits",
+          "price_cents",
+          "currency"
+        ]
+      },
+      "CommercialPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "packs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/CommercialPack"
+            }
+          },
+          "target_gross_margin_bps": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 9000
+          },
+          "fee_reserve_bps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5000
+          },
+          "media_reserve_bps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5000
+          }
+        },
+        "required": [
+          "packs",
+          "target_gross_margin_bps",
+          "fee_reserve_bps",
+          "media_reserve_bps"
+        ]
+      },
+      "CommercialPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "minimum_unit_revenue_micros": {
+            "type": "number"
+          },
+          "worst_pack_gross_margin_bps": {
+            "type": "integer"
+          },
+          "required_gross_margin_bps": {
+            "type": "integer"
+          },
+          "margin_ok": {
+            "type": "boolean"
+          },
+          "basis": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "minimum_unit_revenue_micros",
+          "worst_pack_gross_margin_bps",
+          "required_gross_margin_bps",
+          "margin_ok",
+          "basis"
+        ]
+      },
+      "CommercialPolicyState": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/CommercialPolicy"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommercialPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preview_status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "generation_policy_required"
+            ]
+          }
+        },
+        "required": [
+          "policy",
+          "revision",
+          "updated_at",
+          "source",
+          "preview",
+          "preview_status"
+        ]
+      },
+      "LegacyBackingApproved": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "approved"
         ]
       }
     }

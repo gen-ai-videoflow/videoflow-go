@@ -4,12 +4,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
-RUN CGO_ENABLED=0 GOMAXPROCS=2 go build -p 2 -trimpath -o /videoflow ./cmd/server
+RUN CGO_ENABLED=0 GOMAXPROCS=2 go build -p 2 -trimpath -o /6eek ./cmd/server
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates fonts-noto-core fonts-noto-cjk && rm -rf /var/lib/apt/lists/* \
-    && useradd --uid 10001 --create-home videoflow && mkdir /data && chown videoflow /data
-COPY --from=build /videoflow /usr/local/bin/videoflow
-USER videoflow
+    && useradd --uid 10001 --create-home 6eek && mkdir /data && chown 6eek /data
+COPY --from=build /6eek /usr/local/bin/6eek
+USER 6eek
 ENV DATABASE_PATH=/data/db.sqlite STORAGE_ROOT=/data/storage PORT=8000
 EXPOSE 8000
-CMD ["videoflow", "--host", "0.0.0.0"]
+CMD ["6eek", "--host", "0.0.0.0"]

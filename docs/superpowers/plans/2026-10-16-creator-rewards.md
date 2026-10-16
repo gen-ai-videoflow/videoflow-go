@@ -18,7 +18,7 @@
 - No automatic provider/AWS activation. Preserve existing legacy balances and reward-off defaults.
 - USD accounting initially. Public eligibility and payout availability must match real supported regions/providers.
 - Public user docs exclude operations; maintain private admin/finance procedures separately.
-- Canonical implementation repos: `/home/jienweng/projects/videoflow-saas/videoflow-api`, `videoflow-web`, `admin`, `docs`. API paths below are relative to videoflow-api; UI paths are labelled explicitly.
+- Canonical implementation repos: `/home/jienweng/projects/videoflow-saas/videoflow-api`, `6eek-web`, `admin`, `docs`. API paths below are relative to videoflow-api; UI paths are labelled explicitly.
 - Inspect each repo's AGENTS.md and current migrations before execution. Migration 041 is the next candidate after inspected 040; renumber if concurrent work has consumed it.
 
 ## Review focus
