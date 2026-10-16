@@ -151,7 +151,7 @@ requests['reward_batch']=obj({'id':S,'day':{'type':'string','format':'date'},'so
 requests['reward_hold']=obj({'held':B,'reason':S},('held','reason'))
 routes.extend([
  ('get','/creator/rewards/program',None,'RewardProgram',False),('get','/creator/rewards/summary',None,'RewardBalance',False),('get','/creator/rewards/videos',None,None,False),('get','/creator/rewards/videos/{id}',None,None,False),('get','/creator/rewards/payouts',None,None,False),('post','/creator/rewards/enroll','reward_enroll',None,False),
- ('get','/admin/rewards',None,None,False),('post','/admin/rewards/funding','reward_funding',None,False),('post','/admin/rewards/funding/{id}/reconcile','empty',None,False),('post','/admin/rewards/batches','reward_batch',None,False),('get','/admin/rewards/batches/{id}',None,None,False),('post','/admin/rewards/batches/{id}/confirm','empty',None,False),('post','/admin/rewards/users/{id}/hold','reward_hold',None,False),
+ ('get','/admin/openapi.json',None,None,False),('get','/admin/rewards',None,None,False),('post','/admin/rewards/funding','reward_funding',None,False),('post','/admin/rewards/funding/{id}/reconcile','empty',None,False),('post','/admin/rewards/batches','reward_batch',None,False),('get','/admin/rewards/batches/{id}',None,None,False),('post','/admin/rewards/batches/{id}/confirm','empty',None,False),('post','/admin/rewards/users/{id}/hold','reward_hold',None,False),
 ])
 paths={}
 for method,path,body,response,anonymous in routes:
@@ -159,6 +159,7 @@ for method,path,body,response,anonymous in routes:
  if path in ('/generation/jobs','/memberships/checkout','/billing/checkout','/premium/checkout','/payments/invoices'):
   params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':200 if path in ('/payments/invoices','/premium/checkout','/billing/checkout') else 128}})
  op={'operationId':method+'_'+path.strip('/').replace('/','_').replace('{','').replace('}','').replace('-','_'),'security':[] if anonymous else [{'session':[]}],'parameters':params,'responses':{'200':{'description':'Success'},'400':{'description':'Invalid input'},'401':{'description':'Authentication or authorization required'},'409':{'description':'State conflict'},'503':{'description':'Integration disabled or unavailable'}}}
+ op['tags']=['Administration' if path.startswith('/admin/') else 'Creator rewards' if path.startswith('/creator/rewards/') else 'Authentication' if path.startswith('/auth/') or path.startswith('/security') else 'Payments' if path.startswith(('/billing','/payments','/premium','/memberships')) else 'Creator' if path.startswith(('/creator','/channel')) else 'Studio' if path.startswith(('/projects','/generation','/jobs','/studio')) else 'Watching and publishing']
  if path in ('/auth/login','/auth/magic-link/verify'):op['responses']['202']={'description':'Second factor required; challenge is not an authenticated session','content':{'application/json':{'schema':obj({'mfa_required':B,'challenge':S,'methods':{'type':'array','items':S}},('mfa_required','challenge','methods'))}}}
 
  if path=='/projects/{project}/prompt-templates/{template}':op['parameters'].append({'name':'revision','in':'query','required':True,'schema':{'type':'integer','minimum':1}})

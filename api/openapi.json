@@ -54,7 +54,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "put": {
         "operationId": "put_projects_project_prompt_templates",
@@ -97,6 +100,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -203,7 +209,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/editor": {
@@ -247,7 +256,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "put": {
         "operationId": "put_projects_project_editor",
@@ -290,6 +302,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -337,7 +352,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/payments/invoices": {
@@ -384,6 +402,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -456,7 +477,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/payments/invoices/{id}": {
@@ -500,7 +524,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/payments/invoices/{id}/notify": {
@@ -545,6 +572,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -581,7 +611,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/premium/checkout": {
@@ -628,6 +661,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -677,6 +713,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -733,7 +772,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/edges": {
@@ -771,6 +813,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -838,6 +883,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -904,6 +952,9 @@
             }
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -996,6 +1047,9 @@
             }
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1046,7 +1100,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/forgot-password": {
@@ -1071,6 +1128,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1114,6 +1174,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1157,6 +1220,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1200,6 +1266,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1257,7 +1326,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/projects": {
@@ -1295,7 +1367,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects",
@@ -1329,6 +1404,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1427,7 +1505,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/credits": {
@@ -1455,7 +1536,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/billing/packs": {
@@ -1479,7 +1563,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/billing/checkout": {
@@ -1526,6 +1613,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1589,7 +1679,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/jobs/{id}": {
@@ -1633,7 +1726,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/jobs/{id}/events": {
@@ -1677,7 +1773,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/jobs/{id}/download": {
@@ -1714,7 +1813,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/jobs/{id}/cancel": {
@@ -1751,7 +1853,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/jobs": {
@@ -1798,7 +1903,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/jobs/{id}/pipeline": {
@@ -1842,7 +1950,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/pipelines/quotes": {
@@ -1887,6 +1998,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1972,6 +2086,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2031,6 +2148,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2115,6 +2235,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2226,7 +2349,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/search": {
@@ -2260,7 +2386,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos": {
@@ -2294,7 +2423,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "post": {
         "operationId": "post_videos",
@@ -2328,6 +2460,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2410,7 +2545,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "patch": {
         "operationId": "patch_videos_id",
@@ -2445,7 +2583,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/publish": {
@@ -2482,7 +2623,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/playback-grant": {
@@ -2515,7 +2659,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/report": {
@@ -2553,6 +2700,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2601,7 +2751,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       }
     },
     "/channel": {
@@ -2629,7 +2782,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       },
       "patch": {
         "operationId": "patch_channel",
@@ -2656,6 +2812,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Creator"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2710,7 +2869,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       }
     },
     "/channels/{id}/follow": {
@@ -2747,7 +2909,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       },
       "delete": {
         "operationId": "delete_channels_id_follow",
@@ -2783,6 +2948,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Creator"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2823,7 +2991,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Payments"
+        ]
       }
     },
     "/memberships/checkout": {
@@ -2866,6 +3037,9 @@
             "description": "Per-channel subscriptions are retired"
           }
         },
+        "tags": [
+          "Payments"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2918,6 +3092,9 @@
             "description": "Per-channel subscriptions are retired"
           }
         },
+        "tags": [
+          "Creator"
+        ],
         "deprecated": true,
         "description": "Channel membership pricing is retired; use platform-wide Premium."
       },
@@ -2949,6 +3126,9 @@
             "description": "Per-channel subscriptions are retired"
           }
         },
+        "tags": [
+          "Creator"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3008,7 +3188,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       },
       "post": {
         "operationId": "post_creator_payout_account",
@@ -3035,6 +3218,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Creator"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3083,7 +3269,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       }
     },
     "/creator/analytics/detail": {
@@ -3111,7 +3300,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       }
     },
     "/creator/earnings": {
@@ -3139,7 +3331,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator"
+        ]
       }
     },
     "/watch-sessions": {
@@ -3168,6 +3363,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3215,6 +3413,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3272,6 +3473,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3323,6 +3527,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3379,7 +3586,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/security/sessions": {
@@ -3417,7 +3627,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/security/sessions/{id}": {
@@ -3455,6 +3668,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3496,6 +3712,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3540,6 +3759,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3591,6 +3813,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3641,6 +3866,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3688,6 +3916,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3738,6 +3969,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3788,6 +4022,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3851,6 +4088,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3897,6 +4137,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3941,6 +4184,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3991,7 +4237,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "patch": {
         "operationId": "patch_profile",
@@ -4018,6 +4267,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4102,7 +4354,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "patch": {
         "operationId": "patch_settings_preferences",
@@ -4129,6 +4384,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4212,7 +4470,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/media-assets/{id}": {
@@ -4256,7 +4517,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/media-assets/{id}/download": {
@@ -4293,7 +4557,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/media-assets/{id}/preview": {
@@ -4330,7 +4597,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/publications": {
@@ -4366,6 +4636,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4456,7 +4729,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/poster": {
@@ -4489,7 +4765,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/related": {
@@ -4532,7 +4811,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/videos/{id}/progress": {
@@ -4570,6 +4852,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4616,7 +4901,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/viewer/history": {
@@ -4644,7 +4932,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "delete": {
         "operationId": "delete_viewer_history",
@@ -4670,7 +4961,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/video-uploads/options": {
@@ -4698,7 +4992,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/video-uploads": {
@@ -4727,6 +5024,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4809,7 +5109,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       },
       "delete": {
         "operationId": "delete_video_uploads_id",
@@ -4845,6 +5148,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4895,6 +5201,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4953,6 +5262,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5003,6 +5315,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5051,6 +5366,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5101,6 +5419,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5149,6 +5470,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5208,7 +5532,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_scripts",
@@ -5251,6 +5578,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5351,6 +5681,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5427,7 +5760,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/characters": {
@@ -5474,7 +5810,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_characters",
@@ -5517,6 +5856,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5617,6 +5959,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5693,7 +6038,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/scenes": {
@@ -5740,7 +6088,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_scenes",
@@ -5783,6 +6134,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5883,6 +6237,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5959,7 +6316,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/assets": {
@@ -6006,7 +6366,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_assets",
@@ -6049,6 +6412,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6149,6 +6515,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6225,7 +6594,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/scenes/{scene}/shots": {
@@ -6280,7 +6652,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_scenes_scene_shots",
@@ -6331,6 +6706,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6439,6 +6817,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6523,7 +6904,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/export": {
@@ -6560,7 +6944,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/import": {
@@ -6596,6 +6983,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6678,7 +7068,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "put": {
         "operationId": "put_jobs_id_captions",
@@ -6714,6 +7107,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6781,6 +7177,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6839,7 +7238,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_canvas_scenes",
@@ -6875,6 +7277,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6969,7 +7374,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "patch": {
         "operationId": "patch_projects_project_canvas_scenes_entity",
@@ -7013,6 +7421,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7105,7 +7516,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/canvas/shots": {
@@ -7142,7 +7556,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_canvas_shots",
@@ -7178,6 +7595,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7272,7 +7692,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "patch": {
         "operationId": "patch_projects_project_canvas_shots_entity",
@@ -7316,6 +7739,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7408,7 +7834,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/canvas/characters": {
@@ -7445,7 +7874,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_canvas_characters",
@@ -7481,6 +7913,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7575,7 +8010,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "patch": {
         "operationId": "patch_projects_project_canvas_characters_entity",
@@ -7619,6 +8057,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7711,7 +8152,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/canvas/assets": {
@@ -7748,7 +8192,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "post": {
         "operationId": "post_projects_project_canvas_assets",
@@ -7784,6 +8231,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -7878,7 +8328,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "patch": {
         "operationId": "patch_projects_project_canvas_assets_entity",
@@ -7922,6 +8375,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Studio"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8014,7 +8470,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/scenes/{scene}/cast/{character}": {
@@ -8067,7 +8526,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "delete": {
         "operationId": "delete_projects_project_scenes_scene_cast_character",
@@ -8118,7 +8580,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/projects/{project}/shots/{shot}/assets/{asset}": {
@@ -8171,7 +8636,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       },
       "delete": {
         "operationId": "delete_projects_project_shots_shot_assets_asset",
@@ -8222,7 +8690,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Studio"
+        ]
       }
     },
     "/auth/providers": {
@@ -8253,7 +8724,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/oauth/{provider}/start": {
@@ -8298,6 +8772,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8386,7 +8863,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       },
       "post": {
         "operationId": "post_auth_oauth_provider_callback",
@@ -8429,6 +8909,9 @@
             }
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8476,6 +8959,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8556,6 +9042,9 @@
             }
           }
         },
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8613,6 +9102,9 @@
             }
           }
         },
+        "tags": [
+          "Watching and publishing"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8682,7 +9174,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Watching and publishing"
+        ]
       }
     },
     "/admin/runtime-policy/versions": {
@@ -8714,6 +9209,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -8753,6 +9251,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       },
       "put": {
@@ -8790,6 +9291,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8852,6 +9356,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -8897,6 +9404,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -8939,6 +9449,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -8987,6 +9500,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9056,6 +9572,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9105,6 +9624,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9146,6 +9668,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9205,6 +9730,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9255,6 +9783,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9294,6 +9825,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9350,6 +9884,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9391,6 +9928,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9457,6 +9997,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9510,7 +10053,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
       }
     },
     "/creator/rewards/summary": {
@@ -9545,7 +10091,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
       }
     },
     "/creator/rewards/videos": {
@@ -9573,7 +10122,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
       }
     },
     "/creator/rewards/videos/{id}": {
@@ -9610,7 +10162,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
       }
     },
     "/creator/rewards/payouts": {
@@ -9638,7 +10193,10 @@
           "503": {
             "description": "Integration disabled or unavailable"
           }
-        }
+        },
+        "tags": [
+          "Creator rewards"
+        ]
       }
     },
     "/creator/rewards/enroll": {
@@ -9667,6 +10225,9 @@
             "description": "Integration disabled or unavailable"
           }
         },
+        "tags": [
+          "Creator rewards"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9691,6 +10252,41 @@
             }
           }
         }
+      }
+    },
+    "/admin/openapi.json": {
+      "get": {
+        "operationId": "get_admin_openapi.json",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "tags": [
+          "Administration"
+        ],
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
     "/admin/rewards": {
@@ -9722,6 +10318,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -9754,6 +10353,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9835,6 +10437,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9880,6 +10485,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -9971,6 +10579,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
       }
     },
@@ -10012,6 +10623,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -10066,6 +10680,9 @@
             "description": "Administrator role, second factor or recent verification required"
           }
         },
+        "tags": [
+          "Administration"
+        ],
         "requestBody": {
           "required": true,
           "content": {

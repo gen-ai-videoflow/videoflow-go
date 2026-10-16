@@ -102,6 +102,7 @@ func (s *Server) adminConsoleRoutes(r chi.Router) {
 		r.Get("/rewards/batches/{id}", s.adminRewardBatchDetail)
 		r.Post("/rewards/batches", s.adminRewardDraft)
 		r.Post("/rewards/batches/{id}/confirm", s.adminRewardConfirm)
+		r.Get("/openapi.json", s.adminAPIContract)
 		r.Get("/settings", s.adminSettings)
 		r.Get("/readiness", s.adminReadiness)
 		r.Get("/capacity", s.adminCapacity)
