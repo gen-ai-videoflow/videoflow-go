@@ -1,5 +1,6 @@
 <script lang="ts">
   import ProjectNavigation from "./ProjectNavigation.svelte";
+  import {goto} from "$app/navigation";
   import { page } from "$app/state";
   import { selectStudioProject } from "./navigation";
   import { onMount } from "svelte";
@@ -188,11 +189,9 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-background text-foreground">
-  <ProjectNavigation {projects} {project} view="canvas" onselect={select}/>
-  <div class="flex items-center justify-end gap-2 border-b border-border px-4 py-1">
-    <Button size="sm" variant="ghost" onclick={() => refresh().catch((e) => (error = e.message))} disabled={!project}><RefreshCw class="size-4"/><span class="sr-only">Refresh canvas</span></Button>
-    <Button size="sm" variant="ghost" onclick={() => (showAssistant = !showAssistant)} aria-pressed={showAssistant}>{showAssistant ? "Hide generation panel" : "Generate video"}</Button>
-  </div>
+  <ProjectNavigation {projects} {project} view="canvas" onselect={(id)=>{select(id);void goto(`/studio?project=${encodeURIComponent(id)}`);}}>
+    {#snippet actions()}<Button size="icon-sm" variant="ghost" onclick={() => refresh().catch((e) => (error = e.message))} disabled={!project} aria-label="Refresh canvas"><RefreshCw class="size-4"/></Button><Button size="sm" variant="ghost" onclick={() => (showAssistant = !showAssistant)} aria-pressed={showAssistant} aria-label={showAssistant ? "Hide generation panel" : "Show generation panel"} title={showAssistant ? "Hide generation panel" : "Show generation panel"}><MessageSquare class="size-4"/><span class="hidden lg:inline">{showAssistant ? "Hide panel" : "Generate"}</span></Button>{/snippet}
+  </ProjectNavigation>
   {#if error}<div
       role="alert"
       class="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -417,7 +416,7 @@
                     >Cancel quote</Button
                   >
                 </section>{/if}
-              <GenerationJobs {jobs} onrefresh={refresh} />
+              {#if jobs.length}<GenerationJobs {jobs} onrefresh={refresh} />{/if}
             </div>
           </aside></Pane
         >{/if}

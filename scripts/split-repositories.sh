@@ -43,12 +43,14 @@ if (src/'docs/BILINGUAL-PROMPTS.md').is_file():
 if (src/'docs/EDITOR-OPERATIONS.md').is_file():
     (web/'docs').mkdir(exist_ok=True)
     shutil.copy2(src/'docs/EDITOR-OPERATIONS.md',web/'docs/EDITOR-OPERATIONS.md')
-for doc in ('AI-ACTIVATION.md','ops/REQUEST-CAPACITY.md','ops/ADMIN-CONSOLE.md','ops/OAUTH-SIGN-IN.md','superpowers/plans/2026-10-16-platform-execution.md','superpowers/plans/2026-10-16-platform-activation-admin-checklist.md'):
+for doc in ('CLOUD-USER-GUIDE.md','CLOUD-DEPLOYMENT.md','CLOUD-PAYMENT-OPERATIONS.md','CRYPTORAILS.md','PREMIUM.md','RUNTIME-POLICY.md','AI-ACTIVATION.md','ops/REQUEST-CAPACITY.md','ops/ADMIN-CONSOLE.md','ops/OAUTH-SIGN-IN.md','superpowers/plans/2026-10-16-platform-execution.md','superpowers/plans/2026-10-16-platform-activation-admin-checklist.md'):
     source=src/'docs'/doc
     if source.is_file():
         target=web/'docs'/doc
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(source,target)
+        if doc=='CLOUD-USER-GUIDE.md':
+            target.write_text(target.read_text().replace('../frontend/static/','../static/').replace('`frontend/src/','`src/').replace('[desktop handbook](handbook/README.md)','desktop handbook in the source repository'))
 if (src/'docs/ux').is_dir():
     shutil.copytree(src/'docs/ux', web/'docs/ux', dirs_exist_ok=True)
 if (src/'docs/launch').is_dir():
@@ -58,12 +60,15 @@ for name in ('dev','build','check'):
     package['scripts'][name]='VITE_CLOUD_MODE=true '+package['scripts'][name]
 (web/'package.json').write_text(json.dumps(package,indent=2)+'\n')
 (web/'.gitignore').write_text('node_modules/\n.svelte-kit/\nbuild/\nstatic/editor-app/\n.env\n.env.*\n!.env.example\n')
-(web/'README.md').write_text('# VideoFlow Web\n\nSvelteKit + shadcn-svelte SaaS frontend. Run `npm ci`, then `CLOUD_API_INTERNAL_URL=http://localhost:8000/v1 npm run dev`. Cloud mode is enabled by the package scripts. Production: `docker build -t videoflow-web .`; run with `CLOUD_API_INTERNAL_URL`, `ORIGIN`, and `PORT`. The backend API contract lives in the companion videoflow-api repository; generated wire types are included. No provider or payment secrets belong here.\n')
+(web/'README.md').write_text('# VideoFlow Web\n\nSvelteKit + shadcn-svelte SaaS frontend. Run `npm ci`, then `CLOUD_API_INTERNAL_URL=http://localhost:8000/v1 npm run dev`. Cloud mode is enabled by the package scripts. Production: `docker build -t videoflow-web .`; run with `CLOUD_API_INTERNAL_URL`, `ORIGIN`, and `PORT`. The backend API contract lives in the companion videoflow-api repository; generated wire types are included. No provider or payment secrets belong here.\n\nUser documentation: open `/help` in the app, read [the cloud user guide](static/help/user-guide.md), or see [documentation and operator guides](docs/CLOUD-USER-GUIDE.md). The cloud guide is separate from the desktop handbook.\n')
 backend=dst/'videoflow-api'; backend.mkdir()
 for name in ('cmd','internal','pkg','api','migrations','infra','scripts','docs','deploy','go.mod','go.sum','Makefile','README.md','LICENSE','.gitignore','.dockerignore','.env.cloud.example','compose.cloud.yml','PRODUCT.md','DESIGN.md'):
     source=src/name
     if source.is_dir(): shutil.copytree(source,backend/name,ignore=ignore,symlinks=True)
     elif source.is_file(): shutil.copy2(source,backend/name)
+guide_index=backend/'docs/CLOUD-USER-GUIDE.md'
+if guide_index.is_file():
+    guide_index.write_text(guide_index.read_text().replace('../frontend/static/help/user-guide.md','https://github.com/gen-ai-videoflow/videoflow-web/blob/main/static/help/user-guide.md').replace('`frontend/src/lib/cloud/help/guide.json`','`src/lib/cloud/help/guide.json` in the companion frontend repository'))
 # Keep the backend contract's shared wire types alongside OpenAPI.
 shutil.copy2(src/'frontend/src/lib/cloud/generated.ts', backend/'api/generated.ts')
 if not (dst/'videoflow-web'/'.dockerignore').exists():

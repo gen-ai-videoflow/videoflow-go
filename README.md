@@ -1,3 +1,7 @@
+## Cloud web application
+
+For the SaaS web app, use the [cloud user guide](docs/CLOUD-USER-GUIDE.md), or open **Help & guide** in the application. It covers watching, projects, Story, Canvas, editing, publishing, billing and account security. The download instructions below describe the separate desktop application.
+
 ## Download and use
 
 For a beginner, choose the Electron app from the [GitHub downloads](https://github.com/JienWeng/videoflow-go/releases): install the macOS DMG or the Ubuntu/Debian DEB for your processor, open **VideoFlow**, and add your OpenRouter key in Settings. The desktop app includes its backend, frontend, FFmpeg, FFprobe and caption fonts. No Go, Node, Python or FFmpeg installation is required. AI generation needs internet access and OpenRouter credits. See [desktop beginner instructions](docs/DESKTOP-QUICKSTART.txt).

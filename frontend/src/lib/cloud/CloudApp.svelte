@@ -1,4 +1,5 @@
 <script lang="ts">
+ import HelpPage from './help/HelpPage.svelte';
  import CreatorAnalytics from './CreatorAnalytics.svelte';
  import ConfirmHost from './ConfirmHost.svelte';
   import PaymentProviderChoice from './PaymentProviderChoice.svelte';
@@ -114,20 +115,20 @@
   const editorPage=$derived(path==='/studio/editor');
   const viewingRoute=$derived(['/','/discover','/following','/search','/library','/history','/shorts'].includes(path)||path.startsWith('/watch/')||path.startsWith('/shorts/'));
   const creatorUtilityPage=$derived(path.startsWith('/studio/publish')||path.startsWith('/studio/upload')||path.startsWith('/studio/outputs/')||path==='/channel');
-  const viewerPage=$derived(viewingRoute||!!settingsTab||['/', '/discover','/following','/search','/settings','/security','/profile','/payments','/premium','/memberships','/credits'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/'));
+  const viewerPage=$derived(path==='/help'||viewingRoute||!!settingsTab||['/', '/discover','/following','/search','/settings','/security','/profile','/payments','/premium','/memberships','/credits'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/'));
   const authReturnTo=$derived(safeReturnTo(page.url.searchParams.get('returnTo') || ((canvasPage||resourceSection||dashboardPage||editorPage) ? page.url.pathname+page.url.search+page.url.hash : '/discover'),page.url.origin));
   const signInHref=$derived(authHref('/login',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const signUpHref=$derived(authHref('/register',authPage ? authReturnTo : page.url.pathname+page.url.search+page.url.hash,page.url.origin));
   const displayAuth=$derived(signInPage||((canvasPage||resourceSection||dashboardPage||editorPage)&&sessionKnown&&!user));
-  const publicPage = $derived(path==='/shorts'||path.startsWith('/shorts/')||['/','/discover','/search'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
+  const publicPage = $derived(path==='/help'||path==='/shorts'||path.startsWith('/shorts/')||['/','/discover','/search'].includes(path)||path.startsWith('/watch/')||path.startsWith('/channels/')||path==='/premium'||path==='/memberships');
   const createNav=[{url:'/create',label:'Create video',icon:Clapperboard},{url:'/studio/templates',label:'Templates',icon:LayoutTemplate}];
-  const browseNav=[{url:'/discover',label:'Discover',icon:Compass}];
+  const browseNav=[{url:'/discover',label:'Discover',icon:Compass},{url:'/help',label:'Help & guide',icon:ListVideo}];
   const outputNav=[{url:'/studio/videos',label:'My videos',icon:Film}];
   const advancedNav=[{url:'/studio',label:'Project workspace',icon:FolderOpen}];
   const systemNav=[{url:'/channel',label:'My content',icon:Radio}];
   const mobileNav=[{url:'/studio/dashboard',label:'Overview',icon:LayoutTemplate},{url:'/projects',label:'Projects',icon:FolderOpen},...createNav,...outputNav,...advancedNav,...browseNav,...systemNav];
   const active=(url:string)=>url==='/workspace'?!!resourceSection:url==='/studio'?(canvasPage||editorPage||!!resourceSection):path===(aliases[url]||url);
-  const titles: Record<string,string> = {'/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Canvas','/studio/dashboard':'Projects overview','/studio/editor':'Video editor','/workspace':'Project workspace','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
+  const titles: Record<string,string> = {'/help':'Help & getting started','/':'Discover','/shorts':'Shorts','/library':'Saved videos','/history':'Watch history','/following':'Following','/search':'Search','/profile':'Edit profile','/security':'Security','/payments':'Payments','/templates':'Templates','/discover':'Discover','/create':'Create video','/projects':'Projects','/credits':'Credits & billing','/channel':'Your channel','/earnings':'Creator earnings','/studio':'Canvas','/studio/dashboard':'Projects overview','/studio/editor':'Video editor','/workspace':'Project workspace','/settings':'Account settings','/memberships':'Premium','/premium':'Premium','/render':'My videos','/scenes':'Scenes','/characters':'Characters','/assets':'Assets'};
   const list = (value:any):any[] => Array.isArray(value) ? value : value?.items || value?.videos || value?.projects || value?.jobs || [];
   const money = (cents:number | undefined, currency = 'USD') => cents == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency}).format(cents/100);
   const date = (value:string) => value ? new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
@@ -143,7 +144,7 @@
   async function load(current:string) {
     const sequence=++loadSequence;
     loading = true; loadFailed = false; error = ''; notice = ''; data = {}; playback = ''; quote = null; showReport = false; reportReason = ''; followed = false;
-    if (authPage||settingsTab||viewingRoute||!!resourceSection||dashboardPage||editorPage||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
+    if (current==='/help'||authPage||settingsTab||viewingRoute||!!resourceSection||dashboardPage||editorPage||current==='/channel'||rawPath.startsWith('/studio/outputs/')||rawPath==='/studio/publish'||rawPath==='/studio/upload') { loading = false; return; }
     if (!user && !publicPage) { loading = false; return; }
     try {
       let candidate:any={};let candidateJobs:any[]|undefined;
@@ -196,6 +197,8 @@
       {:else if loadFailed}<div class="cloud-empty"><Film size={35}/><h1>Let's try that again.</h1><p>This page couldn't be loaded. Your saved work is still in your account.</p><Button onclick={()=>load(path)}>Reload page</Button></div>
       {:else if !user && !publicPage}
         <div class="cloud-empty"><ShieldCheck size={38}/><h1>{viewerPage?'Sign in to continue':'Your studio is waiting.'}</h1><p>{viewerPage?'Use your VideoFlow account to follow creators and manage your profile, payments, and preferences.':'Sign in to create videos, manage projects, and grow your channel.'}</p><Button href={signInHref}>Sign in <ArrowRight size={16}/></Button><a href={signUpHref}>Create an account</a></div>
+      {:else if path==='/help'}
+        <HelpPage/>
       {:else if rawPath.startsWith('/studio/outputs/')}
         {#key rawPath}<OutputDetail jobId={rawPath.split('/')[3]}/>{/key}
       {:else if rawPath==='/studio/upload'}

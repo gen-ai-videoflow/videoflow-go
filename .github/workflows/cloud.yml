@@ -96,6 +96,7 @@ jobs:
           npm run check
           node scripts/check-payments.mjs
           node scripts/check-settings.mjs
+          node scripts/generate-user-guide.mjs --check
           node scripts/check-studio-navigation.mjs
           node scripts/check-short-state.mjs
           node scripts/check-prompt-templates.mjs

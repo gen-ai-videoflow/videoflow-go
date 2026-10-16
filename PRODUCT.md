@@ -24,15 +24,16 @@ SvelteKit/shadcn-svelte frontend and Go API, published as private videoflow-web 
 
 ## Capabilities and Constraints
 
-- Preserve the original VideoFlow Studio canvas and working creation logic.
+- Preserve the original VideoFlow Studio canvas and working creation logic. Story, Canvas and Edit share project context; Resources supports them.
+- The public cloud user guide at /help and its downloadable Markdown share one content source, separate from the desktop handbook.
 - Browsing, settings and Studio have distinct navigation and task contexts.
 - Platform-wide Premium viewing is separate from generation credits and free following. No per-channel paid membership pricing.
-- New payments use CryptoRails integration; live checkout remains gated. Current Premium design is prepaid 30-day access without automatic renewal.
+- Stripe and CryptoRails are integrated and separately activation-gated. Stripe Premium can recur; CryptoRails Premium is prepaid for the offered term. Neither integration is evidence of live settlement.
 - Creator rewards are intended to use a capped share of platform revenue; they remain disabled until operational/policy approval. No guaranteed payment per view.
 - Application-owned authentication, MFA, passkeys and active-session controls already exist. Physical-authenticator and real delivered-email checks remain environment gates.
 - User confirmed on 2026-10-15: publish both generated Studio videos and uploaded files; extend the current shadcn interface directly, without a visual mockup round.
-- Owned source assets, measured format metadata, Shorts lifecycle and general uploaded-video publication still need implementation. Do not describe the planned features as shipped.
-- Video uploads need distinct enforceable quotas, validated source metadata and publication rights; limits are open proposals until reviewed.
+- Owned source assets, measured upload metadata, Shorts lifecycle and uploaded-video publication have implementation and fixture-test coverage. Live storage, transcoding and playback still require configured providers.
+- Video uploads enforce server-owned limits, source metadata validation and publication-rights confirmation. Deployment configuration controls availability.
 - Planned business reach is global. Availability of paid services and payouts must follow actual configured provider/country support, not a blanket worldwide guarantee.
 
 ## Brand Commitments
