@@ -3,7 +3,8 @@
  import {goto} from '$app/navigation';
  import {studioHref,selectStudioProject} from './navigation';
  import * as Dropdown from '$lib/components/ui/dropdown-menu';
-  import { beforeNavigate } from '$app/navigation';
+  import {guardUnsaved} from './unsaved';
+ import {confirmAction} from './confirmation.svelte';
   import { page } from '$app/state';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
@@ -71,7 +72,7 @@
   const current = $derived(sections.find(section=>section.value===kind) || sections[0]);
   const list = (value:any):any[] => Array.isArray(value) ? value : value?.items || value?.entities || value?.jobs || [];
 
-  beforeNavigate((navigation)=>{if(dirty && !navigation.willUnload && !window.confirm('Discard your unsaved studio changes?'))navigation.cancel();});
+  guardUnsaved(()=>dirty,'You have unsaved Studio edits.');
   onMount(() => {
     kind=initialSection;
     void Promise.all([request('/me'),request('/projects')]).then(([user,value])=>{
@@ -115,8 +116,8 @@
     } catch(e) {if(version===sequence){error=(e as Error).message;loadFailed=true;}}
     finally {if(version===sequence)loading=false;}
   }
-  function edit(entity:Entity | null) {
-    if(dirty && !window.confirm('Discard your unsaved changes?'))return;
+  async function edit(entity:Entity | null) {
+    if(dirty && !(await confirmAction('Discard your unsaved changes?')))return;
     selected=entity;entityName=entity?.title || '';description=entity?.description || '';
     text=entity?.content || '';appearance=entity?.content || '';scenePrompt=entity?.prompt || '';sceneOrder=entity?.position ?? entities.length+1;sceneDuration=entity?.duration || 5;assetKey=entity?.object_key || '';assetType=entity?.metadata?.type || 'image';
     formOpen=true;dirty=false;notice='';error='';
@@ -158,7 +159,7 @@
   }
   async function loadCaptions() {
     if(!jobId)return;
-    if(dirty && !window.confirm('Discard your unsaved caption changes?'))return;
+    if(dirty && !(await confirmAction('Discard your unsaved caption changes?')))return;
     loading=true;error='';notice='';captionsLoaded=false;
     try {
       const value=await request(`/jobs/${encodeURIComponent(jobId)}/captions`);
@@ -222,7 +223,7 @@
 <div class="studio-workspace">
   <a class="workspace-back" href="/studio/dashboard"><ArrowLeft class="size-3.5"/>Studio overview</a>
   <header class="workspace-header"><div><h1>{current.label}</h1><p>{current.help}</p></div><div class="workspace-controls">{#if projects.length}<label for="studio-project" class="sr-only">Project</label><select id="studio-project" value={projectId} disabled={saving} onchange={event=>{const next=event.currentTarget.value;if(dirty){pendingSwitch={project:next,kind};switchOpen=true;event.currentTarget.value=projectId;return;}void goto(studioHref(kind,next));}}>{#each projects as project}<option value={project.id}>{project.name}</option>{/each}</select>{/if}<input class="studio-file-input" type="file" accept=".json,application/json" bind:this={importInput} aria-label="Import project JSON" onchange={event=>void importProject(event.currentTarget.files?.[0])}/><Dropdown.Root><Dropdown.Trigger class="inline-flex size-9 items-center justify-center rounded-md hover:bg-accent" aria-label="Project actions"><Ellipsis class="size-5"/></Dropdown.Trigger><Dropdown.Content align="end"><Dropdown.Item disabled={initialLoading||saving||dirty} onSelect={()=>importInput?.click()}>Import project JSON</Dropdown.Item><Dropdown.Item disabled={saving||dirty||!projectId} onSelect={downloadProject}>Export project JSON</Dropdown.Item><Dropdown.Item onSelect={()=>void goto('/projects')}>Manage projects</Dropdown.Item></Dropdown.Content></Dropdown.Root></div></header>
-  {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><Button variant="ghost" size="sm" onclick={()=>{if(!dirty||window.confirm('Discard unsaved changes and reload?'))void load();}}>Reload</Button></div>{/if}
+  {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><Button variant="ghost" size="sm" onclick={async()=>{if(!dirty||await confirmAction('Discard unsaved changes and reload?'))void load();}}>Reload</Button></div>{/if}
   {#if notice}<div class="cloud-notice" role="status">{notice}</div>{/if}
   {#if initialLoading}<div class="cloud-loading" role="status"><LoaderCircle size={23} class="animate-spin"/>Opening your workspace…</div>
   {:else if !projects.length}<div class="cloud-empty compact"><FolderOpen size={35}/><h2>A project is your starting point.</h2><p>Create a project to organize scripts, characters, scenes, and assets.</p><Button href="/projects">Create a project <Plus size={15}/></Button></div>
@@ -241,10 +242,10 @@
             {#each captions as segment,index}<div class="caption-row"><span class="caption-number">{String(index+1).padStart(2,'0')}</span><div><label for={`caption-start-${index}`}>Start (s)</label><Input id={`caption-start-${index}`} type="number" min={0} step="0.01" bind:value={segment.start} oninput={()=>dirty=true} disabled={saving}/></div><div><label for={`caption-end-${index}`}>End (s)</label><Input id={`caption-end-${index}`} type="number" min={0} step="0.01" bind:value={segment.end} oninput={()=>dirty=true} disabled={saving}/></div><div class="caption-text"><label for={`caption-text-${index}`}>Caption text</label><Textarea id={`caption-text-${index}`} bind:value={segment.text} rows={2} oninput={()=>dirty=true} disabled={saving}/></div><Button size="icon-sm" variant="ghost" aria-label={`Remove caption ${index+1}`} disabled={saving} onclick={()=>{captions=captions.filter((_,i)=>i!==index);dirty=true;}}><Trash2 size={15}/></Button></div>{:else}<p class="quiet-empty">No captions saved. Add your first timed line.</p>{/each}
             <div class="studio-save-row"><span class="subtle">{dirty ? 'You have unsaved changes.' : 'Captions are up to date.'}</span><Button disabled={saving||!dirty} onclick={saveCaptions}>{#if saving}<LoaderCircle size={15} class="animate-spin"/>{:else}<Save size={15}/>{/if}Save captions</Button></div></div>{/if}
         {:else if !loading}
-          {#if kind==='shots'}<div class="caption-job-select"><div><label for="shot-scene">Scene</label><select id="shot-scene" value={sceneId} disabled={saving} onchange={async(event)=>{if(dirty&&!window.confirm('Discard unsaved changes?'))return;sceneId=event.currentTarget.value;loading=true;error='';try{entities=list(await request(`/projects/${encodeURIComponent(projectId)}/scenes/${encodeURIComponent(sceneId)}/shots`));selected=null;formOpen=false;dirty=false;}catch(e){error=(e as Error).message;}finally{loading=false;}}}>{#each scenes as scene}<option value={scene.id}>{scene.title}</option>{/each}</select>{#if !scenes.length}<p class="field-help">Create a scene before adding shots.</p>{/if}</div></div>{/if}
+          {#if kind==='shots'}<div class="caption-job-select"><div><label for="shot-scene">Scene</label><select id="shot-scene" value={sceneId} disabled={saving} onchange={async(event)=>{if(dirty&&!(await confirmAction('Discard unsaved changes?')))return;sceneId=event.currentTarget.value;loading=true;error='';try{entities=list(await request(`/projects/${encodeURIComponent(projectId)}/scenes/${encodeURIComponent(sceneId)}/shots`));selected=null;formOpen=false;dirty=false;}catch(e){error=(e as Error).message;}finally{loading=false;}}}>{#each scenes as scene}<option value={scene.id}>{scene.title}</option>{/each}</select>{#if !scenes.length}<p class="field-help">Create a scene before adding shots.</p>{/if}</div></div>{/if}
           <div class="studio-edit-layout" class:editing={formOpen}><section class="studio-resource-list" aria-label={`${section.label} in this project`}>
             {#each entities as entity}<Card.Root class={`studio-resource ${selected?.id===entity.id ? 'studio-selected' : ''}`}><button class="studio-resource-open" onclick={()=>edit(entity)} disabled={saving}><div>{#if kind==='characters'}<span class="resource-avatar">{entity.title.slice(0,2).toUpperCase()}</span>{:else}<section.icon size={19}/>{/if}<h3>{entity.title}</h3></div><p>{entity.description || (kind==='scripts' ? entity.content : kind==='characters' ? entity.content : (kind==='scenes'||kind==='shots') ? entity.prompt : entity.metadata?.type) || 'No description yet.'}</p>{#if kind==='scenes'}<small>Scene {entity.position ?? '—'}</small>{/if}</button><Button variant="ghost" size="icon-sm" aria-label={`Delete ${entity.title}`} disabled={saving} onclick={()=>{pendingDelete=entity;deleteOpen=true;}}><Trash2 size={14}/></Button></Card.Root>{:else}<div class="studio-list-empty"><section.icon size={27}/><h3>No {section.label.toLowerCase()} yet.</h3><p>Add a {section.singular} to start shaping this project.</p></div>{/each}
-          </section>{#if formOpen}<Card.Root class="studio-editor"><Card.Header><div class="editor-heading"><Card.Title>{formOpen ? `${selected ? 'Edit' : 'New'} ${section.singular}` : 'Make space for the details.'}</Card.Title><Button type="button" variant="ghost" size="icon-sm" aria-label="Close editor" onclick={()=>{if(!dirty||window.confirm('Discard unsaved changes?')){formOpen=false;selected=null;dirty=false;}}}><X class="size-4"/></Button></div><Card.Description>{formOpen ? 'Save your changes when you’re ready.' : `Choose a ${section.singular}, or add a new one to this project.`}</Card.Description></Card.Header><Card.Content>
+          </section>{#if formOpen}<Card.Root class="studio-editor"><Card.Header><div class="editor-heading"><Card.Title>{formOpen ? `${selected ? 'Edit' : 'New'} ${section.singular}` : 'Make space for the details.'}</Card.Title><Button type="button" variant="ghost" size="icon-sm" aria-label="Close editor" onclick={async()=>{if(!dirty||await confirmAction('Discard unsaved changes?')){formOpen=false;selected=null;dirty=false;}}}><X class="size-4"/></Button></div><Card.Description>{formOpen ? 'Save your changes when you’re ready.' : `Choose a ${section.singular}, or add a new one to this project.`}</Card.Description></Card.Header><Card.Content>
             {#if formOpen}<form onsubmit={(event)=>{event.preventDefault();void save();}} oninput={()=>dirty=true}><label for="entity-name">Name</label><Input id="entity-name" bind:value={entityName} required maxlength={180} disabled={saving}/><label for="entity-description">Description <span class="subtle">(optional)</span></label><Textarea id="entity-description" bind:value={description} rows={2} maxlength={4000} disabled={saving}/>
               {#if kind==='scripts'}<label for="script-text">Script</label><Textarea id="script-text" bind:value={text} maxlength={100000} rows={12} placeholder="Write your story, narration, or dialogue…" disabled={saving}/>
               {:else if kind==='characters'}<label for="character-appearance">Appearance & defining details</label><Textarea id="character-appearance" bind:value={appearance} maxlength={100000} rows={7} placeholder="Describe this character’s appearance, wardrobe, and distinctive traits…" disabled={saving}/>

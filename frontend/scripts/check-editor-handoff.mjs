@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { stageExport, takeExport } from '../src/lib/cloud/editor-handoff.mjs';
+assert.throws(()=>stageExport('a',{buffer:new ArrayBuffer(0),filename:'x.mp4',mime:'video/mp4'}));
+assert.throws(()=>stageExport('a',{buffer:new ArrayBuffer(2),filename:'../x.mp4',mime:'video/mp4'}));
+assert.throws(()=>stageExport('a',{buffer:new ArrayBuffer(2),filename:'x.mp4',mime:'text/html'}));
+stageExport('a',{buffer:new ArrayBuffer(3),filename:'movie.mp4',mime:'video/mp4'});
+assert.equal(takeExport('b'),null,'another account must not inherit export');
+stageExport('a',{buffer:new ArrayBuffer(3),filename:'movie.mp4',mime:'video/mp4'});
+assert.equal(takeExport('a').name,'movie.mp4');assert.equal(takeExport('a'),null,'handoff is consumed once');
+console.log('Editor handoff ownership, validation and one-time consumption passed');

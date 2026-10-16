@@ -191,7 +191,7 @@ func (s *Server) passkeyRegisterVerify(w http.ResponseWriter, r *http.Request) {
 		e = tokenErr
 	}
 	if e == nil {
-		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at)VALUES($1,$2,now())`, tokenHash(token), u.ID)
+		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at,mfa_verified_at)VALUES($1,$2,now(),now())`, tokenHash(token), u.ID)
 	}
 	if e == nil {
 		e = tx.Commit()
@@ -299,7 +299,7 @@ func (s *Server) passkeyLoginVerify(w http.ResponseWriter, r *http.Request) {
 		e = tokenErr
 	}
 	if e == nil {
-		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at)VALUES($1,$2,now())`, tokenHash(token), u.ID)
+		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at,mfa_verified_at)VALUES($1,$2,now(),now())`, tokenHash(token), u.ID)
 	}
 	if e == nil {
 		e = tx.Commit()
@@ -351,7 +351,7 @@ func (s *Server) passkeyDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	token, e := rawToken()
 	if e == nil {
-		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at)VALUES($1,$2,now())`, tokenHash(token), u.ID)
+		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at,mfa_verified_at)VALUES($1,$2,now(),now())`, tokenHash(token), u.ID)
 	}
 	if e == nil {
 		e = tx.Commit()

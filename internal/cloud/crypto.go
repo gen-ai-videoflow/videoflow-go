@@ -106,7 +106,7 @@ func scanCrypto(row interface{ Scan(...any) error }) (v CryptoInvoice, e error) 
 }
 func (s *Server) cryptoRoutes(r chi.Router) {
 	r.Get("/payments/options", func(w http.ResponseWriter, r *http.Request) {
-		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": Packs, "premium_price_cents": s.Config.PremiumPriceCents, "premium_days": 30})
+		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled() || s.stripeEnabled(), "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": Packs, "premium_price_cents": s.Config.PremiumPriceCents, "premium_days": 30})
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireUser, s.mutationLimits)
@@ -230,8 +230,25 @@ func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, ke
 	}
 	amount, gross, net, fee := cryptoQuote(s.Config, price)
 	id := uuid.NewString()
-	_, e := s.Store.DB.ExecContext(ctx, `INSERT INTO cloud_crypto_invoices(id,user_id,workspace_id,purpose,pack_id,credits,price_cents,idempotency_key,reference,network,vm_type,token,token_address,treasury_address,amount,consolidate_amount,amount_net,fee_amount)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$1,$9,$10,$11,$12,$13,$14,$15,$16,$17) ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, u.WorkspaceID, purpose, pack, credits, price, key, s.Config.CryptoRailsNetwork, s.Config.CryptoRailsVMType, s.Config.CryptoRailsToken, s.Config.CryptoRailsTokenAddress, s.Config.CryptoRailsTreasuryAddress, amount, gross, net, fee)
+	insertTx, e := s.Store.DB.BeginTx(ctx, nil)
 	if e != nil {
+		return empty, e
+	}
+	defer insertTx.Rollback()
+	if purpose == "premium" {
+		if _, e = insertTx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,814037229))`, u.ID); e != nil {
+			return empty, e
+		}
+		// A completed/ambiguous recurring checkout must be reconciled before switching rails.
+		if e = s.reconcilePriorPremiumCheckouts(ctx, insertTx, u.ID, "crypto:"+key); e != nil {
+			return empty, e
+		}
+	}
+	_, e = insertTx.ExecContext(ctx, `INSERT INTO cloud_crypto_invoices(id,user_id,workspace_id,purpose,pack_id,credits,price_cents,idempotency_key,reference,network,vm_type,token,token_address,treasury_address,amount,consolidate_amount,amount_net,fee_amount)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$1,$9,$10,$11,$12,$13,$14,$15,$16,$17) ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, u.WorkspaceID, purpose, pack, credits, price, key, s.Config.CryptoRailsNetwork, s.Config.CryptoRailsVMType, s.Config.CryptoRailsToken, s.Config.CryptoRailsTokenAddress, s.Config.CryptoRailsTreasuryAddress, amount, gross, net, fee)
+	if e != nil {
+		return empty, e
+	}
+	if e = insertTx.Commit(); e != nil {
 		return empty, e
 	}
 	tx, e := s.Store.DB.BeginTx(ctx, nil)

@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { proxyRequest } from '../src/lib/cloud/gateway.mjs';
+let calls=0;
+let request=new Request('https://app.test/api/v1/feed',{headers:{'x-videoflow-gateway-hop':'1'}});
+assert.equal((await proxyRequest(request,'https://api.test/v1/feed')).status,508);assert.equal(calls,0);
+request=new Request('https://app.test/api/v1/feed');
+assert.equal((await proxyRequest(request,'https://app.test/api/v1/feed')).status,508);
+request=new Request('https://app.test/api/v1/profile/images',{method:'POST',body:'x'.repeat(40)});
+assert.equal((await proxyRequest(request,'https://api.test/v1/profile/images',{maxBytes:20})).status,413);
+request=new Request('https://app.test/api/v1/feed');
+const result=await proxyRequest(request,'https://api.test/v1/feed',{fetch:async(_url,init)=>{calls++;assert.equal(init.headers.get('x-videoflow-gateway-hop'),'1');return new Response('{"ok":true}',{headers:{'Retry-After':'2'}});}});
+assert.equal(result.status,200);assert.equal(calls,1);assert.equal(result.headers.get('Retry-After'),'2');
+console.log('Gateway loop prevention, body bounds and one upstream request passed');
+
+let release;const held=proxyRequest(new Request('https://app.test/api/v1/feed'),'https://api.test/v1/feed',{maxConcurrent:1,fetch:()=>new Promise(resolve=>release=()=>resolve(new Response('{}')))});
+const overloaded=await proxyRequest(new Request('https://app.test/api/v1/feed'),'https://api.test/v1/feed',{maxConcurrent:1});assert.equal(overloaded.status,503);release();await held;
+console.log('Gateway admission rejects excess concurrent upstream work');
+let cancelled=false;const stalledBody=new ReadableStream({pull(){return new Promise(()=>{});},cancel(){cancelled=true;}});
+const began=Date.now();const stalled=await proxyRequest(new Request('https://app.test/api/v1/update',{method:'POST',body:stalledBody,duplex:'half'}),'https://api.test/v1/update',{timeoutMs:15,maxConcurrent:1});
+assert.equal(stalled.status,408);assert.ok(cancelled);assert.ok(Date.now()-began<500,'body timeout must release gateway permit');
+const afterTimeout=await proxyRequest(new Request('https://app.test/api/v1/feed'),'https://api.test/v1/feed',{maxConcurrent:1,fetch:async()=>new Response('{}')});assert.equal(afterTimeout.status,200);
+console.log('Stalled body deadline cancels input and releases admission');

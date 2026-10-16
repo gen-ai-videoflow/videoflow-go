@@ -113,6 +113,7 @@ function ExportPopover({
 		DEFAULT_EXPORT_OPTIONS.includeAudio ?? true,
 	);
 
+	const [destination,setDestination]=useState("download");
 	const handleExport = async () => {
 		if (!activeProject) return;
 
@@ -131,11 +132,11 @@ function ExportPopover({
 		}
 
 		if (result.success && result.buffer) {
-			downloadBuffer({
-				buffer: result.buffer,
-				filename: `${activeProject.metadata.name}${getExportFileExtension({ format })}`,
-				mimeType: getExportMimeType({ format }),
-			});
+            const filename=`${activeProject.metadata.name.replace(/[\\/\r\n\0]/g,"-").slice(0,170)}${getExportFileExtension({format})}`;
+            if(destination==="publish"&&window.parent!==window){
+                // Structured clone to the verified parent; retain buffer for download fallback.
+                window.parent.postMessage({type:"videoflow:editor:exported",buffer:result.buffer,filename,mime:getExportMimeType({format})},window.location.origin);
+            } else {downloadBuffer({buffer:result.buffer,filename,mimeType:getExportMimeType({format})});}
 
 			editor.project.clearExportState();
 			onOpenChange(false);
@@ -255,6 +256,7 @@ function ExportPopover({
 								</div>
 
 								<div className="p-3 pt-0">
+                                    {window.parent!==window&&<fieldset className="mb-3 space-y-2 text-sm"><legend className="mb-2">After export</legend><label className="flex items-center gap-2"><input type="radio" name="export-destination" checked={destination==="download"} onChange={()=>setDestination("download")}/>Download file</label><label className="flex items-center gap-2"><input type="radio" name="export-destination" disabled={new URLSearchParams(location.search).get("publish")!=="1"} checked={destination==="publish"} onChange={()=>setDestination("publish")}/>Continue to publishing</label><p className="text-muted-foreground text-xs">Review upload, visibility and Premium access before publishing. Direct handoff supports exports up to 200 MiB when video uploads are enabled.</p></fieldset>}
 									<Button onClick={handleExport} className="w-full gap-2">
 										<Download className="size-4" />
 										Export

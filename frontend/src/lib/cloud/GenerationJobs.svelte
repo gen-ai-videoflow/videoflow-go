@@ -3,18 +3,19 @@
   import { Button } from '$lib/components/ui/button';
   import { Clapperboard, ArrowDownToLine, ChevronDown, ChevronUp, LoaderCircle, Square, RefreshCw, FileText } from '@lucide/svelte';
   import { request } from './api';
+  import { createPoller } from './poll.mjs';
   import type { PipelineProgress } from './generated';
   let {jobs, onrefresh, focusId=''}: {jobs:any[];onrefresh:()=>Promise<void>;focusId?:string}=$props();
   let busy=$state('');let error=$state('');let notice=$state('');
   let downloadUrl=$state('');
   let expanded=$state('');let detail=$state<(PipelineProgress & {error?:string})|null>(null);let detailLoading=$state(false);let detailError=$state('');
-  let lastFocus='';
+  let lastFocus='';let refreshing=$state(false);
   $effect(()=>{if(focusId&&focusId!==lastFocus){lastFocus=focusId;expanded=focusId;detail=null;void loadDetail(focusId);}});
   const active=(job:any)=>['queued','running','processing','submitted','planning','generating','assembling'].includes(job.status);
   const pipeline=(job:any)=>['pipeline','storyboard','assembly'].includes(job.kind || job.operation || job.type);
   const label=(value:string)=>value ? value.replaceAll('_',' ').replace(/\b\w/g,char=>char.toUpperCase()) : 'Awaiting update';
   const date=(value:string)=>value ? new Date(value).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
-  async function refresh(){try{await onrefresh();if(expanded)await loadDetail(expanded,false);}catch(e){error=(e as Error).message;}}
+  async function refresh(){if(refreshing)return;refreshing=true;try{await onrefresh();if(expanded)await loadDetail(expanded,false);}catch(e){error=(e as Error).message;throw e;}finally{refreshing=false;}}
   async function loadDetail(id:string,showLoading=true){
     if(showLoading)detailLoading=true;detailError='';
     try{const result=await request(`/jobs/${encodeURIComponent(id)}/pipeline`);if(expanded===id)detail=result;}
@@ -32,10 +33,10 @@
     try{const result=await request(`/jobs/${encodeURIComponent(job.id)}/download`);if(!result.url)throw new Error('This output is not ready to download.');downloadUrl=result.url;}
     catch(e){error=(e as Error).message;}finally{busy='';}
   }
-  onMount(()=>{const timer=setInterval(()=>{if(jobs.some(active))void refresh();},10000);return()=>clearInterval(timer);});
+  onMount(()=>{const poll=createPoller(refresh,{interval:10000,enabled:()=>!document.hidden&&jobs.some(active),onError:()=>{}});poll.start();return()=>poll.stop();});
 </script>
 <section class="generation-jobs">
-  <div class="section-heading"><div><h2>Generation activity</h2><p class="subtle">Saved progress. Updates automatically while work is in progress.</p></div><Button size="sm" variant="ghost" onclick={refresh}><RefreshCw size={14}/>Refresh</Button></div>
+  <div class="section-heading"><div><h2>Generation activity</h2><p class="subtle">Saved progress. Updates automatically while work is in progress.</p></div><Button size="sm" variant="ghost" disabled={refreshing} onclick={()=>void refresh().catch(()=>{})}><RefreshCw size={14}/>Refresh</Button></div>
   {#if downloadUrl}<p class="cloud-notice"><a href={downloadUrl}>Download ready — save your video</a></p>{/if}{#if error}<div class="cloud-alert" role="alert">{error}</div>{/if}{#if notice}<div class="cloud-notice" role="status">{notice}</div>{/if}
   {#if jobs.length}<div class="generation-list">{#each jobs as job (job.id)}<article class="generation-row"><div class="generation-summary"><div class="generation-icon">{#if active(job)&&job.status!=='queued'}<LoaderCircle size={19} class="animate-spin"/>{:else}<Clapperboard size={19}/>{/if}</div><div class="generation-name"><h3>{job.title || job.prompt || job.name || `${pipeline(job) ? 'Project video' : 'Video generation'} · ${job.id.slice(0,8)}`}</h3><p>{date(job.created_at)}{#if typeof job.credits==='number'}<span>Quoted {job.credits.toLocaleString()} credits</span>{/if}</p></div><span class="status" class:job-failed={job.status==='failed'}>{label(job.stage || job.status)}</span><div class="generation-actions">{#if pipeline(job)}<Button size="sm" variant="ghost" aria-expanded={expanded===job.id} onclick={()=>toggle(job)}>{expanded===job.id ? 'Hide stages' : 'View stages'}{#if expanded===job.id}<ChevronUp size={14}/>{:else}<ChevronDown size={14}/>{/if}</Button>{/if}{#if job.status==='queued'||job.can_cancel}<Button size="sm" variant="outline" disabled={busy===job.id} onclick={()=>cancel(job)}><Square size={12}/>Cancel</Button>{/if}{#if ['completed','succeeded','complete'].includes(job.status)}<Button size="sm" variant="outline" disabled={busy===job.id} onclick={()=>download(job)}><ArrowDownToLine size={14}/>Prepare download</Button><Button size="sm" href={`/studio/outputs/${job.id}`}>Preview & publish</Button>{/if}</div></div>{#if job.error}<p class="generation-error" role="status">{job.error}</p>{/if}
   {#if expanded===job.id}<div class="pipeline-details">{#if detailLoading}<p class="detail-loading"><LoaderCircle size={15} class="animate-spin"/>Loading saved stages…</p>{:else if detailError}<div class="cloud-alert" role="alert">{detailError}</div>{:else if detail}<div class="pipeline-stage"><span class="eyebrow">CURRENT STAGE</span><strong>{label(detail.stage || detail.status)}</strong></div>{#if detail.error}<p class="generation-error">{detail.error}</p>{/if}{#if detail.script}<details class="pipeline-script"><summary><FileText size={15}/>Generated screenplay</summary><p>{detail.script}</p></details>{/if}<div class="pipeline-scenes">{#each detail.scenes || [] as scene,index}<div><span class="scene-index">{String(index+1).padStart(2,'0')}</span><div><h4>{scene.title || `Scene ${index+1}`}</h4><p>{scene.prompt}</p><small>{scene.duration ? `${scene.duration} seconds` : ''}</small></div><span class="status">{label(scene.status)}</span></div>{/each}</div>{/if}</div>{/if}</article>{/each}</div>{:else}<p class="quiet-empty">Your video jobs will appear here. Leaving this page does not interrupt processing.</p>{/if}

@@ -125,7 +125,7 @@ func checkMigrationNames(ctx context.Context, db migrationReader) error {
 // worker services. Operator commands intentionally do not call this method.
 func (s *Store) CheckRuntimeRole(ctx context.Context) error {
 	var unsafe bool
-	err := s.DB.QueryRowContext(ctx, `SELECT r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid) OR has_schema_privilege(current_user,'public','CREATE') OR has_database_privilege(current_user,current_database(),'CREATE') OR has_database_privilege(current_user,current_database(),'TEMP') OR has_table_privilege(current_user,'public.cloud_schema_migrations','INSERT,UPDATE,DELETE,TRUNCATE') OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relowner=r.oid AND n.nspname='public') FROM pg_roles r WHERE r.rolname=current_user`).Scan(&unsafe)
+	err := s.DB.QueryRowContext(ctx, `SELECT r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid) OR has_schema_privilege(current_user,'public','CREATE') OR has_database_privilege(current_user,current_database(),'CREATE') OR has_database_privilege(current_user,current_database(),'TEMP') OR has_table_privilege(current_user,'public.cloud_schema_migrations','INSERT,UPDATE,DELETE,TRUNCATE') OR has_table_privilege(current_user,'public.cloud_admin_roles','INSERT,UPDATE,DELETE,TRUNCATE') OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relowner=r.oid AND n.nspname='public') FROM pg_roles r WHERE r.rolname=current_user`).Scan(&unsafe)
 	if err != nil {
 		return fmt.Errorf("check runtime database privileges: %w", err)
 	}

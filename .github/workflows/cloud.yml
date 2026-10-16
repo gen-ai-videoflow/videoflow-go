@@ -99,6 +99,10 @@ jobs:
           node scripts/check-studio-navigation.mjs
           node scripts/check-short-state.mjs
           node scripts/check-prompt-templates.mjs
+          node scripts/check-request-lifecycle.mjs
+          node scripts/check-editor-handoff.mjs
+          node scripts/check-gateway.mjs
+          node scripts/check-image-crop.mjs
           if [[ -f editor/package-lock.json ]]; then npm ci --prefix editor --ignore-scripts; editor/node_modules/.bin/tsc --project editor/tsconfig.json; fi
           VITE_CLOUD_MODE=false npm run build
           VITE_CLOUD_MODE=true VITE_CLOUD_API_BASE=/api/v1 npm run build

@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"net/url"
 	"os"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 )
 
 type Config struct {
+	GoogleClientID, GoogleClientSecret, AppleClientID, AppleClientSecret                                                                                                                                  string
+	MaxConcurrentRequests                                                                                                                                                                                 int
 	VideoUploadsEnabled                                                                                                                                                                                   bool
 	MediaProbePath                                                                                                                                                                                        string
 	AuthEncryptionKey                                                                                                                                                                                     string
@@ -39,6 +42,23 @@ type Config struct {
 
 func EnvConfig() (Config, error) {
 	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), RedisURL: os.Getenv("REDIS_URL"), Region: os.Getenv("AWS_REGION"), OriginalsBucket: os.Getenv("S3_BUCKET_ORIGINALS"), PlaybackBucket: os.Getenv("S3_BUCKET_PLAYBACK"), QueueURL: os.Getenv("SQS_QUEUE_URL"), MediaConvertRole: os.Getenv("MEDIACONVERT_ROLE_ARN"), MediaConvertEndpoint: os.Getenv("MEDIACONVERT_ENDPOINT"), CloudFrontDomain: os.Getenv("CLOUDFRONT_DOMAIN"), CloudFrontKeyPairID: os.Getenv("CLOUDFRONT_KEY_PAIR_ID"), CloudFrontPrivateKey: os.Getenv("CLOUDFRONT_PRIVATE_KEY"), OpenRouterKey: os.Getenv("OPENROUTER_API_KEY"), VideoModel: os.Getenv("OPENROUTER_VIDEO_MODEL"), PublicOrigin: os.Getenv("PUBLIC_ORIGIN"), StripeSecret: os.Getenv("STRIPE_SECRET_KEY"), StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"), MailFrom: os.Getenv("MAIL_FROM"), MailEndpoint: os.Getenv("MAIL_ENDPOINT"), DevMode: os.Getenv("CLOUD_DEV_MODE") == "true", BillingEnabled: os.Getenv("BILLING_ENABLED") == "true", Port: 8000, CreditsPerSecond: 10}
+	c.GoogleClientID = os.Getenv("GOOGLE_CLIENT_ID")
+	c.GoogleClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+	c.AppleClientID = os.Getenv("APPLE_CLIENT_ID")
+	c.AppleClientSecret = os.Getenv("APPLE_CLIENT_SECRET")
+	c.MaxConcurrentRequests = 128
+	if raw := os.Getenv("MAX_CONCURRENT_REQUESTS"); raw != "" {
+		v, err := strconv.Atoi(raw)
+		if err != nil || v < 1 || v > 4096 {
+			return c, fmt.Errorf("MAX_CONCURRENT_REQUESTS must be 1..4096")
+		}
+		c.MaxConcurrentRequests = v
+	}
+	if c.RedisURL != "" {
+		if _, err := redis.ParseURL(c.RedisURL); err != nil {
+			return c, fmt.Errorf("REDIS_URL must be a valid Redis URL")
+		}
+	}
 	c.VideoUploadsEnabled = os.Getenv("VIDEO_UPLOADS_ENABLED") == "true"
 	c.MediaProbePath = os.Getenv("FFPROBE_PATH")
 	if c.MediaProbePath == "" {

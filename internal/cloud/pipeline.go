@@ -261,7 +261,14 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 			s.fail(w, ErrValidation)
 			return
 		}
-		v, e := s.Store.CreatePipelineQuote(r.Context(), u, chi.URLParam(r, "project"), in, policy, s.Config)
+		selectedStory, e := s.selectStoryModel(r.Context(), in.Idea)
+		if e != nil {
+			s.fail(w, e)
+			return
+		}
+		quoteConfig := s.Config
+		quoteConfig.StoryModel = selectedStory
+		v, e := s.Store.CreatePipelineQuote(r.Context(), u, chi.URLParam(r, "project"), in, policy, quoteConfig)
 		s.result(w, v, e)
 	})
 }

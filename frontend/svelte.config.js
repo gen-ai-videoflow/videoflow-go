@@ -7,6 +7,8 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
+    // Apple returns the authorization code via form_post; the API permits only its exact callback.
+    csrf: { trustedOrigins: ['https://appleid.apple.com'] },
     // Preserve desktop SPA packaging; cloud builds use Node for public SSR and the API gateway.
     adapter: cloudMode ? nodeAdapter() : staticAdapter({ fallback: 'index.html' })
   }

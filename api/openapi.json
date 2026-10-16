@@ -610,7 +610,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaymentInvoice"
+                  "$ref": "#/components/schemas/CheckoutResult"
                 }
               }
             }
@@ -635,7 +635,15 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "properties": {},
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "stripe",
+                      "cryptorails"
+                    ]
+                  }
+                },
                 "required": []
               }
             }
@@ -1345,6 +1353,83 @@
         }
       }
     },
+    "/billing/history": {
+      "get": {
+        "operationId": "get_billing_history",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "stripe",
+                "cryptorails"
+              ]
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "credits",
+                "premium"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingHistoryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
     "/credits": {
       "get": {
         "operationId": "get_credits",
@@ -1423,7 +1508,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaymentInvoice"
+                  "$ref": "#/components/schemas/CheckoutResult"
                 }
               }
             }
@@ -1451,6 +1536,13 @@
                 "properties": {
                   "pack_id": {
                     "type": "string"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "stripe",
+                      "cryptorails"
+                    ]
                   }
                 },
                 "required": [
@@ -8104,6 +8196,1076 @@
           }
         }
       }
+    },
+    "/auth/providers": {
+      "get": {
+        "operationId": "get_auth_providers",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthProviders"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/auth/oauth/{provider}/start": {
+      "post": {
+        "operationId": "post_auth_oauth_provider_start",
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "apple"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthStart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "link": {
+                    "type": "boolean"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Starts configured OIDC with browser-bound state and nonce; Google uses S256 PKCE and Apple uses its confidential-client form-post flow. link=true requires the current authenticated account and password/second-factor reauthentication. Never links by email alone."
+      }
+    },
+    "/auth/oauth/{provider}/callback": {
+      "get": {
+        "operationId": "get_auth_oauth_provider_callback",
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "apple"
+              ]
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "303": {
+            "description": "Redirect to application after state/nonce/issuer verification and optional second-factor challenge",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_auth_oauth_provider_callback",
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "apple"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "303": {
+            "description": "Redirect to application after state/nonce/issuer verification and optional second-factor challenge",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "state": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/magic-link": {
+      "post": {
+        "operationId": "post_auth_magic_link",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/magic-link/verify": {
+      "post": {
+        "operationId": "post_auth_magic_link_verify",
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "202": {
+            "description": "Second factor required; challenge is not an authenticated session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mfa_required": {
+                      "type": "boolean"
+                    },
+                    "challenge": {
+                      "type": "string"
+                    },
+                    "methods": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "mfa_required",
+                    "challenge",
+                    "methods"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/images": {
+      "post": {
+        "operationId": "post_profile_images",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileImageUpload"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "avatar",
+                      "banner"
+                    ]
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "maxLength": 4194304
+                  }
+                },
+                "required": [
+                  "kind",
+                  "data"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile-images/{id}": {
+      "get": {
+        "operationId": "get_profile_images_id",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Normalized public profile JPEG",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
+    "/admin/me": {
+      "get": {
+        "operationId": "get_admin_me",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/settings": {
+      "get": {
+        "operationId": "get_admin_settings",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminSetting"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/settings/{key}": {
+      "put": {
+        "operationId": "put_admin_settings_key",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSetting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "value": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "value",
+                  "revision",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/capacity": {
+      "get": {
+        "operationId": "get_admin_capacity",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/users/{id}/records/{kind}": {
+      "get": {
+        "operationId": "get_admin_users_id_records_kind",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/reports/{id}/resolve": {
+      "post": {
+        "operationId": "post_admin_reports_id_resolve",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/videos/{id}/restore": {
+      "post": {
+        "operationId": "post_admin_videos_id_restore",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/readiness": {
+      "get": {
+        "operationId": "get_admin_readiness",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/ai-readiness": {
+      "get": {
+        "operationId": "get_admin_ai_readiness",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIReadiness"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/records/{kind}": {
+      "get": {
+        "operationId": "get_admin_records_kind",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "premium",
+                "crypto",
+                "policies",
+                "usage",
+                "budgets",
+                "revenue",
+                "audience",
+                "users",
+                "content",
+                "jobs",
+                "billing",
+                "reports",
+                "audit"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/users/{id}/restriction": {
+      "post": {
+        "operationId": "post_admin_users_id_restriction",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "suspended": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "suspended",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/videos/{id}/block": {
+      "post": {
+        "operationId": "post_admin_videos_id_block",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
     }
   },
   "components": {
@@ -8268,7 +9430,12 @@
           "created_at": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "id",
+          "purpose",
+          "status"
+        ]
       },
       "User": {
         "type": "object",
@@ -8644,6 +9811,265 @@
         "required": [
           "revision",
           "document"
+        ]
+      },
+      "BillingHistoryEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "stripe",
+              "cryptorails"
+            ]
+          },
+          "product": {
+            "type": "string",
+            "enum": [
+              "credits",
+              "premium"
+            ]
+          },
+          "amount_cents": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "paid_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "management_url": {
+            "type": "string"
+          },
+          "receipt_available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "product",
+          "amount_cents",
+          "currency",
+          "status",
+          "created_at",
+          "paid_at",
+          "management_url",
+          "receipt_available"
+        ]
+      },
+      "BillingHistoryPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillingHistoryEntry"
+            }
+          },
+          "next_cursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
+      },
+      "AuthProviders": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "linked": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "providers",
+          "linked"
+        ]
+      },
+      "OAuthStart": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "StripeCheckout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "stripe"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "provider",
+          "url"
+        ]
+      },
+      "CheckoutResult": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PaymentInvoice"
+          },
+          {
+            "$ref": "#/components/schemas/StripeCheckout"
+          }
+        ]
+      },
+      "AITaskReadiness": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openrouter"
+          },
+          "adapter_supported": {
+            "type": "boolean"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "unsupported",
+              "configuration_missing",
+              "quote_validation_required"
+            ]
+          },
+          "selection": {
+            "type": "string"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "adapter_supported",
+          "configured",
+          "availability",
+          "selection",
+          "missing"
+        ]
+      },
+      "AIReadiness": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "openrouter"
+          },
+          "live_provider_verified": {
+            "type": "boolean",
+            "const": false
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AITaskReadiness"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "live_provider_verified",
+          "tasks",
+          "note"
+        ]
+      },
+      "AdminSetting": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "revision",
+          "updated_at"
+        ]
+      },
+      "ProfileImageUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "url"
         ]
       }
     }

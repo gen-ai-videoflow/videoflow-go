@@ -73,6 +73,34 @@ func verifyStripeSignature(body []byte, header, secret string, now time.Time) bo
 	}
 	return false
 }
+
+// Stripe and CryptoRails are independently activated; settlement verification is mandatory.
+func (s *Server) stripeEnabled() bool {
+	return s.Config.BillingEnabled && s.Config.StripeSecret != "" && s.Config.StripeWebhookSecret != ""
+}
+func (s *Server) billingCheckout(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		PackID   string `json:"pack_id"`
+		Provider string `json:"provider"`
+	}
+	if !s.decode(w, r, &body) {
+		return
+	}
+	switch body.Provider {
+	case "stripe":
+		if !s.stripeEnabled() {
+			s.fail(w, ErrUnavailable)
+			return
+		}
+		result, err := s.checkout(r.Context(), currentUser(r), body.PackID, r.Header.Get("Idempotency-Key"))
+		s.result(w, map[string]string{"provider": "stripe", "url": result}, err)
+	case "", "cryptorails":
+		result, err := s.newCryptoInvoice(r.Context(), currentUser(r), "credits", body.PackID, r.Header.Get("Idempotency-Key"))
+		s.result(w, result, err)
+	default:
+		s.fail(w, ErrValidation)
+	}
+}
 func (s *Server) checkout(ctx context.Context, u User, packID, key string) (string, error) {
 	if !s.Config.BillingEnabled || s.Config.StripeSecret == "" {
 		return "", ErrUnavailable

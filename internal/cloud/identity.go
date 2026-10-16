@@ -168,6 +168,13 @@ func (s *Store) beginSecurityLogin(ctx context.Context, email, password string) 
 	if !checkPassword(hash, password) {
 		return User{}, "", "", ErrInvalidCredentials
 	}
+	var suspended bool
+	if e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_user_restrictions WHERE user_id=$1 AND suspended)`, id).Scan(&suspended); e != nil {
+		return User{}, "", "", e
+	}
+	if suspended {
+		return User{}, "", "", ErrInvalidCredentials
+	}
 	u, e := scanUser(tx.QueryRowContext(ctx, userSelect+" WHERE u.id=$1", id))
 	if e != nil {
 		return User{}, "", "", e
@@ -202,7 +209,7 @@ func (s *Store) Authenticate(ctx context.Context, token string) (User, error) {
 		return User{}, ErrUnauthorized
 	}
 	var id string
-	err := s.DB.QueryRowContext(ctx, `UPDATE cloud_sessions SET last_seen_at=now() WHERE token_hash=$1 AND expires_at>now() AND last_seen_at>now()-interval '7 days' RETURNING user_id`, tokenHash(token)).Scan(&id)
+	err := s.DB.QueryRowContext(ctx, `UPDATE cloud_sessions SET last_seen_at=now() WHERE token_hash=$1 AND expires_at>now() AND last_seen_at>now()-interval '7 days' AND NOT EXISTS(SELECT 1 FROM cloud_user_restrictions x WHERE x.user_id=cloud_sessions.user_id AND x.suspended) RETURNING user_id`, tokenHash(token)).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, ErrUnauthorized
 	}
@@ -218,7 +225,7 @@ func (s *Store) Logout(ctx context.Context, token string) error {
 
 // IssueAccountToken returns a single-use token for delivery through trusted email infrastructure.
 func (s *Store) IssueAccountToken(ctx context.Context, email, purpose string) (string, error) {
-	if purpose != "verify_email" && purpose != "reset_password" {
+	if purpose != "verify_email" && purpose != "reset_password" && purpose != "magic_login" {
 		return "", ErrValidation
 	}
 	token, err := rawToken()
@@ -226,6 +233,9 @@ func (s *Store) IssueAccountToken(ctx context.Context, email, purpose string) (s
 		return "", err
 	}
 	ttl := time.Hour
+	if purpose == "magic_login" {
+		ttl = 15 * time.Minute
+	}
 	if purpose == "verify_email" {
 		ttl = 24 * time.Hour
 	}

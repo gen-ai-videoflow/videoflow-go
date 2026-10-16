@@ -1,0 +1,1 @@
+export function createPoller(task:(signal:AbortSignal)=>Promise<unknown>, options?:{interval?:number;maxInterval?:number;enabled?:()=>boolean;jitter?:()=>number;onError?:(error:unknown)=>void}):{start():void;stop():void;refresh():Promise<void>};

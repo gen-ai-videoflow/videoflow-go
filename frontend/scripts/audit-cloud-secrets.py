@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--root', action='append', required=True, help='Public asset directory or captured log file')
 parser.add_argument('--env', action='append', default=[], help='Environment name holding a server secret/canary')
 args = parser.parse_args()
-names = args.env or ['CRYPTORAILS_API_KEY', 'CRYPTORAILS_WEBHOOK_SECRET', 'OPENROUTER_API_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']
+names = args.env or ['CRYPTORAILS_API_KEY', 'CRYPTORAILS_WEBHOOK_SECRET', 'OPENROUTER_API_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'GOOGLE_CLIENT_SECRET', 'APPLE_CLIENT_SECRET']
 secrets = {name: os.environ[name].encode() for name in names if os.environ.get(name)}
 if not secrets:
     parser.error('At least one configured secret/canary is required; an empty scan is not evidence')

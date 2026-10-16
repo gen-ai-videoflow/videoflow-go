@@ -163,6 +163,8 @@ func provisionRuntimeRole(ctx context.Context, store *cloud.Store, role, passwor
 	for _, table := range tables {
 		privileges := "SELECT,INSERT,UPDATE,DELETE"
 		switch table {
+		case "cloud_admin_roles":
+			privileges = "SELECT"
 		case "cloud_credit_entries", "cloud_credit_postings", "cloud_money_postings", "cloud_earnings", "cloud_premium_refunds", "cloud_premium_invoices", "cloud_crypto_settlements", "cloud_crypto_invoices":
 			privileges = "SELECT,INSERT"
 		}
@@ -177,7 +179,7 @@ func provisionRuntimeRole(ctx context.Context, store *cloud.Store, role, passwor
 		return e
 	}
 	// Webhook dispute audits are append-only. Financial operators use a separate login.
-	if _, e = tx.ExecContext(ctx, `GRANT INSERT ON public.cloud_admin_audit TO `+quoteIdentifier(role)); e != nil {
+	if _, e = tx.ExecContext(ctx, `GRANT SELECT,INSERT ON public.cloud_admin_audit TO `+quoteIdentifier(role)); e != nil {
 		return e
 	}
 	// Serial IDs used by triggers need USAGE, never sequence ownership/DDL.

@@ -24,6 +24,18 @@ objects['PipelineScene']=obj({'title':S,'prompt':S,'duration':I,'status':S},('ti
 objects['PipelineProgress']=obj({'stage':S,'status':S,'script':S,'scenes':{'type':'array','items':{'$ref':'#/components/schemas/PipelineScene'}}},('stage','status','script','scenes'))
 objects['CanvasGraph']=obj({'nodes':{'type':'array','items':obj({'id':S,'type':S,'label':S,'data':{'type':'object'}},('id','type','label'))},'edges':{'type':'array','items':obj({'source':S,'target':S,'label':S},('source','target','label'))}},('nodes','edges'))
 objects['EditorDocument']=obj({'revision':I,'document':{'type':['object','null']},'updated_at':S},('revision','document'))
+objects['PaymentInvoice']['required']=['id','purpose','status']
+objects['BillingHistoryEntry']=obj({'id':S,'provider':{'type':'string','enum':['stripe','cryptorails']},'product':{'type':'string','enum':['credits','premium']},'amount_cents':I,'currency':S,'status':S,'created_at':S,'paid_at':{'type':['string','null']},'management_url':S,'receipt_available':B},('id','provider','product','amount_cents','currency','status','created_at','paid_at','management_url','receipt_available'))
+objects['BillingHistoryPage']=obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/BillingHistoryEntry'}},'next_cursor':S},('items','next_cursor'))
+objects['AuthProviders']=obj({'providers':{'type':'array','items':S},'linked':{'type':'array','items':S}},('providers','linked'))
+objects['OAuthStart']=obj({'url':{'type':'string','format':'uri'}},('url',))
+objects['StripeCheckout']=obj({'provider':{'type':'string','const':'stripe'},'url':{'type':'string','format':'uri'}},('provider','url'))
+objects['CheckoutResult']={'oneOf':[{'$ref':'#/components/schemas/PaymentInvoice'},{'$ref':'#/components/schemas/StripeCheckout'}]}
+objects['AITaskReadiness']=obj({'id':S,'provider':{'type':'string','const':'openrouter'},'adapter_supported':B,'configured':B,'availability':{'type':'string','enum':['unsupported','configuration_missing','quote_validation_required']},'selection':S,'missing':{'type':'array','items':S}},('id','provider','adapter_supported','configured','availability','selection','missing'))
+objects['AIReadiness']=obj({'provider':{'type':'string','const':'openrouter'},'live_provider_verified':{'type':'boolean','const':False},'tasks':{'type':'array','items':{'$ref':'#/components/schemas/AITaskReadiness'}},'note':S},('provider','live_provider_verified','tasks','note'))
+objects['AdminSetting']=obj({'key':S,'value':{'oneOf':[B,S]},'revision':I,'updated_at':S},('key','value','revision','updated_at'))
+objects['ProfileImageUpload']=obj({'url':{'type':'string','format':'uri'}},('url',))
+
 requests={
  'prompt_template':obj({'id':S,'revision':{'type':'integer','minimum':0},'category':{'type':'string','enum':['story','character','scene','shot','asset','video']},'title_en':S,'title_zh':S,'body_en':S,'body_zh':S,'defaults':{'type':'object','additionalProperties':S}},('revision','category')),
  'editor_document':obj({'revision':{'type':'integer','minimum':0},'document':{'type':'object'}},('revision','document')),
@@ -43,7 +55,8 @@ requests={
  'pipeline_quote':obj({'idea':{'type':'string','maxLength':8000},'clips':{'type':'integer','minimum':1,'maximum':4},'clip_duration':{'type':'integer','minimum':5,'maximum':10},'aspect_ratio':{'type':'string','enum':['16:9','9:16','1:1']}},('idea','clips','clip_duration','aspect_ratio')),
  'assembly_quote':obj({'job_ids':{'type':'array','minItems':1,'maxItems':8,'items':S}},('job_ids',)),
  'job':obj({'quote_id':S},('quote_id',)),
- 'checkout':obj({'pack_id':S},('pack_id',)),
+ 'checkout':obj({'pack_id':S,'provider':{'type':'string','enum':['stripe','cryptorails']}},('pack_id',)),
+ 'premium_checkout':obj({'provider':{'type':'string','enum':['stripe','cryptorails']}}),
  'email':obj({'email':S},('email',)),
  'token':obj({'token':S},('token',)),
  'reset':obj({'token':S,'password':S},('token','password')),
@@ -63,11 +76,11 @@ routes=[
  ('get','/projects/{project}/prompt-templates',None,'PromptTemplate[]',False),('put','/projects/{project}/prompt-templates','prompt_template','PromptTemplate',False),('delete','/projects/{project}/prompt-templates/{template}',None,None,False),
  ('get','/projects/{project}/editor',None,'EditorDocument',False),('put','/projects/{project}/editor','editor_document','EditorDocument',False),
  ('get','/payments/options',None,None,True),('post','/payments/invoices','payment_invoice','PaymentInvoice',False),('get','/payments/invoices',None,'PaymentInvoice[]',False),('get','/payments/invoices/{id}',None,'PaymentInvoice',False),('post','/payments/invoices/{id}/notify','empty','PaymentInvoice',False),
- ('get','/premium',None,None,True),('post','/premium/checkout','empty','PaymentInvoice',False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
+ ('get','/premium',None,None,True),('post','/premium/checkout','premium_checkout','CheckoutResult',False),('post','/premium/manage','empty',None,False),('get','/projects/{project}/graph',None,'CanvasGraph',False),('post','/projects/{project}/edges','edge',None,False),('delete','/projects/{project}/edges','edge',None,False),
  ('post','/auth/register','register','User',True),('post','/auth/login','login','User',True),('post','/auth/logout',None,None,False),
  ('post','/auth/forgot-password','email',None,True),('post','/auth/resend-verification','email',None,True),('post','/auth/verify-email','token',None,True),('post','/auth/reset-password','reset',None,True),
  ('get','/me',None,'User',False),('get','/projects',None,'Project[]',False),('post','/projects','project','Project',False),
- ('get','/credits',None,None,False),('get','/billing/packs',None,None,True),('post','/billing/checkout','checkout','PaymentInvoice',False),
+ ('get','/billing/history',None,'BillingHistoryPage',False),('get','/credits',None,None,False),('get','/billing/packs',None,None,True),('post','/billing/checkout','checkout','CheckoutResult',False),
  ('get','/jobs',None,'Job[]',False),('get','/jobs/{id}',None,'Job',False),('get','/jobs/{id}/events',None,None,False),('get','/jobs/{id}/download',None,None,False),('post','/jobs/{id}/cancel',None,None,False),
  ('get','/projects/{project}/jobs',None,'Job[]',False),('get','/jobs/{id}/pipeline',None,'PipelineProgress',False),('post','/projects/{project}/pipelines/quotes','pipeline_quote','Quote',False),('post','/projects/{project}/assembly/quotes','assembly_quote','Quote',False),
  ('post','/generation/quotes','quote','Quote',False),('post','/generation/jobs','job','Job',False),
@@ -112,22 +125,50 @@ for kind in ('scenes','shots','characters','assets'):
  routes.extend([('get',base,None,None,False),('post',base,'canvas',None,False),('get',base+'/{entity}',None,None,False),('patch',base+'/{entity}','canvas',None,False),('delete',base+'/{entity}',None,None,False)])
 for base in ('/projects/{project}/scenes/{scene}/cast/{character}','/projects/{project}/shots/{shot}/assets/{asset}'):
  routes.extend([('post',base,None,None,False),('delete',base,None,None,False)])
+requests['oauth_start']=obj({'link':B,'password':S,'code':S})
+requests['profile_image']=obj({'kind':{'type':'string','enum':['avatar','banner']},'data':{'type':'string','contentEncoding':'base64','maxLength':4194304}},('kind','data'))
+requests['admin_setting']=obj({'value':{'oneOf':[B,S]},'revision':{'type':'integer','minimum':1},'reason':{'type':'string','minLength':1,'maxLength':1000}},('value','revision','reason'))
+requests['admin_restriction']=obj({'suspended':B,'reason':{'type':'string','minLength':1,'maxLength':1000}},('suspended','reason'))
+requests['admin_block']=obj({'reason':{'type':'string','maxLength':1000}})
+routes.extend([
+ ('get','/auth/providers',None,'AuthProviders',True),('post','/auth/oauth/{provider}/start','oauth_start','OAuthStart',True),('get','/auth/oauth/{provider}/callback',None,None,True),('post','/auth/oauth/{provider}/callback',None,None,True),
+ ('post','/auth/magic-link','email',None,True),('post','/auth/magic-link/verify','token','User',True),
+ ('post','/profile/images','profile_image','ProfileImageUpload',False),('get','/profile-images/{id}',None,None,True),
+ ('get','/admin/me',None,None,False),('get','/admin/settings',None,'AdminSetting[]',False),('put','/admin/settings/{key}','admin_setting','AdminSetting',False),('get','/admin/capacity',None,None,False),('get','/admin/users/{id}/records/{kind}',None,None,False),('post','/admin/reports/{id}/resolve','admin_block',None,False),('post','/admin/videos/{id}/restore','admin_block',None,False),('get','/admin/readiness',None,None,False),('get','/admin/ai-readiness',None,'AIReadiness',False),('get','/admin/records/{kind}',None,None,False),('post','/admin/users/{id}/restriction','admin_restriction',None,False),('post','/admin/videos/{id}/block','admin_block',None,False),
+])
 paths={}
 for method,path,body,response,anonymous in routes:
  params=[{'name':part[1:-1],'in':'path','required':True,'schema':S}for part in path.split('/')if part.startswith('{')]
  if path in ('/generation/jobs','/memberships/checkout','/billing/checkout','/premium/checkout','/payments/invoices'):
   params.append({'name':'Idempotency-Key','in':'header','required':True,'schema':{'type':'string','minLength':8,'maxLength':200 if path in ('/payments/invoices','/premium/checkout','/billing/checkout') else 128}})
  op={'operationId':method+'_'+path.strip('/').replace('/','_').replace('{','').replace('}','').replace('-','_'),'security':[] if anonymous else [{'session':[]}],'parameters':params,'responses':{'200':{'description':'Success'},'400':{'description':'Invalid input'},'401':{'description':'Authentication or authorization required'},'409':{'description':'State conflict'},'503':{'description':'Integration disabled or unavailable'}}}
- if path=='/auth/login':op['responses']['202']={'description':'Second factor required; challenge is not an authenticated session','content':{'application/json':{'schema':obj({'mfa_required':B,'challenge':S,'methods':{'type':'array','items':S}},('mfa_required','challenge','methods'))}}}
+ if path in ('/auth/login','/auth/magic-link/verify'):op['responses']['202']={'description':'Second factor required; challenge is not an authenticated session','content':{'application/json':{'schema':obj({'mfa_required':B,'challenge':S,'methods':{'type':'array','items':S}},('mfa_required','challenge','methods'))}}}
 
  if path=='/projects/{project}/prompt-templates/{template}':op['parameters'].append({'name':'revision','in':'query','required':True,'schema':{'type':'integer','minimum':1}})
+ if path=='/billing/history':op['parameters'].extend([{'name':'cursor','in':'query','schema':S},{'name':'provider','in':'query','schema':{'type':'string','enum':['all','stripe','cryptorails']}},{'name':'product','in':'query','schema':{'type':'string','enum':['all','credits','premium']}},{'name':'limit','in':'query','schema':{'type':'integer','minimum':1,'maximum':50,'default':20}}])
  if path=='/feed':op['parameters'].extend([{'name':n,'in':'query','schema':S} for n in ('q','category','filter','format','cursor')])
  if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':requests[body]}}}
  if response:
   schema={'$ref':'#/components/schemas/'+response.removesuffix('[]')}
   if response.endswith('[]'):schema={'type':'array','items':schema}
-  op['responses']['201' if path=='/auth/register' else '200']={'description':'Success','content':{'application/json':{'schema':schema}}}
+  op['responses']['201' if path in ('/auth/register','/profile/images') else '200']={'description':'Success','content':{'application/json':{'schema':schema}}}
  if path=='/feed':op['responses']['200']={'description':'Legacy array without format/cursor; format-filtered requests return items and next_cursor','content':{'application/json':{'schema':{'oneOf':[{'type':'array','items':{'$ref':'#/components/schemas/Video'}},obj({'items':{'type':'array','items':{'$ref':'#/components/schemas/Video'}},'next_cursor':S},('items','next_cursor'))]}}}}
+ if path.startswith('/auth/oauth/'):
+  for param in op['parameters']:
+   if param['name']=='provider':param['schema']={'type':'string','enum':['google','apple']}
+ if path=='/auth/oauth/{provider}/start':op['description']='Starts configured OIDC with browser-bound state and nonce; Google uses S256 PKCE and Apple uses its confidential-client form-post flow. link=true requires the current authenticated account and password/second-factor reauthentication. Never links by email alone.'
+ if path=='/auth/oauth/{provider}/callback':
+  op['responses'].pop('200',None)
+  op['responses']['303']={'description':'Redirect to application after state/nonce/issuer verification and optional second-factor challenge','headers':{'Location':{'schema':S}}}
+  callback=obj({'state':S,'code':S,'error':S})
+  if method=='post':op['requestBody']={'required':True,'content':{'application/x-www-form-urlencoded':{'schema':callback}}}
+  else:op['parameters'].extend([{'name':name,'in':'query','schema':S} for name in ('state','code','error')])
+ if path.startswith('/admin/'):
+  op['description']='Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side.'
+  op['responses']['403']={'description':'Administrator role, second factor or recent verification required'}
+ if path=='/admin/records/{kind}':
+  op['parameters'][0]['schema']={'type':'string','enum':['premium', 'crypto', 'policies', 'usage', 'budgets', 'revenue', 'audience', 'users', 'content', 'jobs', 'billing', 'reports', 'audit']}
+ if path=='/profile-images/{id}':op['responses']['200']={'description':'Normalized public profile JPEG','content':{'image/jpeg':{'schema':{'type':'string','format':'binary'}}}}
  if path.endswith('/events'):
   op['responses']['200']={'description':'Authorized job snapshots as resumable progress hints','content':{'text/event-stream':{'schema':S}}}
  if path in ('/memberships/checkout','/creator/membership-plan'):
@@ -140,6 +181,9 @@ contract={'openapi':'3.1.0','info':{'title':'VideoFlow Cloud API','version':'1.0
 ts=['// Generated by scripts/generate-cloud-contract.py. Do not edit by hand.']
 for name,fields in schemas.items():
  ts.append('export interface '+name+' {\n'+'\n'.join('  '+k+('?' if k in ('error','thumbnail_url','request_id','scene_id','object_key','defaults')else '')+': '+{'integer':'number','number':'number','object':'Record<string, unknown>','string':'string','boolean':'boolean'}[v]+';'for k,v in fields.items())+'\n}')
+ts.append("export interface AuthProviders { providers: string[]; linked: string[]; }\nexport interface OAuthStart { url: string; }")
+ts.append("export interface BillingHistoryEntry { id: string; provider: 'stripe' | 'cryptorails'; product: 'credits' | 'premium'; amount_cents: number; currency: string; status: string; created_at: string; paid_at: string | null; management_url: string; receipt_available: boolean; }\nexport interface BillingHistoryPage { items: BillingHistoryEntry[]; next_cursor: string; }")
+ts.append("export interface StripeCheckout { provider: 'stripe'; url: string; }\nexport type CheckoutResult = PaymentInvoice | StripeCheckout;\nexport interface AITaskReadiness { id: string; provider: 'openrouter'; adapter_supported: boolean; configured: boolean; availability: 'unsupported' | 'configuration_missing' | 'quote_validation_required'; selection: string; missing: string[]; }\nexport interface AIReadiness { provider: 'openrouter'; live_provider_verified: false; tasks: AITaskReadiness[]; note: string; }\nexport interface AdminSetting { key: string; value: boolean | string; revision: number; updated_at: string; }\nexport interface ProfileImageUpload { url: string; }")
 ts.append("export interface EditorDocument { revision: number; document: Record<string, unknown> | null; updated_at?: string; }")
 ts.append("export interface PipelineScene { title: string; prompt: string; duration: number; status: string; }\nexport interface PipelineProgress { stage: string; status: string; script: string; scenes: PipelineScene[]; }")
 ts.append("export type VideoVisibility = 'public' | 'unlisted' | 'private';\nexport type VideoAudience = 'free' | 'members';")

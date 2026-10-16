@@ -8,7 +8,7 @@
  import {Menu,History,Crown,UserRound,ChevronDown,Clapperboard,LogOut,Search,Compass,RectangleVertical,Users,Bookmark} from '@lucide/svelte';
  let {user,path,signInHref,onSignOut,children}:{user:any;path:string;signInHref:string;onSignOut:()=>void;children:Snippet}=$props();
  let menuButton=$state<HTMLButtonElement>();
- let watchMenu=$state(false);const focusedWatching=$derived(path.startsWith('/watch/')||path.startsWith('/shorts'));
+ let watchMenu=$state(false);const focusedWatching=$derived(path.startsWith('/watch/')||path.startsWith('/shorts')||path.startsWith('/settings/'));
  let collapsed=$state(false);let query=$state('');
  const links=[{href:'/discover',label:'Discover',icon:Compass},{href:'/shorts',label:'Shorts',icon:RectangleVertical},{href:'/following',label:'Following',icon:Users},{href:'/library',label:'Saved videos',icon:Bookmark},{href:'/history',label:'Watch history',icon:History}];
  const isActive=(href:string)=>href==='/discover'?['/','/discover','/search'].includes(path):href==='/shorts'?path.startsWith('/shorts'):path===href;

@@ -9,7 +9,9 @@
     "curated toolbar and platform theme override",
     "repair legacy storage migration object-parameter calls and sticker registry signature; include upstream ambient declarations",
     "disable export when referenced browser source files are missing; expose source reconnection in platform adapter",
-    "label media view controls and timeline-add actions; rename asset panel Project media"
+    "label media view controls and timeline-add actions; rename asset panel Project media",
+    "direct export-to-upload handoff with explicit user destination choice",
+    "disable browser-local transcription inference under OpenRouter-only SaaS policy; retain SRT/ASS import"
   ],
   "excluded": [
     "upstream auth, database and hosted catalogues",

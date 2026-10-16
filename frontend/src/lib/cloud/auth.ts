@@ -14,7 +14,7 @@ export function safeReturnTo(value: string | null | undefined, origin: string): 
     const target = new URL(value, base);
     const decodedTarget = new URL(inspected, base);
     for (const url of [target, decodedTarget]) {
-      if (url.origin !== base.origin || url.pathname.startsWith('//') || ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(url.pathname)) return '/discover';
+      if (url.origin !== base.origin || url.pathname.startsWith('//') || ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/magic-link'].includes(url.pathname)) return '/discover';
     }
     return target.pathname + target.search + target.hash;
   } catch {

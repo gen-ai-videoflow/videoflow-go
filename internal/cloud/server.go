@@ -25,13 +25,15 @@ var ErrUnavailable = errors.New("service not configured or temporarily unavailab
 
 type userContext struct{}
 type Server struct {
-	Store  *Store
-	Config Config
-	HTTP   *http.Client
-	Redis  *redis.Client
-	Media  *Media
-	limMu  sync.Mutex
-	limits map[string]localLimit
+	Store   *Store
+	Config  Config
+	HTTP    *http.Client
+	Redis   *redis.Client
+	Media   *Media
+	limMu   sync.Mutex
+	metrics capacityMetrics
+	permits chan struct{}
+	limits  map[string]localLimit
 }
 type localLimit struct {
 	count   int
@@ -39,9 +41,20 @@ type localLimit struct {
 }
 
 func NewServer(store *Store, cfg Config) *Server {
-	s := &Server{Store: store, Config: cfg, HTTP: &http.Client{Timeout: 30 * time.Second}, limits: make(map[string]localLimit)}
+	capacity := cfg.MaxConcurrentRequests
+	if capacity <= 0 {
+		capacity = 128
+	}
+	s := &Server{permits: make(chan struct{}, capacity), Store: store, Config: cfg, HTTP: &http.Client{Timeout: 30 * time.Second}, limits: make(map[string]localLimit)}
 	if cfg.RedisURL != "" {
 		if options, err := redis.ParseURL(cfg.RedisURL); err == nil {
+			options.DialTimeout = 2 * time.Second
+			options.ReadTimeout = time.Second
+			options.WriteTimeout = time.Second
+			options.PoolTimeout = time.Second
+			options.PoolSize = 16
+			options.MaxRetries = -1
+			options.ContextTimeoutEnabled = true
 			s.Redis = redis.NewClient(options)
 		}
 	}
@@ -54,7 +67,9 @@ func (s *Server) Close() {
 }
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.Recoverer, s.security)
+	r.Use(middleware.RequestID, middleware.Recoverer, s.security, s.admission)
+	r.Get("/live", func(w http.ResponseWriter, r *http.Request) { s.json(w, 200, map[string]string{"status": "alive"}) })
+	r.Get("/ready", s.ready)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
@@ -71,6 +86,10 @@ func (s *Server) Router() http.Handler {
 		s.premiumRoutes(r)
 		s.cryptoRoutes(r)
 		s.securityRoutes(r)
+		s.magicLoginRoutes(r)
+		s.oauthRoutes(r)
+		s.adminConsoleRoutes(r)
+		r.Get("/profile-images/{id}", s.profileImage)
 		r.Post("/auth/register", s.register)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/logout", s.auth(s.logout))
@@ -88,7 +107,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/videos/{id}/playback-grant", s.issuePlayback)
 		r.Get("/channels/{handle}", s.publicChannel)
 		r.Get("/billing/packs", func(w http.ResponseWriter, r *http.Request) {
-			s.json(w, 200, map[string]any{"packs": Packs, "checkout_enabled": s.cryptoEnabled()})
+			s.json(w, 200, map[string]any{"packs": Packs, "checkout_enabled": s.cryptoEnabled() || s.stripeEnabled()})
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireUser, s.mutationLimits)
@@ -131,20 +150,12 @@ func (s *Server) Router() http.Handler {
 			r.Delete("/projects/{project}/prompt-templates/{template}", s.deletePromptTemplate)
 			r.Get("/projects/{project}/editor", s.getEditorDocument)
 			r.Put("/projects/{project}/editor", s.saveEditorDocument)
+			r.Get("/billing/history", s.billingHistory)
 			r.Get("/credits", func(w http.ResponseWriter, r *http.Request) {
 				v, e := s.Store.Credits(r.Context(), currentUser(r).WorkspaceID)
 				s.result(w, v, e)
 			})
-			r.Post("/billing/checkout", func(w http.ResponseWriter, r *http.Request) {
-				var b struct {
-					PackID string `json:"pack_id"`
-				}
-				if !s.decode(w, r, &b) {
-					return
-				}
-				v, e := s.newCryptoInvoice(r.Context(), currentUser(r), "credits", b.PackID, r.Header.Get("Idempotency-Key"))
-				s.result(w, v, e)
-			})
+			r.Post("/billing/checkout", s.billingCheckout)
 			r.Get("/channel/videos", s.creatorVideos)
 			r.Post("/watch-sessions", s.beginWatch)
 			r.Post("/watch-events", s.watchEvent)
@@ -225,7 +236,8 @@ func (s *Server) security(next http.Handler) http.Handler {
 			w.WriteHeader(204)
 			return
 		}
-		if r.Method != "GET" && r.Method != "HEAD" && !strings.HasPrefix(r.URL.Path, "/v1/webhooks/") {
+		appleCallback := r.Method == "POST" && r.URL.Path == "/v1/auth/oauth/apple/callback" && r.Header.Get("Origin") == "https://appleid.apple.com" && strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+		if r.Method != "GET" && r.Method != "HEAD" && !strings.HasPrefix(r.URL.Path, "/v1/webhooks/") && !appleCallback {
 			if r.Header.Get("Origin") != s.Config.PublicOrigin {
 				s.fail(w, ErrUnauthorized)
 				return
@@ -311,11 +323,14 @@ func (s *Server) rate(w http.ResponseWriter, r *http.Request, key string, max in
 	hash := sha256.Sum256([]byte(key))
 	key = "vf:limit:" + hex.EncodeToString(hash[:])
 	if s.Redis != nil {
-		n, err := s.Redis.Eval(r.Context(), `local n=redis.call('INCR',KEYS[1]);if n==1 then redis.call('PEXPIRE',KEYS[1],ARGV[1]) end;return n`, []string{key}, window.Milliseconds()).Int()
+		ctx, cancel := context.WithTimeout(r.Context(), time.Second)
+		defer cancel()
+		n, err := s.Redis.Eval(ctx, `local n=redis.call('INCR',KEYS[1]);if n==1 then redis.call('PEXPIRE',KEYS[1],ARGV[1]) end;return n`, []string{key}, window.Milliseconds()).Int()
 		if err == nil {
 			if n <= max {
 				return true
 			}
+			w.Header().Set("Retry-After", fmt.Sprint(int(window.Seconds())+1))
 			s.json(w, 429, map[string]string{"message": "Too many requests. Please try again shortly."})
 			return false
 		}
@@ -327,6 +342,18 @@ func (s *Server) rate(w http.ResponseWriter, r *http.Request, key string, max in
 	s.limMu.Lock()
 	defer s.limMu.Unlock()
 	now := time.Now()
+	if _, exists := s.limits[key]; !exists && len(s.limits) >= localLimitCapacity {
+		for k, v := range s.limits {
+			if now.After(v.expires) {
+				delete(s.limits, k)
+			}
+		}
+		if len(s.limits) >= localLimitCapacity {
+			w.Header().Set("Retry-After", "60")
+			s.json(w, 503, map[string]string{"message": "Request capacity reached. Please try again shortly."})
+			return false
+		}
+	}
 	v := s.limits[key]
 	if now.After(v.expires) {
 		v = localLimit{expires: now.Add(window)}
@@ -341,6 +368,7 @@ func (s *Server) rate(w http.ResponseWriter, r *http.Request, key string, max in
 		}
 	}
 	if v.count > max {
+		w.Header().Set("Retry-After", fmt.Sprint(int(window.Seconds())+1))
 		s.json(w, 429, map[string]string{"message": "Too many requests. Please try again shortly."})
 		return false
 	}
@@ -744,6 +772,20 @@ func (s *Server) mutationLimits(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" && r.Method != "HEAD" && !s.rate(w, r, "mutations:"+currentUser(r).ID, 60, time.Minute, true) {
 			return
+		}
+		if r.Method == "POST" {
+			path := r.URL.Path
+			key := ""
+			if strings.HasSuffix(path, "/generation/quotes") || strings.HasSuffix(path, "/generation/jobs") || strings.HasSuffix(path, "/pipelines/quotes") {
+				key = "generation_enabled"
+			}
+			if strings.HasSuffix(path, "/publications") || strings.HasSuffix(path, "/videos") || strings.HasSuffix(path, "/publish") {
+				key = "publishing_enabled"
+			}
+			if key != "" && !s.adminFeatureEnabled(r.Context(), key) {
+				s.fail(w, ErrUnavailable)
+				return
+			}
 		}
 		next.ServeHTTP(w, r)
 	})

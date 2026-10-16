@@ -42,7 +42,7 @@ func (w *Worker) runPipeline(ctx context.Context, id string) error {
 	}
 	if kind == "storyboard" {
 		if stage == "queued" {
-			if w.cfg.OpenRouterKey == "" || w.cfg.StoryModel != storyModel || storyCost < 1 || storyCost > w.cfg.StoryMaxCostMicros {
+			if w.cfg.OpenRouterKey == "" || !approvedStoryModel(w.cfg.StoryModel, storyModel) || storyCost < 1 || storyCost > w.cfg.StoryMaxCostMicros {
 				return fail("Story generation policy is unavailable")
 			}
 			if maxCost > w.cfg.ProviderMaxCostMicros {

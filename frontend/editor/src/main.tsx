@@ -401,7 +401,7 @@ function App() {
           <a href="/editor-app/notices.txt" target="_blank">
             Open-source notices
           </a>
-          <button onClick={() => parent("videoflow:editor:publish")}>
+          <button disabled={query.get("publish")!=="1"} title={query.get("publish")==="1"?"Upload a finished export":"Video uploads are not configured yet"} onClick={() => parent("videoflow:editor:publish")}>
             Publish an exported video
           </button>
         </footer>

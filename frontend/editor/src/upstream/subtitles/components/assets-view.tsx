@@ -288,10 +288,12 @@ export function Captions() {
 				className="flex-1"
 			>
 				<SectionContent className="flex flex-col gap-4 h-full pt-1">
-					<SectionFields>
-						<SectionField label="Language">
+					<p className="text-muted-foreground text-xs leading-relaxed">Import an SRT or ASS caption file to add captions. Automatic captions will use the platform AI service when available; no AI model runs on your device.</p>
+                    <SectionFields>
+						<SectionField label="Spoken language">
 							<Select
 								value={selectedLanguage}
+                                disabled
 								onValueChange={(value) => handleLanguageChange({ value })}
 							>
 								<SelectTrigger>
@@ -313,10 +315,10 @@ export function Captions() {
 						type="button"
 						className="mt-auto w-full"
 						onClick={handleGenerateTranscript}
-						disabled={isProcessing || activeDiagnostics.length > 0}
+						disabled={true}
 					>
 						{isProcessing && <Spinner className="mr-1" />}
-						{isProcessing ? processing.step : "Generate transcript"}
+						{isProcessing ? processing.step : "Automatic captions unavailable"}
 					</Button>
 					{error && (
 						<div className="bg-destructive/10 border-destructive/20 rounded-md border p-3">

@@ -144,7 +144,7 @@ func TestRuntimeRoleCannotChangeSchemaOrMigrationRecords(t *testing.T) {
 	if _, e = conn.ExecContext(ctx, `SET ROLE `+quoteIdentifier(role)); e != nil {
 		t.Fatal(e)
 	}
-	for _, query := range []string{`CREATE TABLE public.cloud_forbidden(id int)`, `CREATE TEMP TABLE forbidden_temp(id int)`, `UPDATE cloud_schema_migrations SET applied_at=now()`, `UPDATE cloud_payout_batches SET status='paid'`, `UPDATE cloud_admin_audit SET reason='rewritten'`} {
+	for _, query := range []string{`CREATE TABLE public.cloud_forbidden(id int)`, `CREATE TEMP TABLE forbidden_temp(id int)`, `UPDATE cloud_schema_migrations SET applied_at=now()`, `UPDATE cloud_payout_batches SET status='paid'`, `UPDATE cloud_admin_audit SET reason='rewritten'`, `UPDATE cloud_admin_roles SET role='owner'`, `DELETE FROM cloud_admin_roles`} {
 		if _, e = conn.ExecContext(ctx, query); e == nil {
 			t.Fatalf("runtime allowed forbidden SQL: %s", query)
 		}

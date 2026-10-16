@@ -68,7 +68,7 @@ func (p profilePatch) validate() bool {
 			return false
 		}
 		for _, l := range *p.Links {
-			if strings.TrimSpace(l.Label) == "" || len(l.Label) > 40 || l.URL == "" || !validProfileURL(l.URL, false) {
+			if strings.TrimSpace(l.Label) == "" || len(l.Label) > 40 || l.URL == "" || !validProfileURL(l.URL, false) || !validPresetSocialLink(l) {
 				return false
 			}
 		}
@@ -97,6 +97,7 @@ func (s *Server) richChannelData(ctx context.Context, handle string) (map[string
 func (s *Server) profileRoutes(r chi.Router) {
 	r.Get("/profile", s.getProfile)
 	r.Patch("/profile", s.patchProfile)
+	r.Post("/profile/images", s.uploadProfileImage)
 }
 func (s *Server) getProfile(w http.ResponseWriter, r *http.Request) {
 	u := currentUser(r)
@@ -108,7 +109,7 @@ func (s *Server) patchProfile(w http.ResponseWriter, r *http.Request) {
 	if !s.decode(w, r, &p) {
 		return
 	}
-	if !p.validate() {
+	if !s.validateProfilePatch(p) {
 		s.fail(w, ErrValidation)
 		return
 	}
@@ -123,6 +124,24 @@ func (s *Server) patchProfile(w http.ResponseWriter, r *http.Request) {
 	if _, e = tx.ExecContext(r.Context(), `SELECT id FROM cloud_channels WHERE id=$1 FOR UPDATE`, u.ChannelID); e != nil {
 		s.fail(w, e)
 		return
+	}
+	for _, imageURL := range []*string{p.Avatar, p.Banner} {
+		if imageURL == nil || *imageURL == "" {
+			continue
+		}
+		prefix := strings.TrimSuffix(s.Config.PublicOrigin, "/") + "/api/v1/profile-images/"
+		if s.Config.PublicOrigin != "" && strings.HasPrefix(*imageURL, prefix) {
+			id := strings.TrimPrefix(*imageURL, prefix)
+			var exists bool
+			if e = tx.QueryRowContext(r.Context(), `SELECT EXISTS(SELECT 1 FROM cloud_profile_images WHERE id=$1 AND channel_id=$2)`, id, u.ChannelID).Scan(&exists); e != nil {
+				s.fail(w, e)
+				return
+			}
+			if !exists {
+				s.fail(w, ErrValidation)
+				return
+			}
+		}
 	}
 	if p.Featured != nil && *p.Featured != "" {
 		var ok bool
@@ -170,4 +189,23 @@ func (s *Store) DiscoveryFeed(ctx context.Context, u User, query, category, filt
 		category = "following"
 	}
 	return s.Discovery(ctx, u, query, category)
+}
+
+func validPresetSocialLink(link ProfileLink) bool {
+	domains := map[string][]string{"youtube": {"youtube.com", "youtu.be"}, "instagram": {"instagram.com"}, "tiktok": {"tiktok.com"}, "linkedin": {"linkedin.com"}, "github": {"github.com"}, "x": {"x.com", "twitter.com"}, "facebook": {"facebook.com", "fb.com"}, "twitch": {"twitch.tv"}, "discord": {"discord.com", "discord.gg"}, "telegram": {"t.me", "telegram.me"}}
+	allowed, known := domains[strings.ToLower(strings.TrimSpace(link.Label))]
+	if !known {
+		return true
+	}
+	u, err := url.Parse(link.URL)
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	for _, domain := range allowed {
+		if host == domain || strings.HasSuffix(host, "."+domain) {
+			return true
+		}
+	}
+	return false
 }

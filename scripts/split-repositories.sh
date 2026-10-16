@@ -43,6 +43,12 @@ if (src/'docs/BILINGUAL-PROMPTS.md').is_file():
 if (src/'docs/EDITOR-OPERATIONS.md').is_file():
     (web/'docs').mkdir(exist_ok=True)
     shutil.copy2(src/'docs/EDITOR-OPERATIONS.md',web/'docs/EDITOR-OPERATIONS.md')
+for doc in ('AI-ACTIVATION.md','ops/REQUEST-CAPACITY.md','ops/ADMIN-CONSOLE.md','ops/OAUTH-SIGN-IN.md','superpowers/plans/2026-10-16-platform-execution.md','superpowers/plans/2026-10-16-platform-activation-admin-checklist.md'):
+    source=src/'docs'/doc
+    if source.is_file():
+        target=web/'docs'/doc
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(source,target)
 if (src/'docs/ux').is_dir():
     shutil.copytree(src/'docs/ux', web/'docs/ux', dirs_exist_ok=True)
 if (src/'docs/launch').is_dir():

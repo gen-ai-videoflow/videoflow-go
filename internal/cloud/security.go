@@ -65,7 +65,7 @@ func (s *Store) newSecuritySession(ctx context.Context, user string, passkey boo
 	if e != nil {
 		return "", e
 	}
-	_, e = s.DB.ExecContext(ctx, `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at)VALUES($1,$2,CASE WHEN $3 THEN now() ELSE NULL END)`, tokenHash(token), user, passkey)
+	_, e = s.DB.ExecContext(ctx, `INSERT INTO cloud_sessions(token_hash,user_id,passkey_verified_at,mfa_verified_at)VALUES($1,$2,CASE WHEN $3 THEN now() ELSE NULL END,CASE WHEN $3 THEN now() ELSE NULL END)`, tokenHash(token), user, passkey)
 	return token, e
 }
 func (s *Server) securityRoutes(r chi.Router) {
@@ -323,6 +323,9 @@ func (s *Server) totpConfirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token, e := s.Store.newSecuritySession(r.Context(), u.ID, false)
+	if e == nil {
+		_, e = s.Store.DB.ExecContext(r.Context(), `UPDATE cloud_sessions SET mfa_verified_at=now() WHERE token_hash=$1`, tokenHash(token))
+	}
 	if e != nil {
 		s.fail(w, e)
 		return
@@ -416,7 +419,7 @@ func (s *Server) finishPasswordMFA(w http.ResponseWriter, r *http.Request) {
 	}
 	token, e := rawToken()
 	if e == nil {
-		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id)VALUES($1,$2)`, tokenHash(token), user)
+		_, e = tx.ExecContext(r.Context(), `INSERT INTO cloud_sessions(token_hash,user_id,mfa_verified_at)VALUES($1,$2,now())`, tokenHash(token), user)
 	}
 	if e == nil {
 		e = tx.Commit()

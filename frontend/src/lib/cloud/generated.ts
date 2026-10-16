@@ -149,6 +149,19 @@ export interface StudioEntity {
   updated_at: string;
 }
 
+export interface AuthProviders { providers: string[]; linked: string[]; }
+export interface OAuthStart { url: string; }
+
+export interface BillingHistoryEntry { id: string; provider: 'stripe' | 'cryptorails'; product: 'credits' | 'premium'; amount_cents: number; currency: string; status: string; created_at: string; paid_at: string | null; management_url: string; receipt_available: boolean; }
+export interface BillingHistoryPage { items: BillingHistoryEntry[]; next_cursor: string; }
+
+export interface StripeCheckout { provider: 'stripe'; url: string; }
+export type CheckoutResult = PaymentInvoice | StripeCheckout;
+export interface AITaskReadiness { id: string; provider: 'openrouter'; adapter_supported: boolean; configured: boolean; availability: 'unsupported' | 'configuration_missing' | 'quote_validation_required'; selection: string; missing: string[]; }
+export interface AIReadiness { provider: 'openrouter'; live_provider_verified: false; tasks: AITaskReadiness[]; note: string; }
+export interface AdminSetting { key: string; value: boolean | string; revision: number; updated_at: string; }
+export interface ProfileImageUpload { url: string; }
+
 export interface EditorDocument { revision: number; document: Record<string, unknown> | null; updated_at?: string; }
 
 export interface PipelineScene { title: string; prompt: string; duration: number; status: string; }

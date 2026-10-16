@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) premiumEnabled() bool {
-	return s.cryptoEnabled() && s.Config.PremiumPriceCents >= 100 && s.Config.PremiumPriceCents <= 100000
+	return (s.cryptoEnabled() || s.stripeEnabled()) && s.Config.PremiumPriceCents >= 100 && s.Config.PremiumPriceCents <= 100000
 }
 func (s *Store) HasPremium(ctx context.Context, userID string) (bool, error) {
 	if userID == "" {
@@ -80,7 +80,7 @@ func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
 			status = "pending"
 		}
 	}
-	s.json(w, 200, map[string]any{"enabled": s.premiumEnabled(), "price_cents": s.Config.PremiumPriceCents, "currency": "usd", "interval": "30_days", "auto_renew": false, "active": active, "paid_through": end, "status": status, "can_manage": canManage})
+	s.json(w, 200, map[string]any{"enabled": s.premiumEnabled(), "price_cents": s.Config.PremiumPriceCents, "currency": "usd", "interval": "30_days", "auto_renew": false, "active": active, "paid_through": end, "status": status, "can_manage": canManage, "stripe_active": legacyActive, "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "payment_terms": map[string]any{"stripe": map[string]any{"interval": "month", "auto_renew": true}, "cryptorails": map[string]any{"interval": "30_days", "auto_renew": false}}})
 }
 func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
 	if !s.premiumEnabled() {
@@ -92,12 +92,27 @@ func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, ErrUnauthorized)
 		return
 	}
-	var body struct{}
+	var body struct {
+		Provider string `json:"provider"`
+	}
 	if !s.decode(w, r, &body) {
 		return
 	}
 	key := strings.TrimSpace(r.Header.Get("Idempotency-Key"))
 	if len(key) < 8 || len(key) > 200 {
+		s.fail(w, ErrValidation)
+		return
+	}
+	if body.Provider == "stripe" {
+		if !s.stripeEnabled() {
+			s.fail(w, ErrUnavailable)
+			return
+		}
+		result, err := s.startPremiumCheckout(r.Context(), u, key)
+		s.result(w, map[string]string{"provider": "stripe", "url": result}, err)
+		return
+	}
+	if body.Provider != "" && body.Provider != "cryptorails" {
 		s.fail(w, ErrValidation)
 		return
 	}
@@ -114,7 +129,7 @@ func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (
 		return "", e
 	}
 	var active bool
-	e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_premium_subscriptions WHERE user_id=$1 AND status='active' AND paid_through>now()) OR EXISTS(SELECT 1 FROM cloud_premium_disputes WHERE user_id=$1 AND status NOT IN ('won','warning_closed'))`, u.ID).Scan(&active)
+	e = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_premium_subscriptions WHERE user_id=$1 AND status='active' AND paid_through>now()) OR EXISTS(SELECT 1 FROM cloud_premium_disputes WHERE user_id=$1 AND status NOT IN ('won','warning_closed')) OR EXISTS(SELECT 1 FROM cloud_crypto_premium WHERE user_id=$1 AND paid_through>now()) OR EXISTS(SELECT 1 FROM cloud_crypto_invoices WHERE user_id=$1 AND purpose='premium' AND status IN ('pending','processing','review'))`, u.ID).Scan(&active)
 	if e != nil {
 		return "", e
 	}
