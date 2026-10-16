@@ -205,6 +205,11 @@ func (w *Worker) process(ctx context.Context, body string) error {
 	return w.encodingComplete(ctx, event)
 }
 func (w *Worker) generate(ctx context.Context, id string) error {
+	cfg, configErr := w.store.EffectiveConfig(ctx, w.cfg)
+	if configErr != nil {
+		return configErr
+	}
+
 	var pipeline bool
 	if err := w.store.DB.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_pipeline_plans p JOIN cloud_jobs j ON j.quote_id=p.quote_id WHERE j.id=$1)`, id).Scan(&pipeline); err != nil {
 		return err
@@ -224,7 +229,7 @@ func (w *Worker) generate(ctx context.Context, id string) error {
 		return err
 	}
 	if providerID == "" {
-		if w.cfg.OpenRouterKey == "" {
+		if cfg.OpenRouterKey == "" {
 			return w.store.FinishJobAttempt(ctx, id, attempt, "failed", "", "Video provider is not configured")
 		}
 		var prompt, model, aspect, resolution string
@@ -237,10 +242,10 @@ func (w *Worker) generate(ctx context.Context, id string) error {
 		if err = w.provider.ValidateVideo(ctx, payload); err != nil {
 			return w.store.FinishJobAttempt(ctx, id, attempt, "failed", "", "Requested generation capabilities are unavailable")
 		}
-		if maxCost > w.cfg.ProviderMaxCostMicros {
+		if maxCost > cfg.ProviderMaxCostMicros {
 			return w.store.FinishJobAttempt(ctx, id, attempt, "failed", "", "Provider cost limit unavailable")
 		}
-		if err = w.store.TryProviderBudget(ctx, id, maxCost, w.cfg.ProviderDailyBudgetMicros); err != nil {
+		if err = w.store.TryProviderBudget(ctx, id, maxCost, cfg.ProviderDailyBudgetMicros); err != nil {
 			if errors.Is(err, ErrProviderBudget) {
 				return w.store.FinishJobAttempt(ctx, id, attempt, "failed", "", "Provider daily spending limit reached")
 			}
@@ -279,7 +284,7 @@ func (w *Worker) generate(ctx context.Context, id string) error {
 			return err
 		}
 		key := "workspaces/" + workspace + "/jobs/" + id + "/output.mp4"
-		if _, err = w.media.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(w.cfg.OriginalsBucket), Key: aws.String(key), Body: bytes.NewReader(data), ContentType: aws.String("video/mp4")}); err != nil {
+		if _, err = w.media.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(cfg.OriginalsBucket), Key: aws.String(key), Body: bytes.NewReader(data), ContentType: aws.String("video/mp4")}); err != nil {
 			return err
 		}
 		return w.store.FinishJobAttempt(ctx, id, attempt, "succeeded", key, "")

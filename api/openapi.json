@@ -3086,6 +3086,34 @@
         }
       }
     },
+    "/creator/analytics/detail": {
+      "get": {
+        "operationId": "get_creator_analytics_detail",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          }
+        }
+      }
+    },
     "/creator/earnings": {
       "get": {
         "operationId": "get_creator_earnings",
@@ -8657,6 +8685,189 @@
         }
       }
     },
+    "/admin/runtime-policy/versions": {
+      "get": {
+        "operationId": "get_admin_runtime_policy_versions",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/runtime-policy": {
+      "get": {
+        "operationId": "get_admin_runtime_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimePolicyRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      },
+      "put": {
+        "operationId": "put_admin_runtime_policy",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimePolicyRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "policy": {
+                    "$ref": "#/components/schemas/RuntimePolicy"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "policy",
+                  "revision",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
+    "/admin/runtime-policy/refresh-catalogues": {
+      "post": {
+        "operationId": "post_admin_runtime_policy_refresh_catalogues",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication or authorization required"
+          },
+          "409": {
+            "description": "State conflict"
+          },
+          "503": {
+            "description": "Integration disabled or unavailable"
+          },
+          "403": {
+            "description": "Administrator role, second factor or recent verification required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "description": "Requires an assigned administrator role, enrolled MFA/passkey and a verified session. Mutations require recent second-factor verification; role permissions are enforced server side."
+      }
+    },
     "/admin/me": {
       "get": {
         "operationId": "get_admin_me",
@@ -9889,6 +10100,89 @@
         "required": [
           "items",
           "next_cursor"
+        ]
+      },
+      "RuntimePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "story_models": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string"
+            }
+          },
+          "video_models": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string"
+            }
+          },
+          "credits_per_second": {
+            "type": "integer"
+          },
+          "story_credits": {
+            "type": "integer"
+          },
+          "assembly_credits": {
+            "type": "integer"
+          },
+          "provider_daily_budget_micros": {
+            "type": "integer"
+          },
+          "provider_max_cost_micros": {
+            "type": "integer"
+          },
+          "story_max_cost_micros": {
+            "type": "integer"
+          },
+          "premium_price_cents": {
+            "type": "integer"
+          },
+          "max_active_jobs": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "story_models",
+          "video_models",
+          "credits_per_second",
+          "story_credits",
+          "assembly_credits",
+          "provider_daily_budget_micros",
+          "provider_max_cost_micros",
+          "story_max_cost_micros",
+          "premium_price_cents",
+          "max_active_jobs"
+        ]
+      },
+      "RuntimePolicyRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/RuntimePolicy"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy",
+          "revision",
+          "updated_at",
+          "source"
         ]
       },
       "AuthProviders": {

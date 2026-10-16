@@ -1,4 +1,5 @@
 <script lang="ts">
+ import ProjectNavigation from "./ProjectNavigation.svelte";
   import { onMount } from 'svelte';
  import {goto} from '$app/navigation';
  import {studioHref,selectStudioProject} from './navigation';
@@ -12,7 +13,7 @@
   import * as Tabs from '$lib/components/ui/tabs';
   import * as Card from '$lib/components/ui/card';
   import * as Dialog from '$lib/components/ui/dialog';
-  import { FileText, Users, ListVideo, Image, Captions, Plus, Save, Trash2, LoaderCircle, FolderOpen, ArrowUpRight, Sparkles,Ellipsis,ArrowLeft,X } from '@lucide/svelte';
+  import { FileText, Users, ListVideo, Image, Captions, Plus, Save, Trash2, LoaderCircle, FolderOpen, ArrowUpRight, Sparkles,Ellipsis,X } from '@lucide/svelte';
   import Storyboard from './Storyboard.svelte';
  import PromptWorkbench from './prompts/PromptWorkbench.svelte';
   import { request } from './api';
@@ -221,15 +222,15 @@
 
 <svelte:window onbeforeunload={beforeUnload}/>
 <div class="studio-workspace">
-  <a class="workspace-back" href="/studio/dashboard"><ArrowLeft class="size-3.5"/>Studio overview</a>
-  <header class="workspace-header"><div><h1>{current.label}</h1><p>{current.help}</p></div><div class="workspace-controls">{#if projects.length}<label for="studio-project" class="sr-only">Project</label><select id="studio-project" value={projectId} disabled={saving} onchange={event=>{const next=event.currentTarget.value;if(dirty){pendingSwitch={project:next,kind};switchOpen=true;event.currentTarget.value=projectId;return;}void goto(studioHref(kind,next));}}>{#each projects as project}<option value={project.id}>{project.name}</option>{/each}</select>{/if}<input class="studio-file-input" type="file" accept=".json,application/json" bind:this={importInput} aria-label="Import project JSON" onchange={event=>void importProject(event.currentTarget.files?.[0])}/><Dropdown.Root><Dropdown.Trigger class="inline-flex size-9 items-center justify-center rounded-md hover:bg-accent" aria-label="Project actions"><Ellipsis class="size-5"/></Dropdown.Trigger><Dropdown.Content align="end"><Dropdown.Item disabled={initialLoading||saving||dirty} onSelect={()=>importInput?.click()}>Import project JSON</Dropdown.Item><Dropdown.Item disabled={saving||dirty||!projectId} onSelect={downloadProject}>Export project JSON</Dropdown.Item><Dropdown.Item onSelect={()=>void goto('/projects')}>Manage projects</Dropdown.Item></Dropdown.Content></Dropdown.Root></div></header>
+  <ProjectNavigation {projects} project={projectId} view={kind==='storyboard'?'story':'resources'} disabled={saving} onselect={(next)=>{if(dirty){pendingSwitch={project:next,kind};switchOpen=true;return;}void goto(studioHref(kind,next));}}/>
+  {#if kind!=='storyboard'}<header class="workspace-header"><div>{#if kind!=='storyboard'}<h1>{current.label}</h1><p>{current.help}</p>{/if}</div><div class="workspace-controls"><input class="studio-file-input" type="file" accept=".json,application/json" bind:this={importInput} aria-label="Import project JSON" onchange={event=>void importProject(event.currentTarget.files?.[0])}/><Dropdown.Root><Dropdown.Trigger class="inline-flex size-9 items-center justify-center rounded-md hover:bg-accent" aria-label="Project actions"><Ellipsis class="size-5"/></Dropdown.Trigger><Dropdown.Content align="end"><Dropdown.Item disabled={initialLoading||saving||dirty} onSelect={()=>importInput?.click()}>Import project JSON</Dropdown.Item><Dropdown.Item disabled={saving||dirty||!projectId} onSelect={downloadProject}>Export project JSON</Dropdown.Item><Dropdown.Item onSelect={()=>void goto('/projects')}>Manage projects</Dropdown.Item></Dropdown.Content></Dropdown.Root></div></header>{/if}
   {#if error}<div class="cloud-alert" role="alert"><span>{error}</span><Button variant="ghost" size="sm" onclick={async()=>{if(!dirty||await confirmAction('Discard unsaved changes and reload?'))void load();}}>Reload</Button></div>{/if}
   {#if notice}<div class="cloud-notice" role="status">{notice}</div>{/if}
   {#if initialLoading}<div class="cloud-loading" role="status"><LoaderCircle size={23} class="animate-spin"/>Opening your workspace…</div>
   {:else if !projects.length}<div class="cloud-empty compact"><FolderOpen size={35}/><h2>A project is your starting point.</h2><p>Create a project to organize scripts, characters, scenes, and assets.</p><Button href="/projects">Create a project <Plus size={15}/></Button></div>
   {:else}
     <Tabs.Root bind:value={() => kind, requestKind}>
-      <div class="studio-tabs"><Tabs.List variant="line" aria-label="Project resources">{#each sections as section}<Tabs.Trigger value={section.value} disabled={saving}><section.icon size={15}/>{section.label}</Tabs.Trigger>{/each}</Tabs.List></div>
+      {#if kind!=='storyboard'}<div class="studio-tabs"><Tabs.List variant="line" aria-label="Project resources">{#each sections.filter(section=>section.value!=='storyboard') as section}<Tabs.Trigger value={section.value} disabled={saving}><section.icon size={15}/>{section.label}</Tabs.Trigger>{/each}</Tabs.List></div>{/if}
       {#each sections as section}<Tabs.Content value={section.value}>{#if kind===section.value}
         {#if kind!=='storyboard'}<div class="section-heading studio-section-heading"><p class="subtle">{entities.length} {entities.length===1?section.singular:section.label.toLowerCase()}{dirty?' · Unsaved changes':''}</p>{#if kind!=='captions'}<Button disabled={loading||saving||(kind==='shots'&&!sceneId)} onclick={()=>edit(null)}><Plus size={15}/>New {section.singular}</Button>{/if}</div>{/if}
         {#if loading}<div class="cloud-loading studio-loading" role="status"><LoaderCircle size={20} class="animate-spin"/>Loading {section.label.toLowerCase()}…</div>{/if}
@@ -265,7 +266,7 @@
 <Dialog.Root bind:open={switchOpen}><Dialog.Content><Dialog.Header><Dialog.Title>Leave unsaved changes?</Dialog.Title><Dialog.Description>Your edits have not been saved. Save them first, or discard them to switch your workspace view.</Dialog.Description></Dialog.Header><Dialog.Footer><Button variant="outline" onclick={()=>{switchOpen=false;pendingSwitch=null;}}>Keep editing</Button><Button variant="destructive" onclick={discardAndSwitch}>Discard changes</Button></Dialog.Footer></Dialog.Content></Dialog.Root>
 
 <style>
-.workspace-back{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted-foreground);margin-bottom:20px}.workspace-header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:22px}.workspace-header h1{font-size:24px;font-weight:600;letter-spacing:-.025em}.workspace-header p{font-size:13px;line-height:1.7;color:var(--muted-foreground);margin-top:8px}.workspace-controls{display:flex;align-items:center;gap:8px;min-width:0}.workspace-controls select{min-width:150px;max-width:240px}.editor-heading{display:flex;justify-content:space-between;align-items:center;gap:14px}.studio-workspace{max-width:1280px;margin:0 auto}.studio-section-heading{min-height:40px}.studio-tabs :global([data-slot=tabs-trigger][data-state=active]){color:var(--accent-foreground)}@media(max-width:650px){.workspace-header{align-items:start;flex-direction:column;gap:16px}.workspace-controls{width:100%}.workspace-controls select{max-width:none;flex:1}.workspace-controls :global(button){min-width:44px;min-height:44px}}
+.workspace-header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:22px}.workspace-header h1{font-size:24px;font-weight:600;letter-spacing:-.025em}.workspace-header p{font-size:13px;line-height:1.7;color:var(--muted-foreground);margin-top:8px}.workspace-controls{display:flex;align-items:center;gap:8px;min-width:0}.editor-heading{display:flex;justify-content:space-between;align-items:center;gap:14px}.studio-workspace{max-width:1280px;margin:0 auto}.studio-section-heading{min-height:40px}.studio-tabs :global([data-slot=tabs-trigger][data-state=active]){color:var(--accent-foreground)}@media(max-width:650px){.workspace-header{align-items:start;flex-direction:column;gap:16px}.workspace-controls{width:100%}.workspace-controls :global(button){min-width:44px;min-height:44px}}
 
   .studio-file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.studio-upload{padding:20px 0 0}.studio-upload p{max-width:330px}
 

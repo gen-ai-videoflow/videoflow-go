@@ -67,3 +67,17 @@ func (panicImageReader) Read([]byte) (int, error) {
 	panic("overloaded upload must not decode or buffer input")
 }
 func (panicImageReader) Close() error { return nil }
+
+func TestBannerPresetWhitelist(t *testing.T) {
+	server := &Server{}
+	for _, preset := range []string{"/banners/coastal-dawn.webp", "/banners/paper-studio.webp", "/banners/forest-light.webp", "/banners/after-hours.webp"} {
+		if !server.validateProfilePatch(profilePatch{Banner: &preset}) {
+			t.Fatalf("rejected preset %s", preset)
+		}
+	}
+	for _, bad := range []string{"/banners/../private/file.webp", "/banners/other.webp", "//attacker.example/image.webp", "/banners/coastal-dawn.webp?url=evil"} {
+		if server.validateProfilePatch(profilePatch{Banner: &bad}) {
+			t.Fatalf("accepted unlisted path %s", bad)
+		}
+	}
+}

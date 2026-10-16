@@ -75,3 +75,7 @@ Slow requests must not overlap polls. Redis loss must not disable security gates
 - Task6 implemented direct export/upload handoff and settings sidebar cleanup; existing all-package viewing/publication tests pass. Complete live media journeys/load tests and exhaustive UI coverage remain open.
 - Task7 implemented OpenRouter-only inference policy (local Whisper removed), supported-task inventory and cheapest approved story selection; unsupported image/speech/caption cloud tasks are clearly disabled. No live provider verification or AWS rollout claimed.
 - Independent review: gateway stalled-body permit leak reproduced, regression wentred, fixed so body cancellation/deadline releasespermit; no other critical findings in targeted review. Evidence summarized in docs/ops/REQUEST-CAPACITY.md and docs/ux/2026-10-16-platform-delivery-audit.md.
+
+### Unified workspace follow-up
+
+Added shared project navigation across Story, Canvas and Edit, and consolidated supporting project resources. Storyboard now uses theme tokens, one empty state, a graph beside the selected scene inspector, and generation disclosure. Removed redundant scene lists and empty generation activity. Profile customization uses direct image controls, generated banner presets and social-link dialogs. See `docs/ux/2026-10-16-unified-project-workflow.md` for the journey and verification evidence.

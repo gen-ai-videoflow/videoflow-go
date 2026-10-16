@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ProjectNavigation from "./ProjectNavigation.svelte";
   import { page } from "$app/state";
   import { selectStudioProject } from "./navigation";
   import { onMount } from "svelte";
@@ -187,45 +188,11 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-background text-foreground">
-  <header
-    class="flex min-h-12 flex-wrap items-center gap-3 border-b border-border px-4 py-2"
-  >
-    <label for="canvas-project" class="text-sm font-medium">Project</label>
-    <select
-      id="canvas-project"
-      class="h-8 max-w-64 rounded-md border border-input bg-background px-2 text-sm"
-      value={project}
-      onchange={(e) => select(e.currentTarget.value)}
-      disabled={!projects.length}
-      ><option value="" disabled>Select a project</option
-      >{#each projects as p}<option value={p.id}>{p.name}</option
-        >{/each}</select
-    >
-    <Button
-      size="sm"
-      variant="ghost"
-      onclick={() => refresh().catch((e) => (error = e.message))}
-      disabled={!project}
-      ><RefreshCw class="size-4" /><span class="sr-only">Refresh canvas</span
-      ></Button
-    >
-    <Button
-      size="sm"
-      variant="ghost"
-      onclick={() => (showAssistant = !showAssistant)}
-      aria-pressed={!showAssistant}
-      >{showAssistant ? "Focus canvas" : "Show story panel"}</Button
-    >
-    <a
-      href={`/studio/editor?project=${encodeURIComponent(project)}`}
-      class="ml-auto text-sm text-muted-foreground underline underline-offset-4"
-      >Open editor</a
-    ><a
-      href="/studio/dashboard"
-      class=" text-sm text-muted-foreground underline underline-offset-4"
-      >Studio overview</a
-    >
-  </header>
+  <ProjectNavigation {projects} {project} view="canvas" onselect={select}/>
+  <div class="flex items-center justify-end gap-2 border-b border-border px-4 py-1">
+    <Button size="sm" variant="ghost" onclick={() => refresh().catch((e) => (error = e.message))} disabled={!project}><RefreshCw class="size-4"/><span class="sr-only">Refresh canvas</span></Button>
+    <Button size="sm" variant="ghost" onclick={() => (showAssistant = !showAssistant)} aria-pressed={showAssistant}>{showAssistant ? "Hide generation panel" : "Generate video"}</Button>
+  </div>
   {#if error}<div
       role="alert"
       class="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"

@@ -76,7 +76,7 @@ func (s *Server) adminAccess(next http.Handler) http.Handler {
 			s.json(w, 403, map[string]string{"message": "Sign in again with your passkey or authenticator to verify this administrator session. Changes require verification within 15 minutes."})
 			return
 		}
-		allowed := r.Method == http.MethodGet || role == "owner" || (role == "moderator" && (strings.HasSuffix(r.URL.Path, "/block") || strings.HasSuffix(r.URL.Path, "/restore") || strings.HasSuffix(r.URL.Path, "/resolve")))
+		allowed := adminAllowed(role, r.Method, r.URL.Path)
 		if !allowed {
 			s.json(w, 403, map[string]string{"message": "Your administrator role cannot perform this action."})
 			return
@@ -93,7 +93,7 @@ func (s *Server) adminConsoleRoutes(r chi.Router) {
 		r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
 			var role string
 			err := s.Store.DB.QueryRowContext(r.Context(), `SELECT role FROM cloud_admin_roles WHERE user_id=$1`, currentUser(r).ID).Scan(&role)
-			s.result(w, map[string]any{"user": currentUser(r), "role": role}, err)
+			s.result(w, map[string]any{"user": currentUser(r), "role": role, "sections": adminSections(role), "readable_kinds": adminReadableKinds(role), "export_kinds": adminExportKinds(role)}, err)
 		})
 		r.Get("/settings", s.adminSettings)
 		r.Get("/readiness", s.adminReadiness)
@@ -105,6 +105,11 @@ func (s *Server) adminConsoleRoutes(r chi.Router) {
 		r.Post("/videos/{id}/restore", s.adminRestoreVideo)
 		r.Put("/settings/{key}", s.adminUpdateSetting)
 		r.Get("/records/{kind}", s.adminRecords)
+		r.Get("/runtime-policy", s.adminRuntimePolicy)
+		r.Get("/runtime-policy/versions", s.adminRuntimePolicyVersions)
+		r.Put("/runtime-policy", s.adminUpdateRuntimePolicy)
+		r.Post("/runtime-policy/refresh-catalogues", s.adminRefreshRuntimeCatalogues)
+		r.Post("/export/{kind}", s.adminExport)
 		r.Post("/videos/{id}/block", func(w http.ResponseWriter, r *http.Request) {
 			var b struct {
 				Reason string `json:"reason"`
@@ -191,6 +196,9 @@ var adminRecordQueries = map[string]string{
 }
 
 func (s *Server) adminRecords(w http.ResponseWriter, r *http.Request) {
+	if s.adminPagedRecords(w, r, "") {
+		return
+	}
 	kind := chi.URLParam(r, "kind")
 	query, ok := adminRecordQueries[kind]
 	if !ok {

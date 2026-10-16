@@ -20,6 +20,11 @@ import (
 )
 
 func (w *Worker) runPipeline(ctx context.Context, id string) error {
+	cfg, configErr := w.store.EffectiveConfig(ctx, w.cfg)
+	if configErr != nil {
+		return configErr
+	}
+
 	var attempt int
 	var workspace, quote string
 	err := w.store.DB.QueryRowContext(ctx, `UPDATE cloud_jobs SET status='running',attempt=attempt+1,lease_until=now()+interval '10 minutes',updated_at=now() WHERE id=$1 AND status IN ('queued','running') AND (lease_until IS NULL OR lease_until<now())RETURNING attempt,workspace_id,quote_id`, id).Scan(&attempt, &workspace, &quote)
@@ -42,13 +47,13 @@ func (w *Worker) runPipeline(ctx context.Context, id string) error {
 	}
 	if kind == "storyboard" {
 		if stage == "queued" {
-			if w.cfg.OpenRouterKey == "" || !approvedStoryModel(w.cfg.StoryModel, storyModel) || storyCost < 1 || storyCost > w.cfg.StoryMaxCostMicros {
+			if cfg.OpenRouterKey == "" || !approvedStoryModel(cfg.StoryModel, storyModel) || storyCost < 1 || storyCost > cfg.StoryMaxCostMicros {
 				return fail("Story generation policy is unavailable")
 			}
-			if maxCost > w.cfg.ProviderMaxCostMicros {
+			if maxCost > cfg.ProviderMaxCostMicros {
 				return w.pipelineBudgetWait(ctx, id, attempt)
 			}
-			if err = w.store.TryProviderBudget(ctx, id, maxCost, w.cfg.ProviderDailyBudgetMicros); err != nil {
+			if err = w.store.TryProviderBudget(ctx, id, maxCost, cfg.ProviderDailyBudgetMicros); err != nil {
 				if errors.Is(err, ErrProviderBudget) {
 					return w.pipelineBudgetWait(ctx, id, attempt)
 				}
@@ -192,7 +197,7 @@ func (w *Worker) runPipeline(ctx context.Context, id string) error {
 				return e
 			}
 			key := fmt.Sprintf("workspaces/%s/jobs/%s/clips/%d.mp4", workspace, id, position)
-			if _, e = w.media.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(w.cfg.OriginalsBucket), Key: aws.String(key), Body: bytes.NewReader(data), ContentType: aws.String("video/mp4")}); e != nil {
+			if _, e = w.media.s3.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(cfg.OriginalsBucket), Key: aws.String(key), Body: bytes.NewReader(data), ContentType: aws.String("video/mp4")}); e != nil {
 				return e
 			}
 			tx, e := w.store.DB.BeginTx(ctx, nil)
@@ -270,6 +275,11 @@ func pipelineFence(ctx context.Context, tx *sql.Tx, id string, attempt int) erro
 	return nil
 }
 func (w *Worker) pipelineSubmission(ctx context.Context, id string, attempt int, quote string, position int) error {
+	cfg, configErr := w.store.EffectiveConfig(ctx, w.cfg)
+	if configErr != nil {
+		return configErr
+	}
+
 	tx, err := w.store.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -278,7 +288,7 @@ func (w *Worker) pipelineSubmission(ctx context.Context, id string, attempt int,
 	if err = pipelineFence(ctx, tx, id, attempt); err != nil {
 		return err
 	}
-	if err = admitPipelineDayTx(ctx, tx, id, w.cfg.ProviderDailyBudgetMicros, w.cfg.ProviderMaxCostMicros); err != nil {
+	if err = admitPipelineDayTx(ctx, tx, id, cfg.ProviderDailyBudgetMicros, cfg.ProviderMaxCostMicros); err != nil {
 		return err
 	}
 	var changed sql.Result
@@ -542,6 +552,11 @@ func admitPipelineDayTx(ctx context.Context, tx *sql.Tx, id string, dailyLimit, 
 // Ordinary single-clip jobs use the same lease fence and current-day admission
 // immediately before recording a provider submission intent.
 func (w *Worker) claimVideoSubmission(ctx context.Context, id string, attempt int) error {
+	cfg, configErr := w.store.EffectiveConfig(ctx, w.cfg)
+	if configErr != nil {
+		return configErr
+	}
+
 	tx, err := w.store.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -550,7 +565,7 @@ func (w *Worker) claimVideoSubmission(ctx context.Context, id string, attempt in
 	if err = pipelineFence(ctx, tx, id, attempt); err != nil {
 		return err
 	}
-	if err = admitPipelineDayTx(ctx, tx, id, w.cfg.ProviderDailyBudgetMicros, w.cfg.ProviderMaxCostMicros); err != nil {
+	if err = admitPipelineDayTx(ctx, tx, id, cfg.ProviderDailyBudgetMicros, cfg.ProviderMaxCostMicros); err != nil {
 		return err
 	}
 	result, err := tx.ExecContext(ctx, `UPDATE cloud_jobs SET status='submitting',error='',lease_until=now()+interval '10 minutes',updated_at=now() WHERE id=$1 AND attempt=$2 AND status='running' AND lease_until>now()`, id, attempt)

@@ -1,0 +1,2 @@
+CREATE TABLE cloud_runtime_policy_versions(revision bigint PRIMARY KEY CHECK(revision>0),policy jsonb NOT NULL,updated_by text NOT NULL REFERENCES cloud_users(id),reason text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+INSERT INTO cloud_runtime_policy_versions(revision,policy,updated_by,reason,created_at)SELECT revision,policy,updated_by,'Initial snapshot before immutable policy history',updated_at FROM cloud_runtime_policy;

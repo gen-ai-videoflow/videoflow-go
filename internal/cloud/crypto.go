@@ -106,7 +106,12 @@ func scanCrypto(row interface{ Scan(...any) error }) (v CryptoInvoice, e error) 
 }
 func (s *Server) cryptoRoutes(r chi.Router) {
 	r.Get("/payments/options", func(w http.ResponseWriter, r *http.Request) {
-		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled() || s.stripeEnabled(), "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": Packs, "premium_price_cents": s.Config.PremiumPriceCents, "premium_days": 30})
+		cfg, err := s.effectiveConfig(r.Context())
+		if err != nil {
+			s.fail(w, err)
+			return
+		}
+		s.json(w, 200, map[string]any{"enabled": s.cryptoEnabled() || s.stripeEnabled(), "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "network": s.Config.CryptoRailsNetwork, "token": s.Config.CryptoRailsToken, "token_address": s.Config.CryptoRailsTokenAddress, "credit_packs": Packs, "premium_price_cents": cfg.PremiumPriceCents, "premium_days": 30})
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireUser, s.mutationLimits)
@@ -193,6 +198,10 @@ func (s *Server) cryptoCreate(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, key string) (CryptoInvoice, error) {
 	var empty CryptoInvoice
+	cfg, configErr := s.effectiveConfig(ctx)
+	if configErr != nil {
+		return empty, configErr
+	}
 	if !s.cryptoEnabled() {
 		return empty, ErrUnavailable
 	}
@@ -211,10 +220,10 @@ func (s *Server) newCryptoInvoice(ctx context.Context, u User, purpose, pack, ke
 		}
 		credits, price = p.Credits, p.PriceCents
 	case "premium":
-		if pack != "" || s.Config.PremiumPriceCents < 100 || s.Config.PremiumPriceCents > 100000 {
+		if pack != "" || cfg.PremiumPriceCents < 100 || cfg.PremiumPriceCents > 100000 {
 			return empty, ErrValidation
 		}
-		price = s.Config.PremiumPriceCents
+		price = cfg.PremiumPriceCents
 	default:
 		return empty, ErrValidation
 	}

@@ -31,6 +31,11 @@ func (s *Server) premiumRoutes(r chi.Router) {
 	r.Post("/premium/manage", s.auth(s.premiumManage))
 }
 func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
+	cfg, configErr := s.effectiveConfig(r.Context())
+	if configErr != nil {
+		s.fail(w, configErr)
+		return
+	}
 	u := s.optionalUser(r)
 	active, e := s.Store.HasPremium(r.Context(), u.ID)
 	if e != nil {
@@ -80,10 +85,15 @@ func (s *Server) premiumStatus(w http.ResponseWriter, r *http.Request) {
 			status = "pending"
 		}
 	}
-	s.json(w, 200, map[string]any{"enabled": s.premiumEnabled(), "price_cents": s.Config.PremiumPriceCents, "currency": "usd", "interval": "30_days", "auto_renew": false, "active": active, "paid_through": end, "status": status, "can_manage": canManage, "stripe_active": legacyActive, "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "payment_terms": map[string]any{"stripe": map[string]any{"interval": "month", "auto_renew": true}, "cryptorails": map[string]any{"interval": "30_days", "auto_renew": false}}})
+	s.json(w, 200, map[string]any{"enabled": (s.cryptoEnabled() || s.stripeEnabled()) && cfg.PremiumPriceCents >= 100 && cfg.PremiumPriceCents <= 100000, "price_cents": cfg.PremiumPriceCents, "currency": "usd", "interval": "30_days", "auto_renew": false, "active": active, "paid_through": end, "status": status, "can_manage": canManage, "stripe_active": legacyActive, "stripe_enabled": s.stripeEnabled(), "cryptorails_enabled": s.cryptoEnabled(), "payment_terms": map[string]any{"stripe": map[string]any{"interval": "month", "auto_renew": true}, "cryptorails": map[string]any{"interval": "30_days", "auto_renew": false}}})
 }
 func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
-	if !s.premiumEnabled() {
+	cfg, configErr := s.effectiveConfig(r.Context())
+	if configErr != nil {
+		s.fail(w, configErr)
+		return
+	}
+	if !(s.cryptoEnabled() || s.stripeEnabled()) || cfg.PremiumPriceCents < 100 || cfg.PremiumPriceCents > 100000 {
 		s.fail(w, ErrUnavailable)
 		return
 	}
@@ -120,6 +130,10 @@ func (s *Server) premiumCheckout(w http.ResponseWriter, r *http.Request) {
 	s.result(w, result, e)
 }
 func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (string, error) {
+	cfg, configErr := s.effectiveConfig(ctx)
+	if configErr != nil {
+		return "", configErr
+	}
 	tx, e := s.Store.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return "", e
@@ -148,7 +162,7 @@ func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (
 	if pending {
 		return "", ErrConflict
 	}
-	_, e = tx.ExecContext(ctx, `INSERT INTO cloud_premium_checkouts(id,user_id,price_cents,idempotency_key)VALUES($1,$2,$3,$4)ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, s.Config.PremiumPriceCents, key)
+	_, e = tx.ExecContext(ctx, `INSERT INTO cloud_premium_checkouts(id,user_id,price_cents,idempotency_key)VALUES($1,$2,$3,$4)ON CONFLICT(user_id,idempotency_key)DO NOTHING`, id, u.ID, cfg.PremiumPriceCents, key)
 	if e != nil {
 		return "", e
 	}
@@ -158,9 +172,6 @@ func (s *Server) startPremiumCheckout(ctx context.Context, u User, key string) (
 	e = tx.QueryRowContext(ctx, `SELECT id,price_cents,created_at,coalesce(provider_session,''),checkout_url FROM cloud_premium_checkouts WHERE user_id=$1 AND idempotency_key=$2`, u.ID, key).Scan(&id, &price, &created, &session, &checkoutURL)
 	if e != nil {
 		return "", e
-	}
-	if price != s.Config.PremiumPriceCents {
-		return "", ErrConflict
 	}
 	if e = tx.Commit(); e != nil {
 		return "", e

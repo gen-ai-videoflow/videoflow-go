@@ -150,6 +150,14 @@ func (s *Server) profileImage(w http.ResponseWriter, r *http.Request) {
 
 // Only application-generated local images may use HTTP in development. Other links stay HTTPS-only.
 func (s *Server) validateProfilePatch(p profilePatch) bool {
+	if p.Banner != nil {
+		switch *p.Banner {
+		case "/banners/coastal-dawn.webp", "/banners/paper-studio.webp", "/banners/forest-light.webp", "/banners/after-hours.webp":
+			safe := "https://validated-banner-preset.invalid/image.webp"
+			p.Banner = &safe
+		}
+	}
+
 	for _, field := range []**string{&p.Avatar, &p.Banner} {
 		if *field == nil || validProfileURL(**field, true) {
 			continue

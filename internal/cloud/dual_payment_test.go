@@ -44,7 +44,7 @@ func TestPremiumConcurrentGatewaysCreateOnlyOnePurchase(t *testing.T) {
 		if r.Method == "GET" {
 			return cryptoPolicyResponse(), nil
 		}
-		body := `{"id":"cs_concurrent","url":"https://checkout.stripe.com/c/pay/concurrent"}`
+		body := `{"id":"cs_concurrent_` + u.ID + `","url":"https://checkout.stripe.com/c/pay/concurrent"}`
 		if strings.HasSuffix(r.URL.Path, "/api/create-address") {
 			var request map[string]string
 			json.NewDecoder(r.Body).Decode(&request)

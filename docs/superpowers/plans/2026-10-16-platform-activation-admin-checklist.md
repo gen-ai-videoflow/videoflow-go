@@ -274,3 +274,9 @@ Evidence: fresh-database cloud race suite passed; all Go packages passed; target
 External activation gates: real Google/Apple configuration and browser consent, delivered email/physical passkeys, actual OpenRouter capability/pricing smoke tests under a spend cap, Stripe/CryptoRails tenant sandbox/live reconciliation, deployed media encoding/delivery and production load measurements. AWS remains deferred.
 
 Further implementation: complete lifetime/paginated admin search/export and granular operator roles, runtime versioned model/pricing editing, full net revenue/provider-cost/payout reconciliation UI, deeper privacy-preserving viewing/retention/fraud analytics and recommendation controls, additional supported OpenRouter image/speech/caption adapters, durable email outbox, scheduled profile-image cleanup, exhaustive screen/dialog/accessibility audit and declared deployment capacity sign-off. These are not represented as complete by green CI. New media handoff requires configured video uploads; unsupported AI tasks remain explicitly unavailable.
+
+### Versioned runtime controls — 2026-10-16
+
+- Owner-only versioned/audited runtime policy and admin settings UI now control approved model allowlists, generation credit prices, provider spending ceilings, new Premium price and active-generation quota. The API/worker consume effective snapshots; secrets/activation/infrastructure remain deployment managed.
+- Fresh catalogue eligibility, bounded numeric inputs and a fixed-pack minimum provider-cost buffer reject unsafe writes. Revision conflicts fail rather than overwrite concurrent edits. Catalogue refresh submits no inference.
+- Tests verify unchanged stored quote credits and Premium access, new quote prices, same-key quota recovery, stale revisions/audit, unknown models and frozen pending checkout prices. See `docs/RUNTIME-POLICY.md`.

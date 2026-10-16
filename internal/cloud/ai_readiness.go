@@ -71,5 +71,10 @@ func aiReadiness(cfg Config) AIReadiness {
 	return value
 }
 func (s *Server) adminAIReadiness(w http.ResponseWriter, r *http.Request) {
-	s.json(w, http.StatusOK, aiReadiness(s.Config))
+	cfg, err := s.effectiveConfig(r.Context())
+	if err != nil {
+		s.fail(w, err)
+		return
+	}
+	s.json(w, http.StatusOK, aiReadiness(cfg))
 }

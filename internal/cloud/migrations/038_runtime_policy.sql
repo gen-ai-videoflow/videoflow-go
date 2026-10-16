@@ -1,0 +1,1 @@
+CREATE TABLE cloud_runtime_policy(id boolean PRIMARY KEY DEFAULT true CHECK(id),policy jsonb NOT NULL,revision bigint NOT NULL CHECK(revision>0),updated_by text NOT NULL REFERENCES cloud_users(id),updated_at timestamptz NOT NULL DEFAULT now());

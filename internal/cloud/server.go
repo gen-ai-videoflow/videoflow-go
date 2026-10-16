@@ -194,6 +194,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/channel", s.channel)
 			r.Patch("/channel", s.updateChannel)
 			r.Get("/creator/analytics", s.analytics)
+			r.Get("/creator/analytics/detail", s.creatorAnalyticsDetail)
 			r.Get("/creator/earnings", s.creatorEarnings)
 			r.Post("/memberships/checkout", s.membershipCheckout)
 			r.Get("/memberships", s.memberships)
@@ -533,11 +534,16 @@ func (s *Server) resetPassword(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"ok": true}, e)
 }
 func (s *Server) quote(w http.ResponseWriter, r *http.Request) {
+	cfg, configErr := s.effectiveConfig(r.Context())
+	if configErr != nil {
+		s.fail(w, configErr)
+		return
+	}
 	u := currentUser(r)
 	if !s.rate(w, r, "quote:"+u.ID, 20, time.Minute, true) {
 		return
 	}
-	if s.Config.VideoModel == "" || s.Config.OpenRouterKey == "" || s.Config.QueueURL == "" {
+	if cfg.VideoModel == "" || cfg.OpenRouterKey == "" || cfg.QueueURL == "" {
 		s.fail(w, ErrUnavailable)
 		return
 	}
@@ -545,12 +551,12 @@ func (s *Server) quote(w http.ResponseWriter, r *http.Request) {
 	if !s.decode(w, r, &b) {
 		return
 	}
-	if s.Config.ProviderMaxCostMicros <= 0 || s.Config.ProviderDailyBudgetMicros <= 0 {
+	if cfg.ProviderMaxCostMicros <= 0 || cfg.ProviderDailyBudgetMicros <= 0 {
 		s.fail(w, ErrUnavailable)
 		return
 	}
-	for _, model := range strings.Split(s.Config.VideoModel, ",") {
-		if e := s.Store.ConfigureVideoPolicy(r.Context(), strings.TrimSpace(model), s.Config.CreditsPerSecond, s.Config.ProviderMaxCostMicros); e != nil {
+	for _, model := range strings.Split(cfg.VideoModel, ",") {
+		if e := s.Store.ConfigureVideoPolicy(r.Context(), strings.TrimSpace(model), cfg.CreditsPerSecond, cfg.ProviderMaxCostMicros); e != nil {
 			s.fail(w, ErrUnavailable)
 			return
 		}
@@ -559,7 +565,7 @@ func (s *Server) quote(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, ErrUnavailable)
 		return
 	}
-	policy, e := s.Store.ActiveVideoPolicy(r.Context(), b.Duration, b.AspectRatio, strings.Split(s.Config.VideoModel, ",")...)
+	policy, e := s.Store.ActiveVideoPolicy(r.Context(), b.Duration, b.AspectRatio, strings.Split(cfg.VideoModel, ",")...)
 	if e != nil {
 		s.fail(w, fmt.Errorf("%w: this duration or aspect ratio is currently unavailable", ErrValidation))
 		return
@@ -598,7 +604,7 @@ func (s *Server) cancelJob(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"ok": true}, s.Store.FinishJob(r.Context(), j.ID, "cancelled", "", "Cancelled before generation"))
 }
 func (s *Server) feed(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("format") != "" || r.URL.Query().Get("cursor") != "" {
+	if r.URL.Query().Get("rank") != "" || r.URL.Query().Get("format") != "" || r.URL.Query().Get("cursor") != "" {
 		s.viewingFeed(w, r)
 		return
 	}

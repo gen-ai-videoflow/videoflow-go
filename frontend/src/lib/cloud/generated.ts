@@ -149,6 +149,9 @@ export interface StudioEntity {
   updated_at: string;
 }
 
+export interface RuntimePolicy { story_models: string[]; video_models: string[]; credits_per_second: number; story_credits: number; assembly_credits: number; provider_daily_budget_micros: number; provider_max_cost_micros: number; story_max_cost_micros: number; premium_price_cents: number; max_active_jobs: number; }
+export interface RuntimePolicyRecord { policy: RuntimePolicy; revision: number; updated_at: string | null; source: string; }
+
 export interface AuthProviders { providers: string[]; linked: string[]; }
 export interface OAuthStart { url: string; }
 

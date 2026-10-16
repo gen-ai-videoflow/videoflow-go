@@ -3,6 +3,7 @@ package cloud
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -194,6 +195,26 @@ func (s *Store) SubmitJob(ctx context.Context, u User, quoteID, key string) (Job
 	}
 	if !errors.Is(e, sql.ErrNoRows) {
 		return Job{}, e
+	}
+	maxActive := 10
+	var runtimeRaw []byte
+	policyErr := tx.QueryRowContext(ctx, `SELECT policy FROM cloud_runtime_policy WHERE id=true`).Scan(&runtimeRaw)
+	if policyErr != nil && policyErr != sql.ErrNoRows {
+		return Job{}, policyErr
+	}
+	if policyErr == nil {
+		var policy RuntimePolicy
+		if json.Unmarshal(runtimeRaw, &policy) != nil {
+			return Job{}, ErrValidation
+		}
+		maxActive = policy.MaxActiveJobs
+	}
+	var active int
+	if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM cloud_jobs WHERE workspace_id=$1 AND status IN ('queued','running','submitting','encoding')`, u.WorkspaceID).Scan(&active); err != nil {
+		return Job{}, err
+	}
+	if active >= maxActive {
+		return Job{}, fmt.Errorf("%w: finish or cancel an active generation before starting another", ErrConflict)
 	}
 	var credits int64
 	var consumed bool

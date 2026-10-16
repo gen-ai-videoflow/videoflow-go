@@ -67,8 +67,12 @@ func (s *Server) adminRestrictUser(w http.ResponseWriter, r *http.Request) {
 	s.result(w, map[string]bool{"suspended": b.Suspended}, err)
 }
 func (s *Server) adminReadiness(w http.ResponseWriter, r *http.Request) {
-	c := s.Config
-	s.json(w, 200, map[string]any{"configuration_source": "deployment environment; read only", "provider": "OpenRouter", "openrouter_key_configured": c.OpenRouterKey != "", "story_model": c.StoryModel, "video_model": c.VideoModel, "story_credits": c.StoryCredits, "assembly_credits": c.AssemblyCredits, "credits_per_second": c.CreditsPerSecond, "story_max_cost_micros": c.StoryMaxCostMicros, "provider_daily_budget_micros": c.ProviderDailyBudgetMicros, "provider_max_cost_micros": c.ProviderMaxCostMicros, "stripe_enabled": c.BillingEnabled, "stripe_credentials_configured": c.StripeSecret != "" && c.StripeWebhookSecret != "", "cryptorails_enabled": c.CryptoRailsEnabled, "cryptorails_credentials_configured": c.CryptoRailsAPIKey != "" && c.CryptoRailsWebhookSecret != "", "premium_price_cents": c.PremiumPriceCents, "reward_bps": c.RewardBPS, "reward_monthly_cap_cents": c.RewardMonthlyCapCents, "cash_payouts_enabled": c.CashPayoutsEnabled, "redis_configured": s.Redis != nil, "max_concurrent_requests": c.MaxConcurrentRequests, "note": "Configured credentials do not prove provider connectivity. No live provider call is made by this page."})
+	c, err := s.effectiveConfig(r.Context())
+	if err != nil {
+		s.fail(w, err)
+		return
+	}
+	s.json(w, 200, map[string]any{"configuration_source": "effective runtime policy; provider secrets and activation remain deployment managed", "provider": "OpenRouter", "openrouter_key_configured": c.OpenRouterKey != "", "story_model": c.StoryModel, "video_model": c.VideoModel, "story_credits": c.StoryCredits, "assembly_credits": c.AssemblyCredits, "credits_per_second": c.CreditsPerSecond, "story_max_cost_micros": c.StoryMaxCostMicros, "provider_daily_budget_micros": c.ProviderDailyBudgetMicros, "provider_max_cost_micros": c.ProviderMaxCostMicros, "stripe_enabled": c.BillingEnabled, "stripe_credentials_configured": c.StripeSecret != "" && c.StripeWebhookSecret != "", "cryptorails_enabled": c.CryptoRailsEnabled, "cryptorails_credentials_configured": c.CryptoRailsAPIKey != "" && c.CryptoRailsWebhookSecret != "", "premium_price_cents": c.PremiumPriceCents, "reward_bps": c.RewardBPS, "reward_monthly_cap_cents": c.RewardMonthlyCapCents, "cash_payouts_enabled": c.CashPayoutsEnabled, "redis_configured": s.Redis != nil, "max_concurrent_requests": c.MaxConcurrentRequests, "note": "Configured credentials do not prove provider connectivity. No live provider call is made by this page."})
 }
 
 func (s *Server) adminResolveReport(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +143,9 @@ func (s *Server) adminRestoreVideo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) adminUserRecords(w http.ResponseWriter, r *http.Request) {
+	if s.adminPagedRecords(w, r, chi.URLParam(r, "id")) {
+		return
+	}
 	id, kind := chi.URLParam(r, "id"), chi.URLParam(r, "kind")
 	queries := map[string]string{
 		"content":  `SELECT v.id,v.title,v.visibility,v.audience,v.status,v.views,v.watch_seconds,v.created_at FROM cloud_videos v JOIN cloud_channels c ON c.id=v.channel_id WHERE c.user_id=$1 ORDER BY v.created_at DESC,v.id LIMIT 100`,

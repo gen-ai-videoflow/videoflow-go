@@ -99,6 +99,13 @@ func cheapestStoryModel(models []StoryCatalogModel, approved, idea string, budge
 	return best, nil
 }
 func (s *Server) selectStoryModel(ctx context.Context, idea string) (string, error) {
+	cfg, err := s.effectiveConfig(ctx)
+	if err != nil {
+		return "", err
+	}
+	return s.selectStoryModelWithConfig(ctx, idea, cfg)
+}
+func (s *Server) selectStoryModelWithConfig(ctx context.Context, idea string, cfg Config) (string, error) {
 	ctx, stop := context.WithTimeout(ctx, 25*time.Second)
 	defer stop()
 	tx, err := s.Store.DB.BeginTx(ctx, nil)
@@ -120,7 +127,7 @@ func (s *Server) selectStoryModel(ctx context.Context, idea string) (string, err
 		if e != nil {
 			return "", e
 		}
-		req.Header.Set("Authorization", "Bearer "+s.Config.OpenRouterKey)
+		req.Header.Set("Authorization", "Bearer "+cfg.OpenRouterKey)
 		client := *s.HTTP
 		client.CheckRedirect = func(*http.Request, []*http.Request) error { return ErrValidation }
 		res, e := client.Do(req)
@@ -154,9 +161,8 @@ func (s *Server) selectStoryModel(ctx context.Context, idea string) (string, err
 	if json.Unmarshal(raw, &models) != nil {
 		return "", ErrUnavailable
 	}
-	selected, err := cheapestStoryModel(models, s.Config.StoryModel, idea, s.Config.StoryMaxCostMicros)
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return "", err
 	}
-	return selected, tx.Commit()
+	return cheapestStoryModel(models, cfg.StoryModel, idea, cfg.StoryMaxCostMicros)
 }

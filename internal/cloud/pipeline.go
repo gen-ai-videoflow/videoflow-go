@@ -209,6 +209,11 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 		s.result(w, jobs, rows.Err())
 	})
 	r.Post("/projects/{project}/assembly/quotes", func(w http.ResponseWriter, r *http.Request) {
+		cfg, configErr := s.effectiveConfig(r.Context())
+		if configErr != nil {
+			s.fail(w, configErr)
+			return
+		}
 		if !currentUser(r).Verified {
 			s.fail(w, ErrUnauthorized)
 			return
@@ -216,7 +221,7 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 		if !s.rate(w, r, "pipeline:"+currentUser(r).ID, 10, time.Minute, true) {
 			return
 		}
-		if s.Config.AssemblyCredits < 1 || s.Config.QueueURL == "" || s.Config.OriginalsBucket == "" {
+		if cfg.AssemblyCredits < 1 || cfg.QueueURL == "" || cfg.OriginalsBucket == "" {
 			s.fail(w, ErrUnavailable)
 			return
 		}
@@ -226,10 +231,15 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 		if !s.decode(w, r, &b) {
 			return
 		}
-		v, e := s.Store.CreateAssemblyQuote(r.Context(), currentUser(r), chi.URLParam(r, "project"), b.JobIDs, s.Config.AssemblyCredits)
+		v, e := s.Store.CreateAssemblyQuote(r.Context(), currentUser(r), chi.URLParam(r, "project"), b.JobIDs, cfg.AssemblyCredits)
 		s.result(w, v, e)
 	})
 	r.Post("/projects/{project}/pipelines/quotes", func(w http.ResponseWriter, r *http.Request) {
+		cfg, configErr := s.effectiveConfig(r.Context())
+		if configErr != nil {
+			s.fail(w, configErr)
+			return
+		}
 		u := currentUser(r)
 		if !u.Verified {
 			s.fail(w, ErrUnauthorized)
@@ -238,7 +248,7 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 		if !s.rate(w, r, "pipeline:"+u.ID, 10, time.Minute, true) {
 			return
 		}
-		if s.Config.StoryModel == "" || s.Config.StoryCredits < 1 || s.Config.StoryMaxCostMicros < 1 || s.Config.OpenRouterKey == "" || s.Config.ProviderDailyBudgetMicros < 1 || s.Config.QueueURL == "" || s.Config.OriginalsBucket == "" {
+		if cfg.StoryModel == "" || cfg.StoryCredits < 1 || cfg.StoryMaxCostMicros < 1 || cfg.OpenRouterKey == "" || cfg.ProviderDailyBudgetMicros < 1 || cfg.QueueURL == "" || cfg.OriginalsBucket == "" {
 			s.fail(w, ErrUnavailable)
 			return
 		}
@@ -246,8 +256,8 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 		if !s.decode(w, r, &in) {
 			return
 		}
-		for _, model := range strings.Split(s.Config.VideoModel, ",") {
-			if err := s.Store.ConfigureVideoPolicy(r.Context(), strings.TrimSpace(model), s.Config.CreditsPerSecond, s.Config.ProviderMaxCostMicros); err != nil {
+		for _, model := range strings.Split(cfg.VideoModel, ",") {
+			if err := s.Store.ConfigureVideoPolicy(r.Context(), strings.TrimSpace(model), cfg.CreditsPerSecond, cfg.ProviderMaxCostMicros); err != nil {
 				s.fail(w, err)
 				return
 			}
@@ -256,17 +266,17 @@ func (s *Server) pipelineRoutes(r chi.Router) {
 			s.fail(w, ErrUnavailable)
 			return
 		}
-		policy, e := s.Store.ActiveVideoPolicy(r.Context(), in.ClipDuration, in.AspectRatio, strings.Split(s.Config.VideoModel, ",")...)
+		policy, e := s.Store.ActiveVideoPolicy(r.Context(), in.ClipDuration, in.AspectRatio, strings.Split(cfg.VideoModel, ",")...)
 		if e != nil {
 			s.fail(w, ErrValidation)
 			return
 		}
-		selectedStory, e := s.selectStoryModel(r.Context(), in.Idea)
+		selectedStory, e := s.selectStoryModelWithConfig(r.Context(), in.Idea, cfg)
 		if e != nil {
 			s.fail(w, e)
 			return
 		}
-		quoteConfig := s.Config
+		quoteConfig := cfg
 		quoteConfig.StoryModel = selectedStory
 		v, e := s.Store.CreatePipelineQuote(r.Context(), u, chi.URLParam(r, "project"), in, policy, quoteConfig)
 		s.result(w, v, e)
