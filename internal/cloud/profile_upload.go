@@ -39,6 +39,17 @@ func normalizeProfileImage(data []byte) ([]byte, error) {
 	return out.Bytes(), nil
 }
 func (s *Server) uploadProfileImage(w http.ResponseWriter, r *http.Request) {
+	// Decoding a valid compressed image can allocate tens of MiB. Admit before
+	// reading input so ordinary request capacity cannot multiply image memory.
+	select {
+	case s.imagePermits <- struct{}{}:
+		defer func() { <-s.imagePermits }()
+	default:
+		w.Header().Set("Retry-After", "2")
+		s.json(w, http.StatusServiceUnavailable, map[string]string{"message": "Image processing is busy. Please try again shortly."})
+		return
+	}
+
 	if s.Media == nil || s.Config.OriginalsBucket == "" {
 		s.json(w, http.StatusServiceUnavailable, map[string]string{"message": "Profile image storage is not configured yet. You can still use an HTTPS image link."})
 		return

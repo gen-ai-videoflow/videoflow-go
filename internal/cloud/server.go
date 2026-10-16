@@ -25,15 +25,16 @@ var ErrUnavailable = errors.New("service not configured or temporarily unavailab
 
 type userContext struct{}
 type Server struct {
-	Store   *Store
-	Config  Config
-	HTTP    *http.Client
-	Redis   *redis.Client
-	Media   *Media
-	limMu   sync.Mutex
-	metrics capacityMetrics
-	permits chan struct{}
-	limits  map[string]localLimit
+	Store        *Store
+	Config       Config
+	HTTP         *http.Client
+	Redis        *redis.Client
+	Media        *Media
+	limMu        sync.Mutex
+	imagePermits chan struct{}
+	metrics      capacityMetrics
+	permits      chan struct{}
+	limits       map[string]localLimit
 }
 type localLimit struct {
 	count   int
@@ -45,7 +46,7 @@ func NewServer(store *Store, cfg Config) *Server {
 	if capacity <= 0 {
 		capacity = 128
 	}
-	s := &Server{permits: make(chan struct{}, capacity), Store: store, Config: cfg, HTTP: &http.Client{Timeout: 30 * time.Second}, limits: make(map[string]localLimit)}
+	s := &Server{imagePermits: make(chan struct{}, 2), permits: make(chan struct{}, capacity), Store: store, Config: cfg, HTTP: &http.Client{Timeout: 30 * time.Second}, limits: make(map[string]localLimit)}
 	if cfg.RedisURL != "" {
 		if options, err := redis.ParseURL(cfg.RedisURL); err == nil {
 			options.DialTimeout = 2 * time.Second

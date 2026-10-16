@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -46,3 +47,23 @@ func TestPresetSocialLinksMatchTheirPlatform(t *testing.T) {
 		}
 	}
 }
+func TestProfileImageCapacityRejectsBeforeReadingBody(t *testing.T) {
+	server := NewServer(nil, Config{DevMode: true, OriginalsBucket: "test"})
+	server.Media = &Media{}
+	server.imagePermits <- struct{}{}
+	server.imagePermits <- struct{}{}
+	req := httptest.NewRequest("POST", "/v1/profile/images", nil)
+	req.Body = panicImageReader{}
+	response := httptest.NewRecorder()
+	server.uploadProfileImage(response, req)
+	if response.Code != 503 || response.Header().Get("Retry-After") == "" {
+		t.Fatalf("expected bounded image processing admission, got%d", response.Code)
+	}
+}
+
+type panicImageReader struct{}
+
+func (panicImageReader) Read([]byte) (int, error) {
+	panic("overloaded upload must not decode or buffer input")
+}
+func (panicImageReader) Close() error { return nil }

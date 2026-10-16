@@ -1,7 +1,7 @@
 /** Same-origin proxy with bounded admission, input size, lifetime and one forwarding hop. */
 let active=0;
 export async function proxyRequest(request,target,options={}){
- if(active>=(options.maxConcurrent??128))return Response.json({message:'The service is busy. Please try again shortly.'},{status:503,headers:{'Retry-After':'2'}});
+ if(active>=(options.maxConcurrent??16))return Response.json({message:'The service is busy. Please try again shortly.'},{status:503,headers:{'Retry-After':'2'}});
  active++;
  const controller=new AbortController(),signal=AbortSignal.any([request.signal,controller.signal]);
  const timer=setTimeout(()=>controller.abort(),options.timeoutMs??30000);
