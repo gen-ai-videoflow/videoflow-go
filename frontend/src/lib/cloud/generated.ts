@@ -172,3 +172,7 @@ export interface PipelineProgress { stage: string; status: string; script: strin
 
 export type VideoVisibility = 'public' | 'unlisted' | 'private';
 export type VideoAudience = 'free' | 'members';
+
+export interface RewardBalance { currency: string; lifetime_confirmed_cents: number; confirmed_unvested_cents: number; vested_cents: number; available_cents: number; legacy_pending_cents: number; payout_reserved_cents: number; paid_cents: number; held: boolean; estimated_additional_cents: number | null; estimate_status: string; calculated_at: string; }
+export interface RewardProgram { enabled: boolean; enrolled: boolean; policy_version: string; terms_version: string; earning_window_days: number; vesting_days: number; confirmation: string; payout_cadence: string; }
+export interface RewardVideo { video_id: string; title: string; status: string; reason_code: string; first_published_at: string | null; window_ends_at: string | null; }

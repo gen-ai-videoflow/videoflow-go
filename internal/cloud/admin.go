@@ -95,6 +95,9 @@ func (s *Store) ResolveProviderJob(ctx context.Context, id, providerID, actor st
 	return tx.Commit()
 }
 func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (PayoutBatch, error) {
+	if err := s.ReleaseRewardVesting(ctx, userID, time.Now().UTC()); err != nil {
+		return PayoutBatch{}, err
+	}
 	if actor == "" {
 		return PayoutBatch{}, ErrValidation
 	}
@@ -113,7 +116,7 @@ func (s *Store) PreparePayout(ctx context.Context, userID, actor string) (Payout
 		return PayoutBatch{}, err
 	}
 	var disputed bool
-	if err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed'))`, userID).Scan(&disputed); err != nil {
+	if err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed')) OR EXISTS(SELECT 1 FROM cloud_reward_holds WHERE user_id=$1)`, userID).Scan(&disputed); err != nil {
 		return PayoutBatch{}, err
 	}
 	if disputed {
@@ -200,7 +203,7 @@ func (s *Server) ExecutePayout(ctx context.Context, batchID, actor string, execu
 	}
 	defer conn.ExecContext(context.Background(), `SELECT pg_advisory_unlock(hashtextextended($1,814037226))`, b.UserID)
 	var disputed bool
-	if err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed'))`, b.UserID).Scan(&disputed); err != nil {
+	if err = conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM cloud_payment_disputes WHERE creator_id=$1 AND status NOT IN ('won','warning_closed')) OR EXISTS(SELECT 1 FROM cloud_reward_holds WHERE user_id=$1)`, b.UserID).Scan(&disputed); err != nil {
 		return err
 	}
 	if disputed {

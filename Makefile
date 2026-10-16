@@ -34,6 +34,9 @@ cloud:
 cloud-worker:
 	go run ./cmd/cloud-worker
 
+cloud-rewards:
+	go run ./cmd/cloud-rewards
+
 cloud-admin:
 	go run ./cmd/cloud-admin $(ARGS)
 
@@ -47,6 +50,7 @@ cloud-build:
 	go build -o bin/videoflow-cloud ./cmd/cloud
 	go build -o bin/videoflow-cloud-worker ./cmd/cloud-worker
 	go build -o bin/videoflow-cloud-admin ./cmd/cloud-admin
+	go build -o bin/videoflow-cloud-rewards ./cmd/cloud-rewards
 
 cloud-dev:
 	docker compose --env-file .env.cloud -f compose.cloud.yml --profile app up --build

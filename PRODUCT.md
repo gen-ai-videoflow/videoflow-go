@@ -53,3 +53,7 @@ Current implementation in frontend/src/lib/cloud and internal/cloud; product-gap
 5. Make one source usable for publication and authorised download without unnecessary re-uploading.
 
 Brand authority: the user-approved gen-ai-videoflow/landing-page repository supplies the VideoFlow SVG logo and signal-orange/warm-ink/bone palette. Preserve the existing shadcn layouts and canvas; the approved change is logo/colour alignment, not a typography or layout replacement.
+
+## Progressive disclosure
+
+User direction, 2026-10-16: make workflows simple by default. Show the primary result and next action first. Move secondary metrics, technical explanations, histories and advanced controls into clearly labelled expandable details or contextual views. Do not expose every backend concept as a top-level tab or card. Keep material payment/account blockers and estimate qualifications visible when relevant; simplicity must not conceal financial terms. Load optional detail data when opened rather than fetching every hidden panel on entry. Apply this rule to future interface work.

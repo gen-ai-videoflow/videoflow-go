@@ -17,7 +17,7 @@ func adminCanRead(role, kind string) bool {
 		"viewer":     "users content jobs reports usage audience",
 		"support":    "users content jobs reports",
 		"moderation": "users content reports audience",
-		"finance":    "billing crypto premium premium_payments revenue",
+		"finance":    "billing crypto premium premium_payments revenue rewards",
 		"operations": "jobs usage budgets readiness capacity ai-readiness settings policies audit runtime-policy",
 	}
 	return strings.Contains(" "+groups[role]+" ", " "+kind+" ")
@@ -61,6 +61,9 @@ func adminAllowed(role, method, path string) bool {
 		kind := path[strings.LastIndex(path, "/")+1:]
 		return method == "POST" && adminCanExport(role, kind)
 	}
+	if role == "finance" && strings.HasPrefix(path, "/rewards/") {
+		return (method == "GET" && strings.HasPrefix(path, "/rewards/batches/")) || method == "POST" && (path == "/rewards/funding" || path == "/rewards/batches" || strings.HasSuffix(path, "/reconcile") || strings.HasSuffix(path, "/confirm") || strings.HasSuffix(path, "/hold"))
+	}
 	if method == "GET" {
 		if path == "/runtime-policy/versions" {
 			return role == "operations"
@@ -84,7 +87,7 @@ func adminAllowed(role, method, path string) bool {
 }
 func adminSections(role string) []string {
 	out := []string{"overview"}
-	for _, section := range []string{"users", "content", "reports", "jobs", "billing", "analytics", "readiness", "settings", "audit"} {
+	for _, section := range []string{"users", "content", "reports", "jobs", "billing", "rewards", "analytics", "readiness", "settings", "audit"} {
 		kind := section
 		if kind == "analytics" {
 			if adminCanRead(role, "usage") || adminCanRead(role, "revenue") || adminCanRead(role, "audience") {
