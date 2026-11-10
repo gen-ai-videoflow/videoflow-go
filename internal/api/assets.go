@@ -69,6 +69,7 @@ func (s *Server) handleUploadAsset(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file too large", http.StatusBadRequest)
 		return
 	}
+	defer r.MultipartForm.RemoveAll()
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "missing file parameter", http.StatusBadRequest)
@@ -81,9 +82,25 @@ func (s *Server) handleUploadAsset(w http.ResponseWriter, r *http.Request) {
 		assetType = "character_reference"
 	}
 
-	projectID, _ := s.database.GetActiveProjectID()
+	projectID, err := s.database.GetActiveProjectID()
+	if err != nil {
+		http.Error(w, "no active project", http.StatusBadRequest)
+		return
+	}
+	characterID := r.FormValue("character_id")
+	if characterID != "" {
+		c, err := s.database.GetCharacter(characterID)
+		if err != nil || c.ProjectID == nil || *c.ProjectID != projectID {
+			http.Error(w, "character not found in active project", http.StatusBadRequest)
+			return
+		}
+	}
+
 	destDir := filepath.Join(s.cfg.StorageRoot, "assets")
-	_ = os.MkdirAll(destDir, 0755)
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		http.Error(w, "failed to prepare upload storage", 500)
+		return
+	}
 
 	assetID := "asset_" + uuid.New().String()[:8]
 	ext := filepath.Ext(header.Filename)
@@ -94,7 +111,13 @@ func (s *Server) handleUploadAsset(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to save file", http.StatusInternalServerError)
 		return
 	}
-	defer out.Close()
+	saved := false
+	defer func() {
+		out.Close()
+		if !saved {
+			os.Remove(destPath)
+		}
+	}()
 
 	if _, err := io.Copy(out, file); err != nil {
 		http.Error(w, "failed to write file", http.StatusInternalServerError)
@@ -110,11 +133,15 @@ func (s *Server) handleUploadAsset(w http.ResponseWriter, r *http.Request) {
 		TagsJSON:     []byte("[]"),
 		MetadataJSON: []byte("{}"),
 	}
-	if err := s.database.CreateAsset(asset); err != nil {
+	if characterID != "" {
+		asset.CharacterID = &characterID
+	}
+	if err := s.database.CreateUploadedAsset(asset); err != nil {
 		http.Error(w, "failed to save asset to db", http.StatusInternalServerError)
 		return
 	}
 
+	saved = true
 	writeJSON(w, http.StatusOK, asset)
 }
 

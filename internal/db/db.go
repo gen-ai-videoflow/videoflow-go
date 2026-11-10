@@ -764,7 +764,39 @@ func (d *DB) GetAsset(id string) (*models.Asset, error) {
 	return &a, nil
 }
 
-func (d *DB) CreateAsset(a *models.Asset) error {
+type assetInserter interface {
+	Exec(string, ...any) (sql.Result, error)
+}
+
+func (d *DB) CreateAsset(a *models.Asset) error { return insertAsset(d.conn, a) }
+
+// CreateUploadedAsset commits the asset and its character reference together.
+func (d *DB) CreateUploadedAsset(a *models.Asset) error {
+	if a.CharacterID == nil {
+		return d.CreateAsset(a)
+	}
+	tx, err := d.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var projectID string
+	if err = tx.QueryRow(`SELECT project_id FROM characters WHERE id=?`, *a.CharacterID).Scan(&projectID); err != nil {
+		return err
+	}
+	if a.ProjectID == nil || projectID != *a.ProjectID {
+		return fmt.Errorf("character is not in the active project")
+	}
+	if err = insertAsset(tx, a); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`UPDATE characters SET reference_asset_ids_json=json_insert(reference_asset_ids_json,'$[#]',?),updated_at=? WHERE id=?`, a.ID, time.Now().UTC(), *a.CharacterID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func insertAsset(conn assetInserter, a *models.Asset) error {
 	if a.ID == "" {
 		a.ID = "asset_" + uuid.New().String()[:8]
 	}
@@ -781,7 +813,7 @@ func (d *DB) CreateAsset(a *models.Asset) error {
 		meta = "{}"
 	}
 
-	_, err := d.conn.Exec(`
+	_, err := conn.Exec(`
 		INSERT INTO assets (id, project_id, type, name, file_path, tags_json, description, character_id, metadata_json, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, a.ID, a.ProjectID, a.Type, a.Name, a.FilePath, tags, a.Description, a.CharacterID, meta, now, now)

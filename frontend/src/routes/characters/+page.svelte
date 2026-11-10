@@ -70,6 +70,7 @@
       await fn();
       await refresh();
     } catch (e: any) {
+      error = e.message;
       toast.error(e.message);
     } finally {
       busy = '';
@@ -97,10 +98,23 @@
   function uploadPhoto(c: any, e: Event) {
     const input = e.target as HTMLInputElement;
     if (!input.files?.length) return;
-    const form = new FormData();
-    for (const f of Array.from(input.files)) form.append('file', f);
-    form.append('character_id', c.id);
-    run(`photo-${c.id}`, () => upload('/assets/upload', form));
+    const files = Array.from(input.files);
+    run(`photo-${c.id}`, async () => {
+      let uploaded = 0;
+      try {
+        for (const file of files) {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('character_id', c.id);
+          await upload('/assets/upload', form);
+          uploaded++;
+        }
+        toast.success(`${uploaded} reference photo${uploaded === 1 ? '' : 's'} uploaded.`);
+      } finally {
+        // Show completed uploads even when a later file fails.
+        if (uploaded) await refresh();
+      }
+    });
     input.value = '';
   }
 
@@ -367,8 +381,8 @@
                     <Images class="size-3 mr-1" />{busy === `sheets-${c.id}` ? 'Generating…' : 'Generate reference sheets'}
                   </Button>
                   <label class="inline-flex items-center gap-1 cursor-pointer rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">
-                    <Upload class="size-3" />Upload reference photo
-                    <input type="file" class="hidden" multiple accept="image/*" onchange={(e) => uploadPhoto(c, e)} />
+                    <Upload class="size-3" />{busy === `photo-${c.id}` ? 'Uploading…' : 'Upload reference photo'}
+                    <input type="file" class="hidden" multiple disabled={!!busy} accept="image/*" onchange={(e) => uploadPhoto(c, e)} />
                   </label>
                   <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive"
                     disabled={!!busy} onclick={() => (deleteTarget = c)}>
