@@ -1,5 +1,6 @@
 <script lang="ts">
   import { del, get, post } from '$lib/api';
+  import { normalizeChatIntent } from './intent.mjs';
   import { runBackgroundOp, type Op } from '$lib/ops';
   import { Suggestion, Suggestions } from '$lib/components/ai-elements/suggestion';
   import { Badge } from '$lib/components/ui/badge';
@@ -83,7 +84,7 @@
   }
 
   let {
-    intent,
+    intent: rawIntent,
     options,
     projectState = null,
     onran,
@@ -100,6 +101,8 @@
     onop?: (label: string, ctx: RunContext) => OpHandle | undefined;
     onsuggest?: (text: string) => void;
   } = $props();
+
+  let intent = $derived(normalizeChatIntent(rawIntent));
 
   // Each card gets one fixed intent, so plain init from props is fine.
   let busy = $state(false);

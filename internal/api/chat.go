@@ -53,10 +53,7 @@ func (s *Server) handleChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	action := res.Action
-	if action == "" {
-		action = "unknown"
-	}
+	action := canonicalChatAction(res.Action)
 
 	intent := map[string]interface{}{
 		"action":      action,
@@ -115,4 +112,16 @@ func (s *Server) handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+// Keep model output on the action-card contract, including legacy agent replies.
+func canonicalChatAction(action string) string {
+	switch action {
+	case "create_script", "add_scene":
+		return "generate_script"
+	case "generate_script", "generate_scenes", "generate_shots", "storyboard", "render_scene", "render_shot", "caption", "retry_render", "generate_assets", "refine_scene", "refine_shot", "delete_scene", "style_ingest", "plan_assets":
+		return action
+	default:
+		return "unknown"
+	}
 }

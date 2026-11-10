@@ -176,13 +176,18 @@ func (a *AgentEngine) GenerateShots(ctx context.Context, title, summary string, 
 
 type ChatIntentResponse struct {
 	Reply        string                 `json:"reply"`
-	Action       string                 `json:"action"` // create_script, add_scene, render_video, none
+	Action       string                 `json:"action"` // canonical action-card action, or none
 	ActionParams map[string]interface{} `json:"action_params,omitempty"`
 }
 
 func (a *AgentEngine) Chat(ctx context.Context, message string, history []map[string]string) (*ChatIntentResponse, error) {
 	system := `You are the 6eek Studio assistant. Help the user direct their story, build characters, scenes, and shots.
-Respond in JSON with a natural conversational 'reply', and an optional 'action' (create_script, add_scene, none).`
+Respond in JSON with a natural conversational 'reply' and an 'action'.
+Use generate_script to write a new story, script, or scene from an idea. Do not return create_script or add_scene.
+Other supported actions: generate_scenes (expand an existing scene), generate_shots, storyboard,
+render_scene, render_shot, caption, retry_render, generate_assets, refine_scene, refine_shot,
+delete_scene, style_ingest, plan_assets. Use none for conversation or requests that cannot be performed.
+Never invent action names. The user reviews and runs the action card; do not claim it has already executed.`
 
 	historyBytes, _ := json.Marshal(history)
 	prompt := fmt.Sprintf("Conversation history: %s\nUser message: %s", string(historyBytes), message)
