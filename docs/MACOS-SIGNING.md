@@ -1,6 +1,6 @@
 # macOS release signing and notarization
 
-The v0.3.0-electron.1 macOS download audit reproduced the reported failure. The Apple Silicon bundle retained an incomplete Electron ad-hoc signature after packaging: `codesign --verify --deep --strict` reports “code has no resources but signature indicates they must be present.” The Intel bundle has no usable signature. Gatekeeper rejects both and neither has a stapled notarization ticket. Launching an unquarantined app in CI did not catch these failures.
+The historical v0.3.0-electron.1 macOS download audit reproduced the reported failure. Those earlier release assets are not currently published in this repository. The Apple Silicon bundle retained an incomplete Electron ad-hoc signature after packaging: `codesign --verify --deep --strict` reports “code has no resources but signature indicates they must be present.” The Intel bundle has no usable signature. Gatekeeper rejects both and neither has a stapled notarization ticket. Launching an unquarantined app in CI did not catch these failures.
 
 Normal public macOS releases must use a Developer ID Application certificate and Apple notarization. The release workflow now refuses to start without the required GitHub secrets and refuses publication if the downloaded ZIP fails signature, native-helper, notarization-ticket or Gatekeeper checks.
 
@@ -21,7 +21,7 @@ In the GitHub repository, open **Settings → Secrets and variables → Actions 
 Keep these values in GitHub Secrets; do not put them in chat, commits, `.env` files in release artifacts, or logs. For maintainers using the GitHub CLI, certificate bytes can be streamed without printing them:
 
 ```sh
-base64 < /path/to/DeveloperID.p12 | gh secret set CSC_LINK --repo JienWeng/6eek-go
+base64 < /path/to/DeveloperID.p12 | gh secret set CSC_LINK --repo gen-ai-videoflow/videoflow-go
 ```
 
 Set the remaining values through the GitHub UI or the CLI's interactive secret prompts.
