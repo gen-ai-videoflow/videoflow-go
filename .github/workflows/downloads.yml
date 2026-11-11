@@ -63,7 +63,9 @@ jobs:
           pattern: 6eek-*
           merge-multiple: true
           path: dist
-      - run: cd dist && sha256sum *.zip > SHA256SUMS.txt
+      - name: Include standalone installation and testing guide
+        run: cp llms.txt dist/llms.txt
+      - run: cd dist && sha256sum *.zip llms.txt > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
           name: 6eek-downloads

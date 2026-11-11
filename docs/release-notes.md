@@ -1,9 +1,15 @@
-6eek now bundles the app, browser interface, FFmpeg, FFprobe and a caption font in each macOS/Linux download.
+6eek browser studio — repaired workflow preview
 
-Download the ZIP for your computer, extract the entire folder and open **Start 6eek**. Enter your OpenRouter key in Settings. **No Go, Node.js, Python or FFmpeg installation is required.** Projects and your saved key stay in your user data folder when you update.
+These are native browser-launcher ZIP packages for macOS and Linux, not Electron DMG/DEB installers. Choose darwin-arm64 for Apple Silicon, darwin-amd64 for Intel Mac, linux-amd64 for x86 Linux, or linux-arm64 for ARM Linux. Extract the entire archive and open Start 6eek; keep the launcher terminal open. The app opens at http://127.0.0.1:8000.
 
-Internet access and OpenRouter credits are required; AI generation is billable. This is an unsigned preview, so macOS may show a security prompt.
+Each package includes the Go app, browser interface, FFmpeg, FFprobe, caption fonts, START HERE.txt and llms.txt. No Go, Node.js, Python or FFmpeg installation is needed. The standalone llms.txt and SHA256SUMS.txt are also attached to the release.
 
-Each archive includes third-party license texts and the exact media source archives/build script in `media-sources.zip`. FFmpeg runs as a separate process and is built with GPLv3 components. The source code and build checksums are available in the same download.
+This preview contains the repaired character/reference upload and generation flow, canonical runnable chat actions, truthful readiness and model preflight, durable paid-request replay/recovery, real caption exports and ordered clip assembly. Old downloaded packages do not automatically receive these changes.
 
-All four downloads are built and checked on native macOS/Linux runners. Tests launch the extracted app without system tools on PATH, encode video, extract audio and render captions with the included font. Paid live generation is not part of these packaging checks.
+The preview is not Apple-notarized. macOS can block its first launch; use the system Open Anyway option only for a download you trust. Native Electron installers require a separate signing/release workflow. Windows native packages are not provided.
+
+Start by testing project creation, reference upload and persistence without submitting generation. Add your OpenRouter key in Settings only when ready for a small budgeted test. Internet access and OpenRouter credits are required for AI generation and transcription. Live model/device testing is not part of the automated packaging checks. If a submission is uncertain, review saved work and provider activity before retrying.
+
+Projects, media and your saved API key stay in the private user data folder across updates. Back it up. Do not run multiple app copies against that folder.
+
+All four archives must pass native build/tests and the extracted-app smoke check before publication. Checks verify UI/API startup with an empty system PATH, bundled media tools, audio extraction and caption rendering. Each archive includes license texts and matching media sources/build scripts in media-sources.zip. FFmpeg is a separate process built with GPLv3 components.

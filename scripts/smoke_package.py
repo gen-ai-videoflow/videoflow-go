@@ -25,7 +25,7 @@ def main():
             for item in archive.infolist():
                 (root / item.filename).chmod((item.external_attr >> 16) & 0o777)
         folder = root / '6eek'
-        for file in ['ffmpeg', 'ffprobe', 'fonts/NotoSans-Regular.ttf', 'fonts/NotoSansCJKsc-Regular.otf', 'media-sources.zip', 'licenses/NOTICE.txt']:
+        for file in ['llms.txt', 'START HERE.txt', 'ffmpeg', 'ffprobe', 'fonts/NotoSans-Regular.ttf', 'fonts/NotoSansCJKsc-Regular.otf', 'media-sources.zip', 'licenses/NOTICE.txt']:
             assert (folder / file).is_file(), f'Missing {file}'
         ffmpeg = folder / 'ffmpeg'
         if platform.system() == 'Linux':
