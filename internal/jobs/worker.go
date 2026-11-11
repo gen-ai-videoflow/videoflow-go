@@ -1,19 +1,18 @@
 package jobs
 
 import (
+	"6eek-go/internal/providers"
+	"6eek-go/internal/routing"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-	"6eek-go/internal/routing"
 
 	"6eek-go/internal/config"
 	"6eek-go/internal/db"
@@ -32,7 +31,6 @@ type WorkerPool struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	wg           sync.WaitGroup
-	httpClient   *http.Client
 	pollInterval time.Duration
 	activeMu     sync.Mutex
 	active       map[string]bool
@@ -49,7 +47,6 @@ func NewWorkerPool(cfg *config.Config, database *db.DB, broker *events.Broker, m
 		semaphore:    make(chan struct{}, cfg.MaxConcurrentPolls),
 		ctx:          ctx,
 		cancel:       cancel,
-		httpClient:   &http.Client{Timeout: 120 * time.Second},
 		pollInterval: 5 * time.Second,
 		active:       make(map[string]bool),
 	}
@@ -125,8 +122,14 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 	if err != nil {
 		return err
 	}
-	if job.Status == "succeeded" || job.Status == "failed" {
+	if job.Status == "succeeded" || job.Status == "failed" || job.Status == "reconciliation_required" {
 		return nil
+	}
+	if (job.ProviderJobID == nil || *job.ProviderJobID == "") && job.Stage != nil && *job.Stage == "submitting" {
+		job.Status = "reconciliation_required"
+		message := "Provider submission outcome is unknown. Reconcile the existing job before starting another paid generation."
+		job.Error = &message
+		return w.database.UpdateRenderJob(job)
 	}
 	ctx, cancel := context.WithTimeout(w.ctx, 30*time.Minute)
 	defer cancel()
@@ -141,10 +144,14 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 		return nil
 	}
 	defer func() {
-		if resultErr != nil && !errors.Is(resultErr, context.Canceled) && w.ctx.Err() == nil {
+		if resultErr != nil && !errors.Is(resultErr, context.Canceled) && w.ctx.Err() == nil && job.Status != "reconciliation_required" {
 			message := resultErr.Error()
 			job.Error = &message
-			if err := update("failed", "failed", message); err != nil {
+			status, stage := "failed", "failed"
+			if job.ProviderJobID != nil && *job.ProviderJobID != "" && job.Status != "failed" {
+				status, stage = "reconciliation_required", "polling"
+			}
+			if err := update(status, stage, message); err != nil {
 				log.Printf("persist render failure: %v", err)
 			}
 		}
@@ -202,7 +209,24 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 		if len(negatives) > 0 {
 			prompt += "\nAvoid: " + strings.Join(negatives, ", ")
 		}
-		prompt += "\nSpoken dialogue language: " + resolver.Setting("dialogue_language", "English")
+		language := resolver.Setting("dialogue_language", "English")
+		if job.SceneID != nil {
+			if scene, e := w.database.GetScene(*job.SceneID); e == nil {
+				// Explicit tags below preserve the persisted brief across later settings changes.
+				var raw map[string]map[string]any
+				json.Unmarshal(scene.SceneJSON, &raw)
+				brief := raw["generation_brief"]
+				if value, ok := brief["language"].(string); ok && value != "" {
+					language = value
+				}
+				for _, key := range []string{"style", "instruction", "conversation_mode", "character_notes"} {
+					if value, ok := brief[key].(string); ok && value != "" {
+						prompt += "\n" + key + ": " + value
+					}
+				}
+			}
+		}
+		prompt += "\nSpoken dialogue language: " + language
 		payload["prompt"] = prompt
 		if job.Model == "" {
 			job.Model = resolver.MediaModel("video")
@@ -220,6 +244,11 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 					target = scene.Duration
 				}
 			}
+			if job.ShotID != nil {
+				if shot, e := w.database.GetShot(*job.ShotID); e == nil {
+					target = shot.Duration
+				}
+			}
 			chosen := 0
 			for _, duration := range model.Durations {
 				if duration >= target && (chosen == 0 || duration < chosen) {
@@ -227,11 +256,7 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 				}
 			}
 			if chosen == 0 {
-				for _, duration := range model.Durations {
-					if duration > chosen {
-						chosen = duration
-					}
-				}
+				return fmt.Errorf("planned clip duration %ds exceeds or cannot be verified against this model's supported durations; shorten the scene or choose a suitable model", target)
 			}
 			if chosen > 0 {
 				payload["duration"] = chosen
@@ -258,17 +283,36 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 					supports = true
 				}
 			}
+			if !supports {
+				if scene, e := w.database.GetScene(*job.SceneID); e == nil {
+					var brief map[string]map[string]json.RawMessage
+					json.Unmarshal(scene.SceneJSON, &brief)
+					var refs []string
+					json.Unmarshal(brief["generation_brief"]["reference_asset_ids"], &refs)
+					if len(refs) > 0 {
+						return fmt.Errorf("selected video model cannot use the character-conditioned keyframe; select a first-frame model")
+					}
+				}
+			}
 			if supports {
 				assets, e := w.database.ListAssets(*job.ProjectID)
 				if e != nil {
 					return e
+				}
+				approved := map[string]bool{}
+				if scene, e := w.database.GetScene(*job.SceneID); e == nil {
+					var ids []string
+					json.Unmarshal(scene.AssetIDsJSON, &ids)
+					for _, id := range ids {
+						approved[id] = true
+					}
 				}
 				for _, asset := range assets {
 					var meta struct {
 						SceneID string `json:"scene_id"`
 					}
 					_ = json.Unmarshal(asset.MetadataJSON, &meta)
-					if asset.Type == "storyboard" && meta.SceneID == *job.SceneID {
+					if asset.Type == "storyboard" && meta.SceneID == *job.SceneID && approved[asset.ID] {
 						image, e := media.ImageDataURL(w.cfg.StorageRoot, asset.FilePath)
 						if e != nil {
 							return e
@@ -310,11 +354,32 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 		if err != nil {
 			return err
 		}
-		if err = update("running", "submitting", "Submitting to OpenRouter"); err != nil {
+		if err = client.ValidateVideo(ctx, payload); err != nil {
 			return err
 		}
+		claimed, e := w.database.ClaimRenderSubmission(job.ID, job.Model, job.RequestJSON)
+		if e != nil {
+			return e
+		}
+		if !claimed {
+			return nil
+		}
+		job.Status = "running"
+		stage := "submitting"
+		job.Stage = &stage
+
 		id, e := client.CreateVideo(ctx, payload)
 		if e != nil {
+			var rejected *providers.HTTPError
+			if errors.As(e, &rejected) && rejected.Status >= 400 && rejected.Status < 500 && rejected.Status != 408 && rejected.Status != 409 {
+				return e
+			}
+			job.Status = "reconciliation_required"
+			message := "Submission outcome needs review: " + e.Error()
+			job.Error = &message
+			if saveErr := w.database.UpdateRenderJob(job); saveErr != nil {
+				return saveErr
+			}
 			return e
 		}
 		job.ProviderJobID = &id
@@ -323,14 +388,33 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 			return err
 		}
 	}
+	pollFailures := 0
 	for {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
 		status, urls, e := client.GetVideo(ctx, *job.ProviderJobID)
 		if e != nil {
-			return e
+			if status == "failed" {
+				job.Status = "failed"
+				return e
+			}
+			pollFailures++
+			if pollFailures >= 12 {
+				return e
+			}
+			var rejected *providers.HTTPError
+			if errors.As(e, &rejected) && rejected.Status >= 400 && rejected.Status < 500 && rejected.Status != 408 && rejected.Status != 429 {
+				return e
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(w.pollInterval):
+				continue
+			}
 		}
+		pollFailures = 0
 		switch status {
 		case "completed":
 			count := len(urls)
@@ -379,6 +463,7 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 			}
 			return update("succeeded", "done", "Video downloaded")
 		case "failed", "cancelled", "canceled", "expired":
+			job.Status = "failed"
 			return fmt.Errorf("OpenRouter video job %s", status)
 		case "pending", "queued", "in_progress", "processing", "running":
 		default:
@@ -392,28 +477,4 @@ func (w *WorkerPool) processJob(jobID string) (resultErr error) {
 			return ctx.Err()
 		}
 	}
-}
-
-func (w *WorkerPool) DownloadFile(url, destPath string) error {
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
-		return err
-	}
-	resp, err := w.httpClient.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	out, err := os.Create(destPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	return err
 }

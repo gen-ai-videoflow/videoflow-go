@@ -57,6 +57,8 @@ Forked and optimized from [videoflow](https://github.com/JienWeng/videoflow) to 
 
 ---
 
+For the original browser studio’s complete generation and recovery steps, see [Browser workflow](docs/BROWSER-WORKFLOW.md).
+
 ## Quick Start
 
 ### 1. Build and Run the Go Backend

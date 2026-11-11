@@ -60,6 +60,9 @@ func main() {
 
 	workers := jobs.NewWorkerPool(cfg, database, broker, mediaEngine)
 	workers.Start()
+	if err := database.InterruptOperations(); err != nil {
+		log.Fatalf("Cannot recover interrupted operations: %v", err)
+	}
 	workers.ReconcilePending()
 	defer workers.Stop()
 

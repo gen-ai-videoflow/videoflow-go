@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -11,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"6eek-go/internal/media"
 	"6eek-go/internal/models"
+	"github.com/google/uuid"
 )
 
 // operation preserves the existing synchronous/background API contract and records failures.
@@ -27,14 +28,22 @@ func (s *Server) operation(w http.ResponseWriter, r *http.Request, op *models.Op
 		writeJSON(w, 200, result)
 		return
 	}
+	select {
+	case s.operationSlots <- struct{}{}:
+	default:
+		http.Error(w, "Three background operations are already running. Wait for Activity before starting another.", 429)
+		return
+	}
 	op.Status = "running"
 	if err := s.database.CreateOp(op); err != nil {
+		<-s.operationSlots
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	s.tasks.Add(1)
 	go func() {
 		defer s.tasks.Done()
+		defer func() { <-s.operationSlots }()
 		ctx, cancel := context.WithTimeout(s.ctx, 10*time.Minute)
 		defer cancel()
 		result, err := work(ctx)
@@ -46,7 +55,10 @@ func (s *Server) operation(w http.ResponseWriter, r *http.Request, op *models.Op
 			errorText = &message
 		}
 		raw, _ := json.Marshal(result)
-		_ = s.database.UpdateOp(op.ID, status, raw, errorText)
+		if err := s.database.UpdateOp(op.ID, status, raw, errorText); err != nil {
+			slog.Error("could not record generation completion", "operation_id", op.ID)
+			return
+		}
 		s.broker.Publish(map[string]any{"type": "op_done", "op_id": op.ID, "kind": op.Kind, "status": status, "scene_id": op.SceneID, "output_id": op.OutputID, "error": errorText})
 	}()
 	writeJSON(w, 202, map[string]any{"op_id": op.ID, "status": "running"})
@@ -91,16 +103,7 @@ func (s *Server) generateAssets(ctx context.Context, projectID *string, characte
 	if characterID != nil || kind == "prop" {
 		modelKind = "reference"
 	}
-	var prepared struct {
-		Prompt string `json:"prompt"`
-	}
-	if err = s.agentJSON(ctx, "prompt_agent", "Write a precise image-generation prompt from the brief. Preserve the characters, reference consistency, composition and visual style. Return prompt only as JSON.", prompt+"\nVisual style: "+s.stylePrompt(projectID), nil, &prepared); err != nil {
-		return nil, err
-	}
-	if strings.TrimSpace(prepared.Prompt) == "" {
-		return nil, fmt.Errorf("OpenRouter returned no image prompt")
-	}
-	payload := map[string]any{"model": s.routes().MediaModel(modelKind), "prompt": prepared.Prompt}
+	payload := map[string]any{"model": s.routes().MediaModel(modelKind), "prompt": prompt}
 	if aspect != "" {
 		payload["aspect_ratio"] = aspect
 	}
@@ -111,6 +114,22 @@ func (s *Server) generateAssets(ctx context.Context, projectID *string, characte
 		}
 		payload["input_references"] = refs
 	}
+	if err = client.ValidateImage(ctx, payload); err != nil {
+		return nil, err
+	}
+	if !strings.Contains(prompt, "Visual style:") {
+		prompt += "\nVisual style: " + s.stylePrompt(projectID)
+	}
+	var prepared struct {
+		Prompt string `json:"prompt"`
+	}
+	if err = s.agentJSON(ctx, "prompt_agent", "Write a precise image-generation prompt from the brief. Preserve the characters, reference consistency, composition and visual style. Return prompt only as JSON.", prompt, nil, &prepared); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(prepared.Prompt) == "" {
+		return nil, fmt.Errorf("OpenRouter returned no image prompt")
+	}
+	payload["prompt"] = prepared.Prompt
 	images, err := client.GenerateImages(ctx, payload)
 	if err != nil {
 		return nil, err

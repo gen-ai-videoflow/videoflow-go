@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+ const operationScope=new AbortController();
+ onDestroy(()=>operationScope.abort());
+  import { onMount,onDestroy } from 'svelte';
+  import {goto} from '$app/navigation';
+  import {runBackgroundOp} from '$lib/ops';
   import { get, post, API_BASE } from '$lib/api';
   import { subscribeJobs } from '$lib/sse';
   import VideoPreview from '$lib/components/VideoPreview.svelte';
@@ -21,6 +25,15 @@
     ListVideo
   } from '@lucide/svelte';
 
+  let assemblyIDs:string[]=$state([]);
+  let assemblyAspect=$state('9:16');
+  let assemblyCaptioned=$state(false);
+  let assembling=$state(false);
+  async function assemble(){
+   if(assemblyIDs.length<2||assembling)return;assembling=true;
+   try{await runBackgroundOp('/outputs/assemble',{output_ids:assemblyIDs,aspect_ratio:assemblyAspect,captioned:assemblyCaptioned},{signal:operationScope.signal,
+          label:'Assembling selected clips',onDone:async(op)=>{assembling=false;assemblyIDs=[];await refresh();if(op.result_json?.output_id)await goto(`/editor/${op.result_json.output_id}`)},onFail:()=>assembling=false})}catch(e:any){assembling=false;toast.error(e.message)}
+  }
   let jobs: any[] = $state([]);
   let scenes: any[] = $state([]);
   let scripts: any[] = $state([]);
@@ -106,7 +119,7 @@
   }
 
   function isActive(status: string) {
-    return status !== 'succeeded' && status !== 'failed';
+    return status === 'pending' || status === 'running';
   }
 
   async function refresh() {
@@ -138,19 +151,20 @@
     };
   });
 
+  async function reconcileRender(j:any){
+    const id=j.provider_job_id || prompt('Existing OpenRouter video job ID (verify it belongs to this request in your provider account):');
+    if(!id?.trim())return;
+    const reason=j.provider_job_id?'Resume the existing provider job recorded with this request':prompt('Record how you verified this provider job matches the original request (at least 10 characters):');
+    if(!reason || reason.trim().length<10){toast.error('Verification evidence is required.');return;}
+    try{await post(`/render-jobs/${j.id}/reconcile`,{provider_job_id:id.trim(),reason:reason.trim()});await refresh();toast.success('Existing provider job resumed; no new video submitted.');}catch(e:any){toast.error(e.message)}
+  }
   // Re-run a FAILED render. Uses the originating shot/scene endpoints (a failed
   // job produced no output, so there is nothing to /retry).
   async function reRenderJob(j: any) {
     rerunning = j.id;
     try {
-      if (j.shot_id) {
-        await post('/render/from-shot', { scene_id: j.scene_id, shot_id: j.shot_id });
-      } else if (j.scene_id) {
-        await post(`/scenes/${j.scene_id}/render`);
-      } else {
-        toast.error('This render has no scene to re-run.');
-        return;
-      }
+      if(!confirm('Start a new paid video generation using this job’s saved inputs?'))return;
+      await post(`/render-jobs/${j.id}/resubmit`,{});
       toast.success('Re-render started');
       await refresh();
     } catch (e: any) {
@@ -307,7 +321,11 @@
       <Badge variant={statusVariant(j.status)} class={isActive(j.status) ? 'animate-pulse' : ''}>{j.status}</Badge>
       <span class="text-muted-foreground">{j.model?.split('/').slice(-2).join('/')}</span>
       <span class="text-muted-foreground">{relativeTime(j.created_at)}</span>
-      {#if j.status === 'failed'}
+      {#if j.status === 'reconciliation_required'}
+      <p class="text-xs text-destructive">Submission outcome is unknown. Check your provider account before generating again.</p>
+      <Button size="sm" variant="outline" onclick={()=>reconcileRender(j)}>Resume existing provider job</Button>
+    {/if}
+    {#if j.status === 'failed'}
         <Button
           variant="outline"
           size="sm"
@@ -350,6 +368,13 @@
     <p class="text-sm text-muted-foreground">Browse finished renders by scene, then open a take in the editor to caption, fine-tune and export.</p>
   </div>
 
+  <div class="mx-4 my-2 flex flex-wrap items-center gap-3 rounded-md border p-3 text-xs">
+    <span>Select outputs below in playback order: {assemblyIDs.length} selected.</span>
+    <select aria-label="Combined video aspect ratio" bind:value={assemblyAspect} class="rounded border bg-background p-1"><option>9:16</option><option>16:9</option><option>1:1</option></select>
+    <label class="flex items-center gap-1"><input type="checkbox" bind:checked={assemblyCaptioned}/>Use captioned versions</label>
+    <Button size="sm" disabled={assembling||assemblyIDs.length<2} onclick={assemble}>{assembling?'Assembling…':'Assemble selected clips'}</Button>
+    {#if assemblyIDs.length}<button type="button" class="underline" onclick={()=>assemblyIDs=[]}>Clear order</button>{/if}
+  </div>
   <PaneGroup direction="horizontal" class="flex-1 min-h-0 border-t border-border">
     <!-- LEFT: scenes with render activity (the monitor) -->
     <Pane defaultSize={28} minSize={20} class="min-w-0">
@@ -385,7 +410,7 @@
                 <Button type="submit" disabled={busy || !shotId} size="sm" class="w-full">
                   <Play class="size-4 mr-1" />Render shot
                 </Button>
-                <p class="text-[11px] text-muted-foreground">Whole-scene multi-shot renders live on the Scenes page (step 4).</p>
+                <p class="text-[11px] text-muted-foreground">Generate a scene clip on the Scenes page. Exact shot cuts require separately rendered clips and assembly.</p>
               </form>
             </CollapsibleContent>
           </Collapsible>
@@ -521,6 +546,7 @@
                 <div class="flex flex-wrap gap-4">
                   {#each sceneOutputs(g) as { out } (out.id)}
                     <div class="flex-none w-[320px] {out.selected ? 'rounded-lg ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}">
+                      <label class="mb-2 flex items-center gap-2 text-xs"><input type="checkbox" checked={assemblyIDs.includes(out.id)} onchange={(event)=>{assemblyIDs=event.currentTarget.checked?[...assemblyIDs,out.id]:assemblyIDs.filter(id=>id!==out.id)}} disabled={assembling}/>Include in combined video {assemblyIDs.includes(out.id)?`(#${assemblyIDs.indexOf(out.id)+1})`:''}</label>
                       <div class="relative">
                         <VideoPreview
                           path={out.captioned_path || out.video_path}

@@ -161,6 +161,8 @@ func TestWorkerUsesStoryboardFrameAndNegatives(t *testing.T) {
 	os.WriteFile(path, []byte("\x89PNG\r\n\x1a\n"), 0600)
 	asset := &models.Asset{ProjectID: &pid, Type: "storyboard", Name: "Storyboard", FilePath: path, MetadataJSON: json.RawMessage(`{"scene_id":"` + scene.ID + `"}`)}
 	worker.database.CreateAsset(asset)
+	scene.AssetIDsJSON, _ = json.Marshal([]string{asset.ID})
+	worker.database.UpdateScene(scene)
 	job = &models.RenderJob{ProjectID: &pid, SceneID: &scene.ID, Provider: "openrouter", Model: "test/video", Status: "pending", RequestJSON: job.RequestJSON}
 	if err := worker.database.CreateRenderJob(job); err != nil {
 		t.Fatal(err)
@@ -169,5 +171,26 @@ func TestWorkerUsesStoryboardFrameAndNegatives(t *testing.T) {
 	_ = worker.processJob(job.ID)
 	if !submitted {
 		t.Fatal("no video submission")
+	}
+}
+
+func TestRecoveredSubmissionNeverPostsAgain(t *testing.T) {
+	posts := 0
+	worker, job := workerFixture(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			posts++
+		}
+		w.WriteHeader(503)
+	})
+	stage := "submitting"
+	job.Stage = &stage
+	job.Status = "running"
+	worker.database.UpdateRenderJob(job)
+	if err := worker.processJob(job.ID); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := worker.database.GetRenderJob(job.ID)
+	if posts != 0 || saved.Status != "reconciliation_required" {
+		t.Fatalf("uncertain submission replayed: posts=%d status=%s", posts, saved.Status)
 	}
 }

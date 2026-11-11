@@ -22,17 +22,21 @@ import (
 )
 
 type Server struct {
-	cfg        *config.Config
-	database   *db.DB
-	broker     *events.Broker
-	workers    *jobs.WorkerPool
-	agents     *agents.AgentEngine
-	openrouter *providers.OpenRouterClient
-	media      *media.MediaEngine
-	router     *chi.Mux
-	ctx        context.Context
-	cancel     context.CancelFunc
-	tasks      sync.WaitGroup
+	cfg            *config.Config
+	database       *db.DB
+	broker         *events.Broker
+	workers        *jobs.WorkerPool
+	agents         *agents.AgentEngine
+	openrouter     *providers.OpenRouterClient
+	media          *media.MediaEngine
+	router         *chi.Mux
+	ctx            context.Context
+	cancel         context.CancelFunc
+	tasks          sync.WaitGroup
+	activeRequests sync.Map
+	recoveryMu     sync.Mutex
+	paidRequests   chan struct{}
+	operationSlots chan struct{}
 }
 
 func NewServer(
@@ -46,7 +50,7 @@ func NewServer(
 ) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Server{
-		ctx: ctx, cancel: cancel,
+		ctx: ctx, cancel: cancel, paidRequests: make(chan struct{}, 3), operationSlots: make(chan struct{}, 3),
 		cfg:        cfg,
 		database:   database,
 		broker:     broker,
@@ -74,6 +78,7 @@ func (s *Server) Database() *db.DB {
 
 func (s *Server) setupRoutes() {
 	s.router.Use(middleware.RequestID)
+	s.router.Use(s.requestReplay)
 	s.router.Use(middleware.RealIP)
 	s.router.Use(middleware.Logger)
 	s.router.Use(middleware.Recoverer)
@@ -83,7 +88,7 @@ func (s *Server) setupRoutes() {
 	s.router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Idempotency-Key"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
@@ -92,6 +97,10 @@ func (s *Server) setupRoutes() {
 	_ = os.MkdirAll(s.cfg.StorageRoot, 0755)
 	fileServer := http.FileServer(http.Dir(s.cfg.StorageRoot))
 	s.router.Handle("/storage/*", http.StripPrefix("/storage/", fileServer))
+
+	// Recovery does not submit or retry any paid job.
+	s.router.Get("/generation-requests", s.handlePendingRequests)
+	s.router.Post("/generation-requests/{key}/acknowledge", s.handleAcknowledgeRequest)
 
 	// Health
 	s.router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +191,9 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/render-jobs", s.handleListRenderJobs)
 	s.router.Get("/render-jobs/{id}", s.handleGetRenderJob)
 	s.router.Post("/render-jobs/{id}/resubmit", s.handleResubmitJob)
+	s.router.Post("/render-jobs/{id}/reconcile", s.handleReconcileRender)
 
+	s.router.Post("/outputs/assemble", s.handleAssembleOutputs)
 	s.router.Get("/outputs/{id}/editor", s.handleGetEditorData)
 	s.router.Post("/outputs/{id}/retry", s.handleRetryOutput)
 	s.router.Patch("/outputs/{id}/select", s.handleSelectOutput)

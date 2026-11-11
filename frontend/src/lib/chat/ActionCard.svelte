@@ -1,4 +1,7 @@
 <script lang="ts">
+ const operationScope=new AbortController();
+ onDestroy(()=>operationScope.abort());
+ import {onDestroy} from 'svelte';
   import { del, get, post } from '$lib/api';
   import { normalizeChatIntent } from './intent.mjs';
   import { runBackgroundOp, type Op } from '$lib/ops';
@@ -111,6 +114,8 @@
   // svelte-ignore state_referenced_locally
   let sceneCount = $state<number | ''>(intent.scene_count ?? '');
   // svelte-ignore state_referenced_locally
+  let castIds:string[]=$state(intent.character_id?[intent.character_id]:[]);
+  // svelte-ignore state_referenced_locally
   let sceneId = $state(intent.scene_id ?? '');
   // svelte-ignore state_referenced_locally
   let shotId = $state(intent.shot_id ?? '');
@@ -118,11 +123,7 @@
   let outputId = $state(intent.output_id ?? '');
   // svelte-ignore state_referenced_locally
   let captionStyle = $state(intent.style ?? 'kids');
-  let captionModel = $state('');
-  // svelte-ignore state_referenced_locally
-  let captionLanguage = $state(intent.language ?? 'zh');
   let shots = $state<{ id: string; shot_order: number; prompt: string }[]>([]);
-  let captionModels = $state<string[]>([]);
   let maxAssets = $state(4);
   let autoAssets = $state(true);
   let plannedAssets = $state<
@@ -141,7 +142,7 @@
     storyboard: 'Generate storyboard',
     render_scene: 'Render scene',
     render_shot: 'Render shot',
-    caption: 'Add captions',
+    caption: 'Burn saved captions',
     retry_render: 'Fix & re-render',
     generate_assets: 'Generate assets',
     refine_scene: 'AI refine scene',
@@ -185,18 +186,6 @@
 
   // svelte-ignore state_referenced_locally
   if (needsShot(intent.action) && sceneId) loadShots();
-
-  // svelte-ignore state_referenced_locally
-  if (intent.action === 'caption') {
-    get('/caption-config')
-      .then((cfg) => {
-        captionModels = cfg.models ?? [];
-        captionModel = cfg.default_model ?? captionModels[0] ?? '';
-        if (!intent.language) captionLanguage = cfg.default_language ?? 'zh';
-        if (!intent.style && cfg.default_style) captionStyle = cfg.default_style;
-      })
-      .catch(() => {});
-  }
 
   const ready = $derived.by(() => {
     switch (intent.action) {
@@ -265,6 +254,7 @@
     const handle = ctx ? onop?.(label, ctx) : undefined;
     try {
       await runBackgroundOp(path, body, {
+        signal:operationScope.signal,
         label,
         onDone: async (op) => {
           busy = false;
@@ -320,9 +310,7 @@
         return runInBackground(
           `/outputs/${outputId}/caption`,
           {
-            style: captionStyle,
-            model: captionModel || null,
-            language: captionLanguage === 'auto' ? null : captionLanguage
+            style: captionStyle
           },
           'Captioning',
           (op) => op.result_json?.output_id ?? op.output_id ?? outputId,
@@ -337,13 +325,14 @@
         case 'generate_script':
           result = await post('/scripts/generate', {
             idea: ideaOptions ? composedIdea() : idea.trim(),
+            character_ids:castIds,
             ...(sceneCount ? { scene_count: sceneCount } : {})
           });
           focusId = result.scenes?.at(-1)?.id;
           toast.success(`Script generated — ${result.scenes?.length ?? 0} scenes`);
           break;
         case 'generate_scenes':
-          result = await post(`/scenes/${sceneId}/generate`, { character_ids: [] });
+          result = await post(`/scenes/${sceneId}/generate`, {});
           focusId = result.id ?? sceneId;
           toast.success('Scene expanded');
           break;
@@ -484,6 +473,9 @@
         </div>
       {/if}
 
+      {#if intent.action === 'generate_script' && options.characters.length}
+      <fieldset class="space-y-1"><legend class="text-xs">Cast</legend>{#each options.characters as character(character.id)}<label class="flex items-center gap-2 text-xs"><input type="checkbox" bind:group={castIds} value={character.id}/>{character.name}</label>{/each}</fieldset>
+      {/if}
       {#if ['generate_scenes', 'generate_shots', 'storyboard', 'render_scene', 'render_shot', 'generate_assets', 'refine_scene', 'refine_shot', 'delete_scene', 'plan_assets'].includes(intent.action)}
         <div>
           <label class={labelClass} for="scene-{intent.action}">Scene</label>
@@ -586,27 +578,16 @@
       {/if}
 
       {#if intent.action === 'caption'}
-        <div class="grid grid-cols-3 gap-2">
+        <p class="text-xs text-muted-foreground">Transcribe or write captions in the editor first. This action burns saved captions into a new video file.</p>
+        {#if outputId}<a class="text-xs underline" href={`/editor/${outputId}`}>Open caption editor</a>{/if}
+        <div>
           <div>
             <label class={labelClass} for="style-{intent.action}">Style</label>
             <select id="style-{intent.action}" bind:value={captionStyle} class={selectClass}>
               {#each options.caption_styles as st (st)}<option value={st}>{st}</option>{/each}
             </select>
           </div>
-          <div>
-            <label class={labelClass} for="model-{intent.action}">Model</label>
-            <select id="model-{intent.action}" bind:value={captionModel} class={selectClass}>
-              {#each captionModels as m (m)}<option value={m}>{m}</option>{/each}
-            </select>
-          </div>
-          <div>
-            <label class={labelClass} for="lang-{intent.action}">Language</label>
-            <select id="lang-{intent.action}" bind:value={captionLanguage} class={selectClass}>
-              <option value="zh">zh</option>
-              <option value="en">en</option>
-              <option value="auto">auto</option>
-            </select>
-          </div>
+
         </div>
       {/if}
 

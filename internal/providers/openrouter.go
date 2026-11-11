@@ -14,6 +14,13 @@ import (
 	"time"
 )
 
+type HTTPError struct {
+	Status  int
+	Message string
+}
+
+func (e *HTTPError) Error() string { return fmt.Sprintf("OpenRouter HTTP %d: %s", e.Status, e.Message) }
+
 const OpenRouterURL = "https://openrouter.ai/api/v1"
 
 type OpenRouterClient struct {
@@ -83,7 +90,7 @@ func (c *OpenRouterClient) request(ctx context.Context, method, path string, pay
 		if len(message) > 2000 {
 			message = message[:2000]
 		}
-		return nil, fmt.Errorf("OpenRouter HTTP %d: %s", resp.StatusCode, message)
+		return nil, &HTTPError{Status: resp.StatusCode, Message: message}
 	}
 	return data, nil
 }
@@ -232,12 +239,7 @@ type GeneratedImage struct {
 }
 
 func (c *OpenRouterClient) GenerateImages(ctx context.Context, payload map[string]any) ([]GeneratedImage, error) {
-	id, _ := payload["model"].(string)
-	m, err := c.Model(ctx, id, "image")
-	if err != nil {
-		return nil, err
-	}
-	if err = m.validateImage(payload); err != nil {
+	if err := c.ValidateImage(ctx, payload); err != nil {
 		return nil, err
 	}
 	data, err := c.request(ctx, "POST", "/images", payload)
@@ -527,4 +529,13 @@ func exampleShape(t reflect.Type) any {
 	default:
 		return 0
 	}
+}
+
+func (c *OpenRouterClient) ValidateImage(ctx context.Context, payload map[string]any) error {
+	id, _ := payload["model"].(string)
+	model, err := c.Model(ctx, id, "image")
+	if err != nil {
+		return err
+	}
+	return model.validateImage(payload)
 }

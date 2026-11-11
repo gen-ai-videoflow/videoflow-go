@@ -100,7 +100,17 @@ func (s *Server) handleRenderFromShot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectID, _ := s.database.GetActiveProjectID()
+	projectID, err := s.database.GetActiveProjectID()
+	if err != nil {
+		http.Error(w, "no active project", 400)
+		return
+	}
+	scene, err := s.database.GetScene(shot.SceneID)
+	if err != nil || scene.ProjectID == nil || *scene.ProjectID != projectID || (body.SceneID != "" && body.SceneID != shot.SceneID) {
+		http.Error(w, "shot does not belong to this scene and active project", 400)
+		return
+	}
+	body.SceneID = shot.SceneID
 	stage := "submitted"
 	progress := "Queued from shot"
 	reqBytes, _ := json.Marshal(map[string]any{"prompt": shot.Prompt})
@@ -170,17 +180,24 @@ func (s *Server) handleResubmitJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "job not found", 404)
 		return
 	}
+	if job.Status != "failed" && job.Status != "succeeded" {
+		http.Error(w, "Wait for the active job, or reconcile an uncertain provider submission before retrying", 409)
+		return
+	}
 	// Explicit retry starts a new generation; only restart reconciliation reuses the upstream ID.
 	stage, progress := "submitted", "Retry queued"
 	if job.Provider != "openrouter" {
 		job.Model = s.routes().MediaModel("video")
 	}
 	fresh := &models.RenderJob{ProjectID: job.ProjectID, SceneID: job.SceneID, ShotID: job.ShotID, Provider: "openrouter", Model: job.Model, Status: "pending", Stage: &stage, Progress: &progress, RequestJSON: job.RequestJSON}
-	if err = s.database.CreateRenderJob(fresh); err != nil {
+	created, err := s.database.CreateRenderRetry(job.ID, fresh)
+	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	s.workers.Enqueue(fresh.ID)
+	if created {
+		s.workers.Enqueue(fresh.ID)
+	}
 	writeJSON(w, 202, map[string]any{"job_id": fresh.ID, "status": fresh.Status})
 }
 
@@ -445,7 +462,10 @@ func (s *Server) handleSelectOutput(w http.ResponseWriter, r *http.Request) {
 	body.Selected = true
 	_ = json.NewDecoder(r.Body).Decode(&body)
 
-	_ = s.database.SelectRenderOutput(outputID, body.Selected)
+	if err := s.database.SelectRenderOutput(outputID, body.Selected); err != nil {
+		http.Error(w, "failed to save output selection", 500)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"id":       outputID,
 		"selected": body.Selected,
@@ -589,12 +609,7 @@ func (s *Server) handleUpdateCaptions(w http.ResponseWriter, r *http.Request) {
 		body.Style = "clean"
 	}
 	s.operation(w, r, &models.Op{Kind: "caption", OutputID: &outputID}, func(ctx context.Context) (any, error) {
-		output.CaptionsJSON, _ = json.Marshal(body)
-		output.CaptionedPath = nil
-		if err := s.database.UpdateRenderOutput(output); err != nil {
-			return nil, err
-		}
-		return map[string]string{"output_id": outputID, "status": "saved"}, nil
+		return s.saveBurnedCaptions(ctx, output, body.Segments, body.Style)
 	})
 }
 func (s *Server) handleTranscribeCaptions(w http.ResponseWriter, r *http.Request) {
@@ -663,29 +678,34 @@ func (s *Server) handleCaptionOutput(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "output not found", 404)
 		return
 	}
+	var body struct {
+		Style string `json:"style"`
+	}
+	if r.Body != nil && r.ContentLength != 0 {
+		if err = json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "invalid caption request", 400)
+			return
+		}
+	}
+	var captions struct {
+		Segments []models.CaptionSegment `json:"segments"`
+		Style    string                  `json:"style"`
+	}
+	if json.Unmarshal(output.CaptionsJSON, &captions) != nil {
+		json.Unmarshal(output.CaptionsJSON, &captions.Segments)
+	}
+	if len(captions.Segments) == 0 {
+		http.Error(w, "Open the editor and transcribe or write captions before burning", 400)
+		return
+	}
+	if body.Style != "" {
+		captions.Style = body.Style
+	}
+	if captions.Style == "" {
+		captions.Style = "clean"
+	}
 	s.operation(w, r, &models.Op{Kind: "caption", OutputID: &outputID}, func(ctx context.Context) (any, error) {
-		var captions struct {
-			Segments []models.CaptionSegment `json:"segments"`
-			Style    string                  `json:"style"`
-		}
-		if err := json.Unmarshal(output.CaptionsJSON, &captions); err != nil {
-			_ = json.Unmarshal(output.CaptionsJSON, &captions.Segments)
-		}
-		path, err := s.storagePath(output.VideoPath)
-		if err != nil {
-			return nil, err
-		}
-		name := output.ID + "-captioned.mp4"
-		dest := filepath.Join(s.cfg.StorageRoot, "outputs", name)
-		if err = s.media.BurnCaptions(ctx, path, dest, captions.Segments, captions.Style); err != nil {
-			return nil, err
-		}
-		public := filepath.ToSlash(filepath.Join("storage", "outputs", name))
-		output.CaptionedPath = &public
-		if err = s.database.UpdateRenderOutput(output); err != nil {
-			return nil, err
-		}
-		return map[string]string{"output_id": output.ID, "status": "burned", "captioned_path": public}, nil
+		return s.saveBurnedCaptions(ctx, output, captions.Segments, captions.Style)
 	})
 }
 

@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"6eek-go/internal/agents"
 	"6eek-go/internal/models"
 )
 
@@ -21,46 +21,34 @@ func (s *Server) handleVideoPreflight(w http.ResponseWriter, r *http.Request) {
 		style = "2d-picture-book"
 	}
 
-	missing := []map[string]string{}
-	if _, err := s.routes().Client("openrouter"); err != nil {
-		missing = append(missing, map[string]string{
-			"route":   "media",
-			"setting": "/settings",
-			"reason":  "Configure an OpenRouter API key in settings.",
-		})
+	project, _ := s.database.GetActiveProjectID()
+	brief := generationBrief{Idea: "Preflight", AspectRatio: aspectRatio, Style: style}
+	brief.SceneCount, _ = strconv.Atoi(r.URL.Query().Get("scene_count"))
+	brief.TargetDuration, _ = strconv.Atoi(r.URL.Query().Get("target_duration"))
+	if ids := r.URL.Query().Get("character_ids"); ids != "" {
+		brief.CharacterIDs = strings.Split(ids, ",")
 	}
-	elseCheck := len(missing) == 0
-	if elseCheck {
-		client, _ := s.routes().Client("openrouter")
-		if err := client.CheckKey(r.Context()); err != nil {
-			missing = append(missing, map[string]string{"route": "authentication", "setting": "/settings", "reason": err.Error()})
-		} else {
-			for kind, model := range map[string]string{"image": s.routes().MediaModel("image"), "video": s.routes().MediaModel("video")} {
-				metadata, err := client.Model(r.Context(), model, kind)
-				if err != nil {
-					missing = append(missing, map[string]string{"route": kind, "setting": "/settings#engines", "reason": err.Error()})
-					continue
-				}
-				if kind == "video" {
-					supported := false
-					for _, aspect := range metadata.AspectRatios {
-						if aspect == aspectRatio {
-							supported = true
-						}
-					}
-					if !supported {
-						missing = append(missing, map[string]string{"route": "video", "setting": "/settings#engines", "reason": "Selected video model does not support aspect ratio " + aspectRatio})
-					}
-				}
-			}
-			if _, _, err := s.routes().Agent(r.Context(), "script_agent"); err != nil {
-				missing = append(missing, map[string]string{"route": "text", "setting": "/settings", "reason": err.Error()})
+	if err := s.prepareBrief(project, &brief); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	missing := s.generationPrerequisites(r.Context(), brief)
+	effective, hasStyle := s.effectiveStyle(project, style)
+	client, _ := s.routes().Client("openrouter")
+	var durations []int
+	supportsReferences := false
+	if client != nil {
+		if model, err := client.Model(r.Context(), s.routes().MediaModel("video"), "video"); err == nil {
+			durations = model.Durations
+			for _, f := range model.FrameImages {
+				supportsReferences = supportsReferences || f == "first_frame"
 			}
 		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"ready":   len(missing) == 0,
+		"ready":           len(missing) == 0,
+		"effective_style": effective, "has_project_style": hasStyle, "video_durations": durations, "supports_references": supportsReferences,
 		"missing": missing,
 		"effective_routes": map[string]string{
 			"video_provider": "openrouter",
@@ -75,193 +63,122 @@ func (s *Server) handleVideoPreflight(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleGenerateVideo(w http.ResponseWriter, r *http.Request) {
-	projectID, err := s.database.GetActiveProjectID()
+	project, err := s.database.GetActiveProjectID()
 	if err != nil {
-		http.Error(w, "no active project", http.StatusInternalServerError)
+		http.Error(w, "no active project", 400)
 		return
 	}
-
-	var body struct {
-		Idea             string `json:"idea"`
-		TargetDuration   int    `json:"target_duration"`
-		SceneCount       int    `json:"scene_count"`
-		Style            string `json:"style"`
-		AspectRatio      string `json:"aspect_ratio"`
-		Language         string `json:"language"`
-		ConversationMode string `json:"conversation_mode"`
-		Instruction      string `json:"instruction"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Idea == "" {
-		http.Error(w, "idea is required", http.StatusBadRequest)
+	var brief generationBrief
+	if json.NewDecoder(r.Body).Decode(&brief) != nil {
+		http.Error(w, "invalid generation request", 400)
 		return
 	}
-
-	if body.SceneCount <= 0 {
-		body.SceneCount = 3
-	}
-	if body.TargetDuration <= 0 {
-		body.TargetDuration = body.SceneCount * int(s.routes().NumberSetting("default_scene_duration", 5))
-	}
-	if body.AspectRatio == "" {
-		body.AspectRatio = s.routes().Setting("default_aspect_ratio", "9:16")
-	}
-
-	op := &models.Op{
-		Kind:      "video_generation",
-		Status:    "running",
-		ProjectID: &projectID,
-	}
-	if err := s.database.CreateOp(op); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err = s.prepareBrief(project, &brief); err != nil {
+		http.Error(w, err.Error(), 400)
 		return
 	}
-
-	// Run guided video pipeline asynchronously
+	if missing := s.generationPrerequisites(r.Context(), brief); len(missing) > 0 {
+		http.Error(w, missing[0]["reason"], 400)
+		return
+	}
+	select {
+	case s.operationSlots <- struct{}{}:
+	default:
+		http.Error(w, "Three background operations are already running. Check Activity before starting another.", 429)
+		return
+	}
+	op := &models.Op{Kind: "video_generation", Status: "running", ProjectID: &project}
+	if err = s.database.CreateOp(op); err != nil {
+		<-s.operationSlots
+		http.Error(w, "failed to save operation", 500)
+		return
+	}
 	s.tasks.Add(1)
-	go func(opID, pid string) {
+	go func() {
 		defer s.tasks.Done()
+		defer func() { <-s.operationSlots }()
 		ctx, cancel := context.WithTimeout(s.ctx, 10*time.Minute)
 		defer cancel()
-
+		ctx = brief.context(ctx)
 		stages := []string{}
-		recordStage := func(stage string) {
+		fail := func(err error) { message := err.Error(); s.database.UpdateOp(op.ID, "failed", nil, &message) }
+		record := func(stage string) {
 			stages = append(stages, stage)
-			s.broker.Publish(map[string]interface{}{
-				"type":       "pipeline_stage",
-				"op_id":      opID,
-				"stage":      stage,
-				"stages":     stages,
-				"project_id": pid,
-			})
+			raw, _ := json.Marshal(map[string]any{"stages": stages, "brief": brief})
+			s.database.UpdateOp(op.ID, "running", raw, nil)
+			s.broker.Publish(map[string]any{"type": "pipeline_stage", "op_id": op.ID, "stage": stage, "stages": stages, "project_id": project})
 		}
-
-		// Stage 1: Story / Script
-		draft, err := s.agents.GenerateScript(agents.WithDialogueLanguage(ctx, body.Language), body.Idea, body.SceneCount, body.TargetDuration, body.AspectRatio)
+		draft, err := s.agents.GenerateScript(ctx, brief.prompt(), brief.SceneCount, brief.TargetDuration, brief.AspectRatio)
 		if err != nil {
-			errStr := err.Error()
-			_ = s.database.UpdateOp(opID, "failed", nil, &errStr)
+			fail(err)
 			return
 		}
-		recordStage("story")
-
-		draftBytes, _ := json.Marshal(draft)
-		script := &models.Script{
-			ProjectID: &pid,
-			Idea:      body.Idea,
-			Title:     draft.Title,
-			Summary:   draft.Summary,
-			DraftJSON: draftBytes,
-		}
-		if err := s.database.CreateScript(script); err != nil {
-			message := err.Error()
-			_ = s.database.UpdateOp(opID, "failed", nil, &message)
+		script, scenes, err := s.persistDraft(project, brief, draft)
+		if err != nil {
+			fail(err)
 			return
 		}
-
-		// Stage 2: Scenes & Shots
-		createdScenes := []models.Scene{}
-		for i, sc := range draft.Scenes {
-			scene := models.Scene{
-				ProjectID:   &pid,
-				ScriptID:    &script.ID,
-				SceneOrder:  i + 1,
-				Title:       sc.Title,
-				Summary:     sc.Summary,
-				Duration:    sc.Duration,
-				AspectRatio: sc.AspectRatio,
-			}
-			if err := s.database.CreateScene(&scene); err != nil {
-				message := err.Error()
-				_ = s.database.UpdateOp(opID, "failed", nil, &message)
+		record("story")
+		record("scenes")
+		for i := range scenes {
+			scene := &scenes[i]
+			drafts, err := s.agents.GenerateShots(ctx, scene.Title, scene.Summary+"\n"+brief.prompt(), scene.Duration)
+			if err != nil {
+				fail(err)
 				return
 			}
-			createdScenes = append(createdScenes, scene)
-
-			// Generate shots for scene
-			shots, err := s.agents.GenerateShots(ctx, scene.Title, scene.Summary, scene.Duration)
-			if err != nil {
-				message := err.Error()
-				_ = s.database.UpdateOp(opID, "failed", nil, &message)
-				return
+			shots := []models.Shot{}
+			for _, d := range drafts {
+				camera, movement := d.Camera, d.Movement
+				shots = append(shots, models.Shot{ShotOrder: d.Order, Duration: d.Duration, Prompt: d.Prompt, Camera: &camera, Movement: &movement})
 			}
-			for _, sh := range shots {
-				shot := models.Shot{
-					SceneID:   scene.ID,
-					ShotOrder: sh.Order,
-					Duration:  sh.Duration,
-					Prompt:    sh.Prompt,
-					Camera:    &sh.Camera,
-					Movement:  &sh.Movement,
-				}
-				if err := s.database.CreateShot(&shot); err != nil {
-					message := err.Error()
-					_ = s.database.UpdateOp(opID, "failed", nil, &message)
-					return
-				}
-			}
-		}
-		recordStage("scenes")
-		recordStage("shots")
-
-		// Stage 3: Dialogue
-		// Dialogue is included in the script/video prompt; no separate speech stage is claimed.
-
-		// Stage 4: Visuals
-		for _, scene := range createdScenes {
-			_, err := s.generateAssets(ctx, scene.ProjectID, nil, scene.ID, scene.Title+" keyframe", "storyboard", scene.Title+". "+scene.Summary, scene.AspectRatio, nil)
-			if err != nil {
-				message := err.Error()
-				_ = s.database.UpdateOp(opID, "failed", nil, &message)
+			if err = s.database.ReplaceSceneShots(scene, shots); err != nil {
+				fail(err)
 				return
 			}
 		}
-		recordStage("visuals")
-
-		// Stage 5: Render Jobs
-		renderJobIDs := []string{}
-		for _, sc := range createdScenes {
-			stage := "submitted"
-			progress := "Queued for render"
-			job := models.RenderJob{
-				ProjectID: &pid,
-				SceneID:   &sc.ID,
-				Provider:  "openrouter",
-				Model:     s.routes().MediaModel("video"),
-				Status:    "pending",
-				Stage:     &stage,
-				Progress:  &progress,
-			}
-			if err := s.database.CreateRenderJob(&job); err != nil {
-				message := err.Error()
-				_ = s.database.UpdateOp(opID, "failed", nil, &message)
+		record("shots")
+		for i := range scenes {
+			scene := &scenes[i]
+			refs, err := s.sceneReferences(scene)
+			if err != nil {
+				fail(err)
 				return
 			}
-			renderJobIDs = append(renderJobIDs, job.ID)
+			images, err := s.generateAssets(ctx, scene.ProjectID, nil, scene.ID, scene.Title+" keyframe", "storyboard", scene.Title+". "+scene.Summary+"\n"+brief.prompt(), scene.AspectRatio, refs)
+			if err != nil {
+				fail(err)
+				return
+			}
+			var ids []string
+			json.Unmarshal(scene.AssetIDsJSON, &ids)
+			for _, image := range images {
+				ids = append(ids, image.ID)
+			}
+			scene.AssetIDsJSON, _ = json.Marshal(ids)
+			if err = s.database.UpdateScene(scene); err != nil {
+				fail(err)
+				return
+			}
+		}
+		record("visuals")
+		jobs := []models.RenderJob{}
+		sceneIDs := []string{}
+		for i := range scenes {
+			scene := &scenes[i]
+			stage, progress := "submitted", "Queued scene clip"
+			jobs = append(jobs, models.RenderJob{ProjectID: &project, SceneID: &scene.ID, Provider: "openrouter", Model: s.routes().MediaModel("video"), Status: "pending", Stage: &stage, Progress: &progress})
+			sceneIDs = append(sceneIDs, scene.ID)
+		}
+		stages = append(stages, "render")
+		result := map[string]any{"project_id": project, "script_id": script.ID, "scene_ids": sceneIDs, "stages": stages, "status": "rendering", "brief": brief}
+		if err = s.database.SaveOperationJobs(op.ID, jobs, result); err != nil {
+			fail(err)
+			return
+		}
+		for _, job := range jobs {
 			s.workers.Enqueue(job.ID)
 		}
-		recordStage("render")
-
-		sceneIDs := make([]string, len(createdScenes))
-		for i, sc := range createdScenes {
-			sceneIDs[i] = sc.ID
-		}
-
-		result := map[string]interface{}{
-			"project_id":     pid,
-			"script_id":      script.ID,
-			"scene_ids":      sceneIDs,
-			"render_job_ids": renderJobIDs,
-			"stages":         stages,
-			"status":         "rendering",
-		}
-		resultBytes, _ := json.Marshal(result)
-		_ = s.database.UpdateOp(opID, "succeeded", resultBytes, nil)
-
-		log.Printf("Guided video pipeline completed for op %s (%d scenes, %d render jobs)", opID, len(sceneIDs), len(renderJobIDs))
-	}(op.ID, projectID)
-
-	writeJSON(w, http.StatusAccepted, map[string]interface{}{
-		"op_id":  op.ID,
-		"status": op.Status,
-	})
+	}()
+	writeJSON(w, 202, map[string]any{"op_id": op.ID, "status": "running"})
 }

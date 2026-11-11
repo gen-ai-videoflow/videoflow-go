@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"6eek-go/internal/providers"
 )
@@ -59,29 +60,67 @@ func (a *AgentEngine) structured(ctx context.Context, name, system, prompt strin
 // --- Develop Idea ---
 
 type ConceptOption struct {
-	Title       string `json:"title"`
-	Hook        string `json:"hook"`
-	Narrative   string `json:"narrative"`
-	VisualStyle string `json:"visual_style"`
+	Title      string `json:"title"`
+	Premise    string `json:"premise"`
+	Hook       string `json:"hook"`
+	WhyItWorks string `json:"why_it_works"`
 }
-
 type DevelopIdeaResponse struct {
-	OptionA        ConceptOption `json:"option_a"`
-	OptionB        ConceptOption `json:"option_b"`
-	Recommendation string        `json:"recommendation"`
+	Options          []ConceptOption `json:"options"`
+	RecommendedIndex int             `json:"recommended_index"`
+	Reasoning        string          `json:"reasoning"`
 }
 
+// UnmarshalJSON accepts old provider replies without advertising the legacy schema to new calls.
+func (response *DevelopIdeaResponse) UnmarshalJSON(data []byte) error {
+	type canonical DevelopIdeaResponse
+	var current canonical
+	if err := json.Unmarshal(data, &current); err != nil {
+		return err
+	}
+	*response = DevelopIdeaResponse(current)
+	if len(response.Options) > 0 {
+		return nil
+	}
+	var legacy struct {
+		OptionA, OptionB struct{ Title, Hook, Narrative string }
+		Recommendation   string
+	}
+	// Legacy snake-case names are explicit; unknown historic fields are ignored.
+	var raw struct {
+		A              struct{ Title, Hook, Narrative string } `json:"option_a"`
+		B              struct{ Title, Hook, Narrative string } `json:"option_b"`
+		Recommendation string                                  `json:"recommendation"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	legacy.OptionA = raw.A
+	legacy.OptionB = raw.B
+	legacy.Recommendation = raw.Recommendation
+	if legacy.OptionA.Title != "" && legacy.OptionB.Title != "" {
+		response.Options = []ConceptOption{{Title: legacy.OptionA.Title, Premise: legacy.OptionA.Narrative, Hook: legacy.OptionA.Hook}, {Title: legacy.OptionB.Title, Premise: legacy.OptionB.Narrative, Hook: legacy.OptionB.Hook}}
+		response.Reasoning = legacy.Recommendation
+		if strings.EqualFold(strings.TrimSpace(legacy.Recommendation), "B") {
+			response.RecommendedIndex = 1
+		}
+	}
+	return nil
+}
 func (a *AgentEngine) DevelopIdea(ctx context.Context, idea string) (*DevelopIdeaResponse, error) {
-	system := "You are a professional film and animation director. Expand the user's idea into two mature, distinct concept directions (Option A and Option B), and give a recommendation."
-	prompt := fmt.Sprintf("Idea: %s", idea)
-
-	var res DevelopIdeaResponse
-	err := a.structured(ctx, "idea_agent", system, prompt, &res)
-	if err != nil {
+	var response DevelopIdeaResponse
+	if err := a.structured(ctx, "idea_agent", "Develop two distinct film concepts. Return JSON options (exactly two objects with title, premise, hook, why_it_works), recommended_index (0 or 1), and reasoning.", "Idea: "+idea, &response); err != nil {
 		return nil, err
 	}
-
-	return &res, nil
+	if len(response.Options) != 2 || response.RecommendedIndex < 0 || response.RecommendedIndex >= 2 {
+		return nil, fmt.Errorf("OpenRouter returned invalid idea options")
+	}
+	for _, o := range response.Options {
+		if strings.TrimSpace(o.Title) == "" || strings.TrimSpace(o.Premise) == "" {
+			return nil, fmt.Errorf("OpenRouter returned incomplete idea options")
+		}
+	}
+	return &response, nil
 }
 
 // --- Generate Script & Scenes ---
@@ -175,22 +214,25 @@ func (a *AgentEngine) GenerateShots(ctx context.Context, title, summary string, 
 // --- Classify Chat Intent ---
 
 type ChatIntentResponse struct {
-	Reply        string                 `json:"reply"`
-	Action       string                 `json:"action"` // canonical action-card action, or none
-	ActionParams map[string]interface{} `json:"action_params,omitempty"`
+	Reply       string `json:"reply"`
+	Action      string `json:"action"` // canonical action-card action, or none
+	SceneCount  int    `json:"scene_count,omitempty"`
+	SceneID     string `json:"scene_id,omitempty"`
+	CharacterID string `json:"character_id,omitempty"`
+	OutputID    string `json:"output_id,omitempty"`
 }
 
-func (a *AgentEngine) Chat(ctx context.Context, message string, history []map[string]string) (*ChatIntentResponse, error) {
+func (a *AgentEngine) Chat(ctx context.Context, message string, history []map[string]string, projectContext ...string) (*ChatIntentResponse, error) {
 	system := `You are the 6eek Studio assistant. Help the user direct their story, build characters, scenes, and shots.
 Respond in JSON with a natural conversational 'reply' and an 'action'.
 Use generate_script to write a new story, script, or scene from an idea. Do not return create_script or add_scene.
 Other supported actions: generate_scenes (expand an existing scene), generate_shots, storyboard,
 render_scene, render_shot, caption, retry_render, generate_assets, refine_scene, refine_shot,
 delete_scene, style_ingest, plan_assets. Use none for conversation or requests that cannot be performed.
-Never invent action names. The user reviews and runs the action card; do not claim it has already executed.`
+Never invent action names or IDs. Set scene_count only when the user specifies a scene count; otherwise use 1. Select scene_id, character_id or output_id only from the supplied project context when the request identifies that item. The user reviews and runs the action card; do not claim it has already executed.`
 
 	historyBytes, _ := json.Marshal(history)
-	prompt := fmt.Sprintf("Conversation history: %s\nUser message: %s", string(historyBytes), message)
+	prompt := fmt.Sprintf("Conversation history: %s\nUser message: %s\nProject context: %s", string(historyBytes), message, strings.Join(projectContext, "\n"))
 
 	var res ChatIntentResponse
 	err := a.structured(ctx, "intent_agent", system, prompt, &res)

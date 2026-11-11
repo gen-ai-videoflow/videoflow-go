@@ -1,4 +1,6 @@
 <script lang="ts">
+ const operationScope=new AbortController();
+ onDestroy(()=>operationScope.abort());
   /**
    * Video editor: preview player + zoomable multi-track timeline + inspector.
    *
@@ -6,7 +8,7 @@
    * the background-op flow. Shot edits PATCH the live shot rows and only
    * affect the NEXT render.
    */
-  import { onMount } from 'svelte';
+  import { onMount,onDestroy } from 'svelte';
   import { page } from '$app/state';
   import { beforeNavigate } from '$app/navigation';
   import { get, mediaUrl, API_BASE } from '$lib/api';
@@ -218,6 +220,7 @@
         },
         {
           method: 'PUT',
+          signal:operationScope.signal,
           label: 'Re-burning captions',
           onDone: () => {
             // Only a successful burn makes the page clean — clearing dirty on
@@ -254,6 +257,7 @@
         `/outputs/${output.id}/captions/transcribe`,
         { model: model || null, language: language || null },
         {
+          signal:operationScope.signal,
           label: hasCaptions ? 'Re-transcribing' : 'Transcribing',
           onDone: () => {
             transcribing = false;

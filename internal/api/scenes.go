@@ -71,15 +71,34 @@ func (s *Server) handleUpdateScene(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	previousCast := string(scene.CharacterIDsJSON)
+	previousProject := scene.ProjectID
+	previousUpdated := scene.UpdatedAt
 	// Snapshot revision before update
 	oldSnap, _ := json.Marshal(scene)
-	_, _ = s.database.CreateRevision("scene", id, oldSnap)
+	if _, err := s.database.CreateRevision("scene", id, oldSnap); err != nil {
+		http.Error(w, "cannot save scene revision", 500)
+		return
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(scene); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	scene.ID = id
+	scene.ProjectID = previousProject
+	scene.UpdatedAt = previousUpdated
+	if string(scene.CharacterIDsJSON) != previousCast {
+		var ids []string
+		if json.Unmarshal(scene.CharacterIDsJSON, &ids) != nil {
+			http.Error(w, "invalid cast", 400)
+			return
+		}
+		if err := s.setSceneCast(scene, ids); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+	}
 	if err := s.database.UpdateScene(scene); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,7 +156,10 @@ func (s *Server) handleUpdateShot(w http.ResponseWriter, r *http.Request) {
 
 	// Snapshot revision before update
 	oldSnap, _ := json.Marshal(shot)
-	_, _ = s.database.CreateRevision("shot", id, oldSnap)
+	if _, err := s.database.CreateRevision("shot", id, oldSnap); err != nil {
+		http.Error(w, "cannot save shot revision", 500)
+		return
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(shot); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -160,36 +182,10 @@ func (s *Server) handleDeleteShot(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"deleted": id})
 }
 
+// Both entry points use the same validated, atomic scene-generation operation.
 func (s *Server) handleExpandScene(w http.ResponseWriter, r *http.Request) {
-	sceneID := chi.URLParam(r, "id")
-	scene, err := s.database.GetScene(sceneID)
-	if err != nil {
-		http.Error(w, "scene not found", http.StatusNotFound)
-		return
-	}
-
-	shots, err := s.agents.GenerateShots(r.Context(), scene.Title, scene.Summary, scene.Duration)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	createdShots := []models.Shot{}
-	for _, sh := range shots {
-		shot := models.Shot{
-			SceneID:   scene.ID,
-			ShotOrder: sh.Order,
-			Duration:  sh.Duration,
-			Prompt:    sh.Prompt,
-			Camera:    &sh.Camera,
-			Movement:  &sh.Movement,
-		}
-		_ = s.database.CreateShot(&shot)
-		createdShots = append(createdShots, shot)
-	}
-	writeJSON(w, http.StatusOK, createdShots)
+	s.handleGenerateShots(w, r)
 }
-
 func (s *Server) handleGenerateShots(w http.ResponseWriter, r *http.Request) {
 	sceneID := chi.URLParam(r, "id")
 	scene, err := s.database.GetScene(sceneID)
@@ -197,19 +193,56 @@ func (s *Server) handleGenerateShots(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "scene not found", 404)
 		return
 	}
+	var body struct {
+		CharacterIDs *[]string `json:"character_ids"`
+	}
+	if r.Body != nil && r.ContentLength != 0 {
+		if err = json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "invalid request body", 400)
+			return
+		}
+	}
+	if body.CharacterIDs != nil {
+		scene.CharacterIDsJSON, _ = json.Marshal(*body.CharacterIDs)
+		brief := sceneBrief(scene)
+		brief.CharacterIDs = *body.CharacterIDs
+		if scene.ProjectID != nil {
+			if brief.Idea == "" {
+				brief.Idea = scene.Summary
+			}
+			if err = s.prepareBrief(*scene.ProjectID, &brief); err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+		}
+		var snapshot map[string]any
+		json.Unmarshal(scene.SceneJSON, &snapshot)
+		if snapshot == nil {
+			snapshot = map[string]any{}
+		}
+		snapshot["generation_brief"] = brief
+		scene.SceneJSON, _ = json.Marshal(snapshot)
+	}
+	if len(scene.CharacterIDsJSON) == 0 {
+		scene.CharacterIDsJSON = []byte("[]")
+	}
+	notes, err := s.characterNotes(scene.ProjectID, scene.CharacterIDsJSON)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
 	s.operation(w, r, &models.Op{Kind: "shots", SceneID: &sceneID, ProjectID: scene.ProjectID}, func(ctx context.Context) (any, error) {
-		drafts, err := s.agents.GenerateShots(ctx, scene.Title, scene.Summary, scene.Duration)
+		drafts, err := s.agents.GenerateShots(sceneBrief(scene).context(ctx), scene.Title, scene.Summary+"\n"+sceneBrief(scene).prompt()+notes, scene.Duration)
 		if err != nil {
 			return nil, err
 		}
 		shots := []models.Shot{}
 		for _, draft := range drafts {
 			camera, movement := draft.Camera, draft.Movement
-			shot := models.Shot{SceneID: scene.ID, ShotOrder: draft.Order, Duration: draft.Duration, Prompt: draft.Prompt, Camera: &camera, Movement: &movement}
-			if err = s.database.CreateShot(&shot); err != nil {
-				return nil, err
-			}
-			shots = append(shots, shot)
+			shots = append(shots, models.Shot{SceneID: scene.ID, ShotOrder: draft.Order, Duration: draft.Duration, Prompt: draft.Prompt, Camera: &camera, Movement: &movement})
+		}
+		if err = s.database.ReplaceSceneShots(scene, shots); err != nil {
+			return nil, err
 		}
 		return map[string]any{"scene_id": scene.ID, "shots": shots}, nil
 	})
@@ -327,7 +360,11 @@ func (s *Server) handleRenderScene(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectID, _ := s.database.GetActiveProjectID()
+	projectID, err := s.database.GetActiveProjectID()
+	if err != nil || scene.ProjectID == nil || *scene.ProjectID != projectID {
+		http.Error(w, "scene not in active project", 400)
+		return
+	}
 	stage := "submitted"
 	progress := "Whole scene render queued"
 	job := &models.RenderJob{
@@ -340,7 +377,10 @@ func (s *Server) handleRenderScene(w http.ResponseWriter, r *http.Request) {
 		Progress:    &progress,
 		RequestJSON: []byte(fmt.Sprintf(`{"scene_id":"%s"}`, scene.ID)),
 	}
-	_ = s.database.CreateRenderJob(job)
+	if err := s.database.CreateRenderJob(job); err != nil {
+		http.Error(w, "failed to save render job", 500)
+		return
+	}
 	s.workers.Enqueue(job.ID)
 
 	writeJSON(w, http.StatusAccepted, map[string]interface{}{
@@ -361,7 +401,7 @@ func (s *Server) handleStoryboard(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return nil, err
 		}
-		assets, err := s.generateAssets(ctx, scene.ProjectID, nil, scene.ID, scene.Title+" storyboard", "storyboard", "Storyboard keyframe of "+scene.Title+". "+scene.Summary, scene.AspectRatio, refs)
+		assets, err := s.generateAssets(ctx, scene.ProjectID, nil, scene.ID, scene.Title+" storyboard", "storyboard", "Storyboard keyframe of "+scene.Title+". "+scene.Summary+"\n"+sceneBrief(scene).prompt(), scene.AspectRatio, refs)
 		if err != nil {
 			return nil, err
 		}
@@ -437,50 +477,66 @@ func (s *Server) handleGenerateSceneAssets(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) sceneReferences(scene *models.Scene) ([]string, error) {
-	characterIDs := []string{}
-	_ = json.Unmarshal(scene.CharacterIDsJSON, &characterIDs)
+	assetIDs := sceneBrief(scene).ReferenceAssetIDs
+	if len(assetIDs) == 0 {
+		var characterIDs []string
+		json.Unmarshal(scene.CharacterIDsJSON, &characterIDs)
+		if _, err := s.characterNotes(scene.ProjectID, scene.CharacterIDsJSON); err != nil {
+			return nil, err
+		}
+		for _, id := range characterIDs {
+			c, err := s.database.GetCharacter(id)
+			if err != nil {
+				return nil, err
+			}
+			var ids []string
+			json.Unmarshal(c.ReferenceAssetIDsJSON, &ids)
+			assetIDs = append(assetIDs, ids...)
+		}
+	}
 	refs := []string{}
-	for _, id := range characterIDs {
-		character, err := s.database.GetCharacter(id)
+	seen := map[string]bool{}
+	for _, id := range assetIDs {
+		if seen[id] || len(refs) >= 8 {
+			continue
+		}
+		seen[id] = true
+		asset, err := s.database.GetAsset(id)
 		if err != nil {
 			return nil, err
 		}
-		ids := []string{}
-		_ = json.Unmarshal(character.ReferenceAssetIDsJSON, &ids)
-		if len(ids) > 0 {
-			asset, err := s.database.GetAsset(ids[0])
-			if err != nil {
-				return nil, err
-			}
-			image, err := s.imageURL(asset)
-			if err != nil {
-				return nil, err
-			}
-			refs = append(refs, image)
+		if scene.ProjectID == nil || asset.ProjectID == nil || *scene.ProjectID != *asset.ProjectID {
+			return nil, fmt.Errorf("reference project mismatch")
 		}
+		image, err := s.imageURL(asset)
+		if err != nil {
+			return nil, err
+		}
+		refs = append(refs, image)
 	}
+
 	return refs, nil
 }
 
 func (s *Server) handleCastMemberAdd(w http.ResponseWriter, r *http.Request) {
 	sceneID := chi.URLParam(r, "id")
 	characterID := chi.URLParam(r, "character_id")
-	if err := s.database.AddSceneCast(sceneID, characterID); err != nil {
+	scene, err := s.changeSceneCast(sceneID, characterID, true)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	scene, _ := s.database.GetScene(sceneID)
 	writeJSON(w, http.StatusOK, scene)
 }
 
 func (s *Server) handleCastMemberDelete(w http.ResponseWriter, r *http.Request) {
 	sceneID := chi.URLParam(r, "id")
 	characterID := chi.URLParam(r, "character_id")
-	if err := s.database.RemoveSceneCast(sceneID, characterID); err != nil {
+	scene, err := s.changeSceneCast(sceneID, characterID, false)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	scene, _ := s.database.GetScene(sceneID)
 	writeJSON(w, http.StatusOK, scene)
 }
 
@@ -603,12 +659,24 @@ func (s *Server) handleRevertRevision(w http.ResponseWriter, r *http.Request) {
 	if rev.EntityType == "scene" {
 		var sc models.Scene
 		if err := json.Unmarshal(rev.SnapshotJSON, &sc); err == nil {
-			_ = s.database.UpdateScene(&sc)
+			current, err := s.database.GetScene(sc.ID)
+			if err != nil {
+				http.Error(w, "scene not found", 404)
+				return
+			}
+			sc.UpdatedAt = current.UpdatedAt
+			if err := s.database.UpdateScene(&sc); err != nil {
+				http.Error(w, "cannot restore scene", 500)
+				return
+			}
 		}
 	} else if rev.EntityType == "shot" {
 		var sh models.Shot
 		if err := json.Unmarshal(rev.SnapshotJSON, &sh); err == nil {
-			_ = s.database.UpdateShot(&sh)
+			if err := s.database.UpdateShot(&sh); err != nil {
+				http.Error(w, "cannot restore shot", 500)
+				return
+			}
 		}
 	}
 
@@ -639,46 +707,24 @@ func (s *Server) handleGenerateScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		Idea           string `json:"idea"`
-		TargetDuration int    `json:"target_duration"`
-		SceneCount     int    `json:"scene_count"`
-		AspectRatio    string `json:"aspect_ratio"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Idea == "" {
-		http.Error(w, "idea is required", http.StatusBadRequest)
+	var body generationBrief
+	if json.NewDecoder(r.Body).Decode(&body) != nil {
+		http.Error(w, "invalid request", 400)
 		return
 	}
-
-	draft, err := s.agents.GenerateScript(r.Context(), body.Idea, body.SceneCount, body.TargetDuration, body.AspectRatio)
+	if err = s.prepareBrief(projectID, &body); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	draft, err := s.agents.GenerateScript(body.context(r.Context()), body.prompt(), body.SceneCount, body.TargetDuration, body.AspectRatio)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), 502)
 		return
 	}
-
-	draftBytes, _ := json.Marshal(draft)
-	script := &models.Script{
-		ProjectID: &projectID,
-		Idea:      body.Idea,
-		Title:     draft.Title,
-		Summary:   draft.Summary,
-		DraftJSON: draftBytes,
-	}
-	_ = s.database.CreateScript(script)
-
-	createdScenes := []models.Scene{}
-	for i, sc := range draft.Scenes {
-		scene := models.Scene{
-			ProjectID:   &projectID,
-			ScriptID:    &script.ID,
-			SceneOrder:  i + 1,
-			Title:       sc.Title,
-			Summary:     sc.Summary,
-			Duration:    sc.Duration,
-			AspectRatio: sc.AspectRatio,
-		}
-		_ = s.database.CreateScene(&scene)
-		createdScenes = append(createdScenes, scene)
+	script, createdScenes, err := s.persistDraft(projectID, body, draft)
+	if err != nil {
+		http.Error(w, "failed to save generated script", 500)
+		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{

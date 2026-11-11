@@ -1,4 +1,5 @@
 <script lang="ts">
+ import GenerationRecovery from '$lib/GenerationRecovery.svelte';
   import { onMount } from 'svelte';
   import { get, put, post } from '$lib/api';
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
@@ -1271,3 +1272,5 @@
     </Tabs>
   {/if}
 </div>
+
+<GenerationRecovery/>

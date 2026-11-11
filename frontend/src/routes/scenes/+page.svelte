@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+ const operationScope=new AbortController();
+ onDestroy(()=>operationScope.abort());
+  import { onMount,onDestroy } from 'svelte';
   import { beforeNavigate } from '$app/navigation';
   import { get, patch, post, put, del, mediaUrl } from '$lib/api';
   import { runBackgroundOp } from '$lib/ops';
@@ -42,6 +44,7 @@
   let opBusy: Record<string, boolean> = $state({});
 
   let idea = $state('');
+  let storyCast:string[]=$state([]);
   let targetDuration: number | '' = $state('');
   let sceneCount: number | '' = $state('');
   let castSelection: Record<string, string[]> = $state({});
@@ -236,7 +239,7 @@
     storyboards = {};
     for (const a of allAssets) {
       const sid = a.metadata_json?.scene_id;
-      if (a.type === 'storyboard' && sid) storyboards[sid] = a;
+      if (a.type === 'storyboard' && sid && scenes.find(scene=>scene.id===sid)?.asset_ids_json?.includes(a.id)) storyboards[sid] = a;
     }
     const rendered: Record<string, boolean> = {};
     for (const j of jobs) {
@@ -298,6 +301,7 @@
       async () => {
         await post('/scripts/generate', {
           idea,
+          character_ids:storyCast,
           target_duration: targetDuration || null,
           ...(sceneCount ? { scene_count: sceneCount } : {})
         });
@@ -340,6 +344,7 @@
         `/scenes/${s.id}/shots/generate`,
         { auto_assets: autoProps[s.id] ?? true },
         {
+          signal:operationScope.signal,
           label: 'Shot generation',
           onDone: async () => {
             opBusy[key] = false;
@@ -377,7 +382,8 @@
     opBusy[key] = true;
     try {
       await runBackgroundOp(`/scenes/${s.id}/storyboard`, undefined, {
-        label: 'Storyboard',
+        signal:operationScope.signal,
+          label: 'Storyboard',
         onDone: async () => {
           opBusy[key] = false;
           await refresh();
@@ -439,7 +445,8 @@
       },
       {
         key: 'storyboard',
-        label: 'Storyboard',
+        signal:operationScope.signal,
+          label: 'Storyboard',
         icon: Images,
         done: hasStoryboard || hasRender,
         busy: !!opBusy[`sb-${s.id}`],
@@ -632,7 +639,8 @@
         brief: conversationBrief(conversationInstruction.trim()),
         preview: false
       }, {
-        label: 'Conversational conversion',
+        signal:operationScope.signal,
+          label: 'Conversational conversion',
         onDone: async () => {
           busy[key] = false;
           await refresh();
@@ -678,6 +686,7 @@
         `/scenes/${s.id}/assets/generate`,
         { instruction, max_assets: maxAssets },
         {
+          signal:operationScope.signal,
           label: 'Asset generation',
           onDone: async (op) => {
             opBusy[key] = false;
@@ -989,6 +998,7 @@
           placeholder="e.g. A short video about a kid learning to read…"
           class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm min-h-[120px] resize-y"></textarea>
       </div>
+      {#if characters.length}<fieldset class="space-y-1"><legend class="text-xs font-medium">Cast</legend>{#each characters as character(character.id)}<label class="flex items-center gap-2 text-xs"><input type="checkbox" bind:group={storyCast} value={character.id}/>{character.name}</label>{/each}</fieldset>{/if}
       <div class="flex flex-wrap gap-3 items-end">
         <div class="min-w-[120px] flex-1">
           <label class="block text-xs text-muted-foreground mb-1" for="dur">Target duration</label>

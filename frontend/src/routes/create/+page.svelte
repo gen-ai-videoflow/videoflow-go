@@ -10,8 +10,11 @@
   let style = $state('2d-picture-book');
   let aspectRatio = $state('9:16');
   let duration = $state('');
+  let sceneCount=$state(1);
   let language = $state('English');
-  let conversationMode = $state('dialogue');
+  const conversationMode = 'dialogue';
+  let characters:any[]=$state([]);
+  let selectedCharacters:string[]=$state([]);
   let instruction = $state('');
   let busy = $state(false);
   let opId = $state('');
@@ -47,9 +50,9 @@
       const jobs = await Promise.all(ids.map((id) => get(`/render-jobs/${id}`)));
       opError = '';
       const states = jobs.map((item) => item.job.status);
-      if (states.some((state) => state === 'failed')) {
+      if (states.some((state) => state === 'failed' || state === 'reconciliation_required')) {
         opStatus = 'failed';
-        opError = jobs.find((item) => item.job.status === 'failed')?.job.error || 'A render job failed.';
+        opError = jobs.find((item) => item.job.status === 'failed' || item.job.status === 'reconciliation_required')?.job.error || 'A render job failed.';
         busy = false;
         stopRenderPolling();
       } else if (states.every((state) => state === 'succeeded')) {
@@ -77,7 +80,7 @@
         opStatus = 'rendering';
         await checkRenderJobs();
         if (opStatus === 'rendering') renderPoller = setInterval(() => void checkRenderJobs(), 4000);
-      } else if (op.status === 'failed') {
+      } else if ((op.status === 'failed' || op.status === 'reconciliation_required')) {
         stopPolling();
         opError = op.error || 'The generation failed.';
         busy = false;
@@ -88,28 +91,22 @@
     }
   }
 
+  let preflightSequence=0;
   async function loadPreflight(ratio: string, styleChoice: string) {
+    const sequence=++preflightSequence;
     preflightError = '';
     try {
       const params = new URLSearchParams({ aspect_ratio: ratio });
       params.set('style', styleChoice);
-      preflight = await get(`/videos/preflight?${params}`);
+      params.set('scene_count',String(sceneCount));params.set('target_duration',duration||'0');params.set('character_ids',selectedCharacters.join(','));
+      const result=await get(`/videos/preflight?${params}`);if(sequence!==preflightSequence)return null;preflight=result;
       return preflight;
     } catch (e: any) {
+      if(sequence!==preflightSequence)return null;
       preflightError = e.message;
       preflight = null;
       return null;
     }
-  }
-
-  function videoRouteSummary(route: any): string {
-    const duration = `${route.min_duration}–${route.max_duration}s`;
-    const resolution = route.resolution ? `, ${route.resolution}` : '';
-    const references = route.max_reference_images > 0
-      ? `${route.min_reference_count ? `${route.min_reference_count}+ image reference required; ` : ''}up to ${route.max_reference_images} image references${route.reference_limit_source === 'application' ? ' (6eek upload cap)' : ''}`
-      : 'no image references (storyboards are not sent to this route)';
-    const audio = route.supports_generated_audio ? ', generated audio supported' : '';
-    return `${route.provider} / ${route.model || 'no model selected'} (${duration}${resolution}; ${references}${audio})`;
   }
 
   async function restoreOperation() {
@@ -131,13 +128,13 @@
         busy = true;
         await checkRenderJobs();
         if (opStatus === 'rendering') renderPoller = setInterval(() => void checkRenderJobs(), 4000);
-      } else if (op.status === 'failed') {
+      } else if ((op.status === 'failed' || op.status === 'reconciliation_required')) {
         opError = op.error || 'The generation failed.';
       }
     } catch { /* Create remains usable if project history is unavailable. */ }
   }
 
-  onMount(() => { void restoreOperation(); });
+  onMount(() => { void restoreOperation(); get('/characters').then(result=>characters=result).catch(()=>{}); });
 
   $effect(() => {
     const ratio = aspectRatio;
@@ -160,10 +157,12 @@
     try {
       const response = await post('/videos/generate?background=true', {
         idea: idea.trim(),
+        scene_count:sceneCount,
         style,
         aspect_ratio: aspectRatio,
         language,
         conversation_mode: conversationMode,
+        character_ids:selectedCharacters,
         ...(duration ? { target_duration: Number(duration) } : {}),
         ...(instruction.trim() ? { instruction: instruction.trim() } : {})
       });
@@ -213,6 +212,13 @@
         ></textarea>
       </div>
 
+      <label class="grid gap-1 text-sm"><span class="font-medium">Number of scene clips</span><input type="number" min="1" max="20" bind:value={sceneCount} class="rounded-lg border bg-background px-3 py-2"/><span class="text-xs text-muted-foreground">Each scene generates its own image and video. Start with one clip to test your setup.</span></label>
+      {#if characters.length}
+      <fieldset class="space-y-2 rounded-lg border p-3"><legend class="text-sm font-medium">Characters in this story</legend>
+       {#each characters as character(character.id)}<label class="flex items-center gap-2 text-sm"><input type="checkbox" bind:group={selectedCharacters} value={character.id}/>{character.name}</label>{/each}
+       <p class="text-xs text-muted-foreground">Choose the cast explicitly. Upload reference photos first; likeness still depends on the selected models.</p>
+      </fieldset>
+      {/if}
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="grid gap-1.5 text-sm">
           <span class="font-medium">Visual style</span>
@@ -262,7 +268,7 @@
           <p class="mt-2 text-muted-foreground">Checking configured models and supported video settings…</p>
         {:else}
           <p class="mt-2">Effective project style: <strong>{preflight.effective_style}</strong></p>
-          <p class="mt-1 text-muted-foreground">This request plans a story, scenes, shots, dialogue, storyboard images, and video render jobs. Image provider: {preflight.routes.image.provider} (storyboards). Character and prop images use AtlasCloud. Video: {videoRouteSummary(preflight.routes.video)}.</p>
+          <p class="mt-1 text-muted-foreground">This request creates a story, shots, storyboard images and separate scene clips through OpenRouter. Image model: {preflight.effective_routes.image_model}. Video model: {preflight.effective_routes.video_model}. Supported clip durations: {(preflight.video_durations ?? []).join(', ')} seconds. Assemble approved clips in My videos after rendering.</p>
           {#each preflight.warnings ?? [] as warning}
             <p class="mt-2 text-amber-700 dark:text-amber-300">Unverified route: {warning.reason}</p>
           {/each}
@@ -283,7 +289,7 @@
         <div class="mt-3 grid gap-3 sm:grid-cols-2">
           <label class="grid gap-1.5">
             <span class="text-muted-foreground">Target duration in seconds</span>
-            <input type="number" min="3" max="300" bind:value={duration} placeholder="Automatic" class="rounded-lg border border-input bg-background px-3 py-2" />
+            <input type="number" min={sceneCount} max="300" bind:value={duration} placeholder="Automatic" class="rounded-lg border border-input bg-background px-3 py-2" />
           </label>
           <label class="grid gap-1.5 sm:col-span-2">
             <span class="text-muted-foreground">Direction for the AI</span>

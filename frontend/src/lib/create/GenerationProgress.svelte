@@ -12,7 +12,6 @@
     { key: 'story', label: 'Story' },
     { key: 'scenes', label: 'Scenes' },
     { key: 'shots', label: 'Shots' },
-    { key: 'dialogue', label: 'Dialogue' },
     { key: 'visuals', label: 'Visuals' },
     { key: 'render', label: 'Submit render jobs' }
   ];

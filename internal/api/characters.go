@@ -94,20 +94,26 @@ func (s *Server) handleCharacterRefSheets(w http.ResponseWriter, r *http.Request
 	}
 
 	s.operation(w, r, &models.Op{Kind: "character_reference", ProjectID: c.ProjectID}, func(ctx context.Context) (any, error) {
-		images, err := s.generateAssets(ctx, c.ProjectID, &c.ID, "", c.Name+" reference", "character_reference", fmt.Sprintf("Character reference sheet showing front, side and full body views of %s. Appearance: %s. Description: %s. Visual rules: %s", c.Name, c.Appearance, c.Description, c.VisualRulesJSON), "1:1", nil)
+		cast, _ := json.Marshal([]string{c.ID})
+		refs, err := s.sceneReferences(&models.Scene{ProjectID: c.ProjectID, CharacterIDsJSON: cast})
+		if err != nil {
+			return nil, err
+		}
+		images, err := s.generateAssets(ctx, c.ProjectID, &c.ID, "", c.Name+" reference", "character_reference", fmt.Sprintf("Character reference sheet showing front, side and full body views of %s. Appearance: %s. Description: %s. Visual rules: %s", c.Name, c.Appearance, c.Description, c.VisualRulesJSON), "1:1", refs)
 		if err != nil {
 			return nil, err
 		}
 		ids := []string{}
-		_ = json.Unmarshal(c.ReferenceAssetIDsJSON, &ids)
 		for _, image := range images {
 			ids = append(ids, image.ID)
 		}
-		c.ReferenceAssetIDsJSON, _ = json.Marshal(ids)
-		if err = s.database.UpdateCharacter(c); err != nil {
+		if c.ProjectID == nil {
+			return nil, fmt.Errorf("character has no project")
+		}
+		if err = s.database.AppendCharacterReferences(c.ID, *c.ProjectID, ids); err != nil {
 			return nil, err
 		}
-		return c, nil
+		return s.database.GetCharacter(c.ID)
 	})
 }
 

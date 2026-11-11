@@ -47,6 +47,9 @@ func Open(databasePath string) (*DB, error) {
 	if err := d.migrate(); err != nil {
 		return nil, fmt.Errorf("migration failed: %w", err)
 	}
+	if err := d.ensureRequestReplay(); err != nil {
+		return nil, err
+	}
 	if err := d.ensureActiveProject(); err != nil {
 		return nil, fmt.Errorf("ensure active project failed: %w", err)
 	}
@@ -473,6 +476,7 @@ func (d *DB) CreateCharacter(c *models.Character) error {
 }
 
 func (d *DB) UpdateCharacter(c *models.Character) error {
+	expected := c.UpdatedAt
 	now := time.Now().UTC()
 	c.UpdatedAt = now
 	vr := string(c.VisualRulesJSON)
@@ -488,12 +492,19 @@ func (d *DB) UpdateCharacter(c *models.Character) error {
 		ra = "[]"
 	}
 
-	_, err := d.conn.Exec(`
+	result, err := d.conn.Exec(`
 		UPDATE characters
 		SET name = ?, description = ?, appearance = ?, personality = ?, visual_rules_json = ?, voice_rules_json = ?, sample_dialogue = ?, reference_asset_ids_json = ?, updated_at = ?
-		WHERE id = ?
-	`, c.Name, c.Description, c.Appearance, c.Personality, vr, vor, c.SampleDialogue, ra, now, c.ID)
-	return err
+		WHERE id = ? AND updated_at = ?
+	`, c.Name, c.Description, c.Appearance, c.Personality, vr, vor, c.SampleDialogue, ra, now, c.ID, expected)
+	if err != nil {
+		return err
+	}
+	n, _ := result.RowsAffected()
+	if n != 1 {
+		return fmt.Errorf("record changed during this operation; reload before retrying")
+	}
+	return nil
 }
 
 func (d *DB) DeleteCharacter(id string) error {
@@ -556,7 +567,8 @@ func (d *DB) GetScene(id string) (*models.Scene, error) {
 	return &s, nil
 }
 
-func (d *DB) CreateScene(s *models.Scene) error {
+func (d *DB) CreateScene(s *models.Scene) error { return insertScene(d.conn, s) }
+func insertScene(conn sqlExecutor, s *models.Scene) error {
 	if s.ID == "" {
 		s.ID = "scene_" + uuid.New().String()[:8]
 	}
@@ -577,7 +589,7 @@ func (d *DB) CreateScene(s *models.Scene) error {
 		sjson = "{}"
 	}
 
-	_, err := d.conn.Exec(`
+	_, err := conn.Exec(`
 		INSERT INTO scenes (id, project_id, script_id, scene_order, title, summary, duration, aspect_ratio, character_ids_json, asset_ids_json, scene_json, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, s.ID, s.ProjectID, s.ScriptID, s.SceneOrder, s.Title, s.Summary, s.Duration, s.AspectRatio, cids, aids, sjson, now, now)
@@ -585,6 +597,7 @@ func (d *DB) CreateScene(s *models.Scene) error {
 }
 
 func (d *DB) UpdateScene(s *models.Scene) error {
+	expected := s.UpdatedAt
 	now := time.Now().UTC()
 	s.UpdatedAt = now
 	cids := string(s.CharacterIDsJSON)
@@ -600,12 +613,19 @@ func (d *DB) UpdateScene(s *models.Scene) error {
 		sjson = "{}"
 	}
 
-	_, err := d.conn.Exec(`
+	result, err := d.conn.Exec(`
 		UPDATE scenes
 		SET title = ?, summary = ?, duration = ?, aspect_ratio = ?, scene_order = ?, character_ids_json = ?, asset_ids_json = ?, scene_json = ?, updated_at = ?
-		WHERE id = ?
-	`, s.Title, s.Summary, s.Duration, s.AspectRatio, s.SceneOrder, cids, aids, sjson, now, s.ID)
-	return err
+		WHERE id = ? AND updated_at = ?
+	`, s.Title, s.Summary, s.Duration, s.AspectRatio, s.SceneOrder, cids, aids, sjson, now, s.ID, expected)
+	if err != nil {
+		return err
+	}
+	n, _ := result.RowsAffected()
+	if n != 1 {
+		return fmt.Errorf("record changed during this operation; reload before retrying")
+	}
+	return nil
 }
 
 func (d *DB) DeleteScene(id string) error {
@@ -665,6 +685,20 @@ func (d *DB) GetShot(id string) (*models.Shot, error) {
 }
 
 func (d *DB) CreateShot(s *models.Shot) error {
+	tx, err := d.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err = insertShot(tx, s); err != nil {
+		return err
+	}
+	if _, err = tx.Exec("UPDATE scenes SET updated_at=? WHERE id=?", time.Now().UTC(), s.SceneID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+func insertShot(conn sqlExecutor, s *models.Shot) error {
 	if s.ID == "" {
 		s.ID = "shot_" + uuid.New().String()[:8]
 	}
@@ -681,7 +715,7 @@ func (d *DB) CreateShot(s *models.Shot) error {
 		sjson = "{}"
 	}
 
-	_, err := d.conn.Exec(`
+	_, err := conn.Exec(`
 		INSERT INTO shots (id, scene_id, shot_order, duration, prompt, camera, movement, asset_ids_json, shot_json, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, s.ID, s.SceneID, s.ShotOrder, s.Duration, s.Prompt, s.Camera, s.Movement, aids, sjson, now, now)
@@ -689,28 +723,50 @@ func (d *DB) CreateShot(s *models.Shot) error {
 }
 
 func (d *DB) UpdateShot(s *models.Shot) error {
+	tx, err := d.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
 	now := time.Now().UTC()
-	s.UpdatedAt = now
 	aids := string(s.AssetIDsJSON)
 	if aids == "" {
 		aids = "[]"
 	}
-	sjson := string(s.ShotJSON)
-	if sjson == "" {
-		sjson = "{}"
+	data := string(s.ShotJSON)
+	if data == "" {
+		data = "{}"
 	}
-
-	_, err := d.conn.Exec(`
-		UPDATE shots
-		SET prompt = ?, duration = ?, camera = ?, movement = ?, shot_order = ?, asset_ids_json = ?, shot_json = ?, updated_at = ?
-		WHERE id = ?
-	`, s.Prompt, s.Duration, s.Camera, s.Movement, s.ShotOrder, aids, sjson, now, s.ID)
-	return err
+	result, err := tx.Exec(`UPDATE shots SET prompt=?,duration=?,camera=?,movement=?,shot_order=?,asset_ids_json=?,shot_json=?,updated_at=? WHERE id=? AND updated_at=?`, s.Prompt, s.Duration, s.Camera, s.Movement, s.ShotOrder, aids, data, now, s.ID, s.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	n, _ := result.RowsAffected()
+	if n != 1 {
+		return fmt.Errorf("shot changed; reload before saving")
+	}
+	if _, err = tx.Exec(`UPDATE scenes SET updated_at=? WHERE id=(SELECT scene_id FROM shots WHERE id=?)`, now, s.ID); err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	s.UpdatedAt = now
+	return nil
 }
-
 func (d *DB) DeleteShot(id string) error {
-	_, err := d.conn.Exec("DELETE FROM shots WHERE id = ?", id)
-	return err
+	tx, err := d.conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err = tx.Exec(`UPDATE scenes SET updated_at=? WHERE id=(SELECT scene_id FROM shots WHERE id=?)`, time.Now().UTC(), id); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM shots WHERE id=?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // --- Assets ---
@@ -764,7 +820,7 @@ func (d *DB) GetAsset(id string) (*models.Asset, error) {
 	return &a, nil
 }
 
-type assetInserter interface {
+type sqlExecutor interface {
 	Exec(string, ...any) (sql.Result, error)
 }
 
@@ -796,7 +852,7 @@ func (d *DB) CreateUploadedAsset(a *models.Asset) error {
 	return tx.Commit()
 }
 
-func insertAsset(conn assetInserter, a *models.Asset) error {
+func insertAsset(conn sqlExecutor, a *models.Asset) error {
 	if a.ID == "" {
 		a.ID = "asset_" + uuid.New().String()[:8]
 	}
@@ -866,7 +922,8 @@ func (d *DB) ListScripts(projectID string) ([]models.Script, error) {
 	return scripts, nil
 }
 
-func (d *DB) CreateScript(s *models.Script) error {
+func (d *DB) CreateScript(s *models.Script) error { return insertScript(d.conn, s) }
+func insertScript(conn sqlExecutor, s *models.Script) error {
 	if s.ID == "" {
 		s.ID = "script_" + uuid.New().String()[:8]
 	}
@@ -877,7 +934,7 @@ func (d *DB) CreateScript(s *models.Script) error {
 	if draft == "" {
 		draft = "{}"
 	}
-	_, err := d.conn.Exec(
+	_, err := conn.Exec(
 		"INSERT INTO scripts (id, project_id, idea, title, summary, draft_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		s.ID, s.ProjectID, s.Idea, s.Title, s.Summary, draft, now, now,
 	)
@@ -973,7 +1030,8 @@ func (d *DB) ListRenderJobs(projectID string) ([]models.RenderJob, error) {
 	return jobs, nil
 }
 
-func (d *DB) CreateRenderJob(j *models.RenderJob) error {
+func (d *DB) CreateRenderJob(j *models.RenderJob) error { return insertRenderJob(d.conn, j) }
+func insertRenderJob(conn sqlExecutor, j *models.RenderJob) error {
 	if j.ID == "" {
 		j.ID = "job_" + uuid.New().String()[:8]
 	}
@@ -990,7 +1048,7 @@ func (d *DB) CreateRenderJob(j *models.RenderJob) error {
 		resp = "{}"
 	}
 
-	_, err := d.conn.Exec(`
+	_, err := conn.Exec(`
 		INSERT INTO render_jobs (id, project_id, scene_id, shot_id, provider, model, provider_job_id, status, stage, progress, request_json, response_json, error, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, j.ID, j.ProjectID, j.SceneID, j.ShotID, j.Provider, j.Model, j.ProviderJobID, j.Status, j.Stage, j.Progress, req, resp, j.Error, now, now)
@@ -1543,7 +1601,8 @@ func (d *DB) ListConnections() ([]models.Connection, error) {
 
 // --- Outputs ---
 
-func (d *DB) CreateRenderOutput(o *models.RenderOutput) error {
+func (d *DB) CreateRenderOutput(o *models.RenderOutput) error { return insertRenderOutput(d.conn, o) }
+func insertRenderOutput(conn sqlExecutor, o *models.RenderOutput) error {
 	if o.ID == "" {
 		o.ID = "output_" + uuid.New().String()[:8]
 	}
@@ -1564,7 +1623,7 @@ func (d *DB) CreateRenderOutput(o *models.RenderOutput) error {
 		sel = 1
 	}
 
-	_, err := d.conn.Exec(`
+	_, err := conn.Exec(`
 		INSERT INTO render_outputs (
 			id, render_job_id, video_path, thumbnail_path, captioned_path,
 			captions_json, score, qa_json, selected, notes, created_at, updated_at
@@ -1595,34 +1654,43 @@ func (d *DB) GetRenderOutput(id string) (*models.RenderOutput, error) {
 
 func (d *DB) UpdateRenderOutput(o *models.RenderOutput) error {
 	now := time.Now().UTC()
-	o.UpdatedAt = now
+	previous := o.UpdatedAt
 	sel := 0
 	if o.Selected {
 		sel = 1
 	}
-	_, err := d.conn.Exec(`
+	result, err := d.conn.Exec(`
 		UPDATE render_outputs
 		SET video_path = ?, thumbnail_path = ?, captioned_path = ?, captions_json = ?, score = ?, qa_json = ?, selected = ?, notes = ?, updated_at = ?
-		WHERE id = ?
-	`, o.VideoPath, o.ThumbnailPath, o.CaptionedPath, string(o.CaptionsJSON), o.Score, string(o.QAJSON), sel, o.Notes, now, o.ID)
-	return err
-}
-
-func (d *DB) SelectRenderOutput(id string, selected bool) error {
-	o, err := d.GetRenderOutput(id)
+		WHERE id = ? AND updated_at = ?
+	`, o.VideoPath, o.ThumbnailPath, o.CaptionedPath, string(o.CaptionsJSON), o.Score, string(o.QAJSON), sel, o.Notes, now, o.ID, previous)
 	if err != nil {
 		return err
 	}
-	// Deselect others in the same render job
-	if selected {
-		_, _ = d.conn.Exec("UPDATE render_outputs SET selected = 0 WHERE render_job_id = ?", o.RenderJobID)
+	n, _ := result.RowsAffected()
+	if n != 1 {
+		return fmt.Errorf("output changed; reload before saving")
 	}
-	sel := 0
-	if selected {
-		sel = 1
+	o.UpdatedAt = now
+	return nil
+}
+
+func (d *DB) SelectRenderOutput(id string, selected bool) error {
+	tx, err := d.conn.Begin()
+	if err != nil {
+		return err
 	}
-	_, err = d.conn.Exec("UPDATE render_outputs SET selected = ? WHERE id = ?", sel, id)
-	return err
+	defer tx.Rollback()
+	now := time.Now().UTC()
+	if selected {
+		if _, err = tx.Exec(`UPDATE render_outputs SET selected=0,updated_at=? WHERE render_job_id=(SELECT render_job_id FROM render_outputs WHERE id=?)`, now, id); err != nil {
+			return err
+		}
+	}
+	if _, err = tx.Exec(`UPDATE render_outputs SET selected=?,updated_at=? WHERE id=?`, selected, now, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // --- Shots Reorder & Scene/Shot Associations ---
@@ -1640,43 +1708,10 @@ func (d *DB) ReorderShots(sceneID string, orderedIDs []string) error {
 			return err
 		}
 	}
+	if _, err = tx.Exec(`UPDATE scenes SET updated_at=? WHERE id=?`, time.Now().UTC(), sceneID); err != nil {
+		return err
+	}
 	return tx.Commit()
-}
-
-func (d *DB) AddSceneCast(sceneID, characterID string) error {
-	scene, err := d.GetScene(sceneID)
-	if err != nil {
-		return err
-	}
-	var charIDs []string
-	_ = json.Unmarshal(scene.CharacterIDsJSON, &charIDs)
-	for _, cid := range charIDs {
-		if cid == characterID {
-			return nil
-		}
-	}
-	charIDs = append(charIDs, characterID)
-	bytes, _ := json.Marshal(charIDs)
-	scene.CharacterIDsJSON = bytes
-	return d.UpdateScene(scene)
-}
-
-func (d *DB) RemoveSceneCast(sceneID, characterID string) error {
-	scene, err := d.GetScene(sceneID)
-	if err != nil {
-		return err
-	}
-	var charIDs []string
-	_ = json.Unmarshal(scene.CharacterIDsJSON, &charIDs)
-	filtered := make([]string, 0, len(charIDs))
-	for _, cid := range charIDs {
-		if cid != characterID {
-			filtered = append(filtered, cid)
-		}
-	}
-	bytes, _ := json.Marshal(filtered)
-	scene.CharacterIDsJSON = bytes
-	return d.UpdateScene(scene)
 }
 
 func (d *DB) AttachShotAsset(shotID, assetID string) error {
