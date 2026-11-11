@@ -149,7 +149,7 @@ func TestGuidedCharacterToTwoOutputsAndCombinedExport(t *testing.T) {
 	json.Unmarshal(response.Body.Bytes(), &assembled)
 	combined, _ := s.database.GetRenderOutput(assembled.ID)
 	full, _ := s.storagePath(combined.VideoPath)
-	if b, err := exec.Command(binary, "-v", "error", "-i", full, "-f", "null", "-").CombinedOutput(); err != nil {
+	if b, err := exec.Command(binary, "-v", "error", "-i", full, "-c:v", "rawvideo", "-c:a", "pcm_s16le", "-f", "null", "-").CombinedOutput(); err != nil {
 		t.Fatalf("export decode failed: %v %s", err, b)
 	}
 	response = call(t, s, "GET", "/outputs/"+assembled.ID+"/download", "")

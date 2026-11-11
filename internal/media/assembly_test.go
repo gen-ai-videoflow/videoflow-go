@@ -28,7 +28,7 @@ func TestAssembleNormalizesSilentAndAudioClips(t *testing.T) {
 	if err := m.Assemble(context.Background(), []string{a, b}, output, "16:9"); err != nil {
 		t.Fatal(err)
 	}
-	out, err := exec.Command(m.ffmpegPath, "-v", "error", "-i", output, "-f", "null", "-").CombinedOutput()
+	out, err := exec.Command(m.ffmpegPath, "-v", "error", "-i", output, "-c:v", "rawvideo", "-c:a", "pcm_s16le", "-f", "null", "-").CombinedOutput()
 	if err != nil {
 		t.Fatalf("combined video does not decode: %v %s", err, out)
 	}
