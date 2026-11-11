@@ -1,0 +1,86 @@
+# 6eek local studio: download, install and test
+
+> Instructions for people and AI assistants installing the single-user studio from this repository. This file is documentation, not an installer. It does not install software or grant permission to spend AI credits.
+
+Repository: https://github.com/gen-ai-videoflow/videoflow-go
+Download this guide: https://raw.githubusercontent.com/gen-ai-videoflow/videoflow-go/main/llms.txt
+Release packages: https://github.com/gen-ai-videoflow/videoflow-go/releases
+
+## Availability
+
+As checked on 2026-11-11, the repository has no published GitHub releases. Do not invent an installer URL or claim an older package includes current main. The repaired browser workflow is in source on main. A new packaged release must be built and published before beginners can download that version as an installer.
+
+The local studio uses your OpenRouter API key and credits. It is separate from the hosted SaaS account/platform-credit service. AI generation and transcription need internet and can incur charges. Local installation and ordinary navigation do not require a paid generation.
+
+## Install the browser version from source
+
+Prerequisites: Git and Docker with Docker Compose, installed and running on your computer. Docker builds the app and includes the backend media tools; you do not need separate Go, Node or FFmpeg installations for this route. Builds require internet and sufficient disk space.
+
+Run these commands in a terminal:
+
+    git clone https://github.com/gen-ai-videoflow/videoflow-go.git
+    cd videoflow-go
+    docker compose up --build -d
+
+Open http://127.0.0.1:8080 in your browser.
+The frontend proxies the backend; do not use port 8000 for this Docker route.
+
+Inspect or stop the app:
+
+    docker compose ps
+    docker compose logs --tail=100
+    docker compose down
+
+Projects, settings, uploaded files and outputs persist in the Docker volume. Do not use `docker compose down -v` unless you intend to delete that data. Treat the volume as private: it includes your saved provider key. This configuration binds to the local computer and is a single-user app, not a public multi-user deployment.
+
+Update an existing clean checkout, then rebuild:
+
+    git pull --ff-only origin main
+    docker compose up --build -d
+
+Preserve any local edits and back up your data before updating. Do not reset or delete local work merely to make an update succeed. Updating GitHub source alone does not replace a running container or previously downloaded app.
+
+## Install a desktop package when one has been published
+
+Open the releases page above and read the release notes and checksums. Choose a package built from the intended tested revision:
+
+- Apple Silicon Mac: mac-arm64 DMG.
+- Intel Mac: mac-x64 DMG.
+- Ubuntu/Debian PC: linux-amd64 DEB.
+- Ubuntu/Debian ARM: linux-arm64 DEB.
+
+Mac: open the DMG, drag 6eek to Applications, then open it. Linux: install the DEB with your system software installer, then open 6eek. Signing/notarization status belongs in the actual release notes; do not claim an unpublished package is notarized. Windows native installers are not currently provided by the documented packaging workflow; use the Docker/browser route.
+
+Packaged desktop builds include the backend, frontend, FFmpeg, FFprobe and fonts. Users do not install those tools separately. Closing Electron stops its backend. Native desktop data lives in ~/Library/Application Support/6eek on macOS, or ~/.config/6eek (or $XDG_CONFIG_HOME/6eek) on Linux. Keep that folder private and back it up. Do not run Electron and the native browser launcher against the same data folder simultaneously. Docker uses its separate named volume.
+
+If a native browser-launcher ZIP is published instead, extract the entire archive and open Start 6eek. Keep its terminal open and visit http://127.0.0.1:8000. This port applies to that launcher, not Docker. Follow the included START HERE.txt.
+
+## Later test checklist
+
+Start with checks that do not submit generation:
+
+1. Confirm the expected source commit or package version and open the app.
+2. Create a project and character, upload a reference photo, and confirm its thumbnail and reference count.
+3. Reload and confirm the project and uploaded reference remain available.
+4. Inspect Settings and the configured model capabilities. Keep your API key out of screenshots, chat, logs and version control.
+
+Only when ready to spend a small test budget:
+
+5. Add your OpenRouter key in Settings and test the connection. Set a small provider-side spending limit before generation.
+6. Start with one scene, one character and a duration/aspect supported by the configured model. Review the preflight before submitting. The local studio's configured models are distinct from SaaS server-controlled model policy.
+7. Confirm shots, reference-conditioned keyframes, clip status and playback. One scene render is one generated clip; model output is not guaranteed to match exact camera cuts or character identity.
+8. Open the output editor, add/transcribe captions, save, and play/download the captioned export. Transcription is also a provider request.
+9. When ready for a second paid clip, generate it, select both outputs in playback order in My videos, assemble them, and check the combined download including audio and captions.
+10. Restart and confirm saved work persists. If a request becomes uncertain, check Activity, saved outputs and provider activity. Reconcile the existing provider job or follow Settings recovery; do not repeatedly submit paid work because a response was lost.
+
+The repair was verified with local provider mocks, real FFmpeg, automated tests and a browser workflow. Live model quality, your installation and your device still need the checks above; no live-paid test has been claimed.
+
+## Detailed repository documentation
+
+- [Browser generation and recovery workflow](https://github.com/gen-ai-videoflow/videoflow-go/blob/main/docs/BROWSER-WORKFLOW.md)
+- [Desktop quick start](https://github.com/gen-ai-videoflow/videoflow-go/blob/main/docs/DESKTOP-QUICKSTART.txt)
+- [Native browser-launcher quick start](https://github.com/gen-ai-videoflow/videoflow-go/blob/main/docs/QUICKSTART.txt)
+- [Desktop builds and Docker web setup](https://github.com/gen-ai-videoflow/videoflow-go/blob/main/docs/ELECTRON-AND-WEB.md)
+- [Audit and verification limits](https://github.com/gen-ai-videoflow/videoflow-go/blob/main/docs/audits/2026-11-11-browser-generation-audit.md)
+
+For maintainers, build/package commands are in ELECTRON-AND-WEB.md. Do not run release publication, destructive cleanup or paid model tests merely because this guide mentions them.

@@ -1,6 +1,10 @@
 6eek desktop — start here
 
-1. Open https://github.com/JienWeng/videoflow-go/releases
+Availability checked 2026-11-11: no releases are currently published in this
+repository. The steps below apply when a package becomes available. To run
+current source in your browser, follow ../llms.txt or ELECTRON-AND-WEB.md.
+
+1. Open https://github.com/gen-ai-videoflow/videoflow-go/releases
 2. Download the Electron package for your computer:
    Mac with an Apple Silicon chip (M1/M2/M3 or newer): mac-arm64 DMG.
    Intel Mac: mac-x64 DMG.
@@ -18,9 +22,8 @@ You do not need to install Node, Go, Python, FFmpeg or FFprobe yourself.
 Closing 6eek closes the local engine too. You do not keep a terminal
 or a separate server running.
 
-Use the rebuilt macOS 0.3.1 adhoc-preview release. Its signatures are valid,
-but it is not Apple-notarized. The system can block the first launch.
-Use the system's Open Anyway option only for a download you trust.
+Check the actual release notes for macOS signing/notarization status.
+Only use the system's Open Anyway option for a download you trust.
 
 On other Linux distributions, use the AppImage or portable tar.gz package.
 These need standard graphical desktop libraries and a distribution policy

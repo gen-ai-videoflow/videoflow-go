@@ -9,11 +9,11 @@ For the SaaS web app, use the [cloud user guide](docs/CLOUD-USER-GUIDE.md), or o
 
 ## Download and use
 
-For a beginner, choose the Electron app from the [GitHub downloads](https://github.com/JienWeng/videoflow-go/releases): install the macOS DMG or the Ubuntu/Debian DEB for your processor, open **6eek**, and add your OpenRouter key in Settings. The desktop app includes its backend, frontend, FFmpeg, FFprobe and caption fonts. No Go, Node, Python or FFmpeg installation is required. AI generation needs internet access and OpenRouter credits. See [desktop beginner instructions](docs/DESKTOP-QUICKSTART.txt).
+Download the [installation and testing guide (`llms.txt`)](https://raw.githubusercontent.com/gen-ai-videoflow/videoflow-go/main/llms.txt), or [read it here](llms.txt). It covers local browser setup, desktop packages, updates, data storage and a staged test checklist.
 
-Use the [rebuilt macOS 0.3.1 preview](https://github.com/JienWeng/videoflow-go/releases/tag/v0.3.1-macos-preview.1) instead of the affected 0.3.0 Mac packages. Its ad-hoc signatures pass strict integrity checks, but it is not Apple-notarized and requires explicit approval in System Settings → Privacy & Security → Open Anyway. Linux AppImage and tar.gz alternatives are available for distributions permitting Chromium user namespaces; AppImage can also need FUSE.
+As checked on 2026-11-11, this repository has no published releases. To use the current repaired browser version, clone the repository and run `docker compose up --build -d`, then open `http://127.0.0.1:8080`. See [desktop and web build instructions](docs/ELECTRON-AND-WEB.md).
 
-The earlier browser launcher remains available: extract its native ZIP and open **Start 6eek**. See [browser launcher instructions](docs/QUICKSTART.txt). Developers can run the separate web frontend and backend using `docker compose up --build -d`; see [desktop and web build instructions](docs/ELECTRON-AND-WEB.md).
+When installers are published on [GitHub releases](https://github.com/gen-ai-videoflow/videoflow-go/releases), choose the macOS DMG or Ubuntu/Debian DEB matching your processor. Packaged desktop builds include the backend, frontend, FFmpeg, FFprobe and caption fonts. AI generation still requires internet and OpenRouter credits. See [desktop beginner instructions](docs/DESKTOP-QUICKSTART.txt). Native browser-launcher ZIP instructions are in [QUICKSTART.txt](docs/QUICKSTART.txt).
 
 To build a download, build the frontend, run `python3 scripts/build_media.py` on the target platform, then run `python3 scripts/package.py --target <platform-architecture>`. Media build tools are documented in the builder; users do not need them. A tagged release runs checks and publishes four macOS/Linux archives with checksums. Start a local combined server with `bin/6eek-server --desktop --ui-dir frontend/build`; add `--no-browser` for a service. The server binds to localhost by default; `--host` explicitly sets another interface.
 

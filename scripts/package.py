@@ -83,6 +83,7 @@ def main():
             for file in ['media-sources.zip', 'BUILD-INFO.txt']:
                 shutil.copy2(media / file, folder / file)
             shutil.copyfile(ROOT / 'docs/QUICKSTART.txt', folder / 'START HERE.txt')
+            shutil.copyfile(ROOT / 'llms.txt', folder / 'llms.txt')
             if system == 'windows':
                 (folder / 'Start 6eek.bat').write_text('@echo off\ncd /d "%~dp0"\nvideoflow.exe --desktop\nif errorlevel 1 pause\n', encoding='utf-8')
             else:
